@@ -1,5 +1,5 @@
 from utils import zip_files, join_files
-import sys, os, glob, json, re, shutil, stat
+import sys, os, glob, json, re, shutil, stat, tarfile, zipfile
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
@@ -134,6 +134,8 @@ class MainWindow(QtGui.QWidget):
 
         self.resize(width,height)
 
+        self.extract_error = None
+
         layout = QtGui.QVBoxLayout()
         dl_bar = self.createDownloadBar()
         self.app_settings_widget = self.createApplicationSettings()
@@ -164,7 +166,13 @@ class MainWindow(QtGui.QWidget):
             cancel_button.setEnabled(True)
             self.disableUIWhileWorking()
             setting = self.files_to_download.pop()
-            self.downloadFile(setting.url, setting)
+            try:
+                self.downloadFile(setting.url, setting)
+            except Exception as e:
+                if os.path.exists(setting.full_file_path):
+                    os.remove(setting.full_file_path)
+                QtGui.QMessageBox.information(self, 'Error!', str(e))
+
         else:
             QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
 
@@ -322,22 +330,39 @@ class MainWindow(QtGui.QWidget):
         self.runInBackground('extractFiles', self.doneExtracting)
 
     def extractFiles(self):
+        self.extract_error = None
         for setting_name, setting in self.export_settings.items():
-            if setting.value:
-                extract_path = os.path.join('files', setting.name)
-                if not os.path.exists(os.path.join(extract_path, setting.dest_file)):
-                    fbytes = setting.get_file_bytes()
-                    with open(os.path.join(extract_path, setting.dest_file), 'wb') as d:
-                        d.write(fbytes)
-                    if os.path.exists(setting.full_file_path):
-                        os.remove(setting.full_file_path) #remove the zip/tar since we don't need it anymore
-                self.progress_label.setText(self.progress_label.text()+'.')
+            try:
+                if setting.value:
+                    extract_path = os.path.join('files', setting.name)
+
+                    if not os.path.exists(os.path.join(extract_path, setting.dest_file)):
+                        fbytes = setting.get_file_bytes()
+
+                        with open(os.path.join(extract_path, setting.dest_file), 'wb') as d:
+                            d.write(fbytes)
+                        if os.path.exists(setting.full_file_path):
+                            os.remove(setting.full_file_path) #remove the zip/tar since we don't need it anymore
+
+                    self.progress_label.setText(self.progress_label.text()+'.')
+
+            except (tarfile.ReadError, zipfile.BadZipfile) as e:
+                if os.path.exists(setting.full_file_path):
+                    os.remove(setting.full_file_path)
+                self.extract_error = e
+                #cannot use GUI in thread to notify user. Save it for later
+
+
 
     def doneExtracting(self):
         self.ex_button.setEnabled(True)
-        self.progress_label.setText('Done Extracting.')
-        self.makeOutputFilesInBackground()
         self.enableUI()
+        if self.extract_error:
+            self.progress_label.setText('Error extracting.')
+            QtGui.QMessageBox.information(self, 'Error!', 'There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
+        else:
+            self.progress_label.setText('Done Extracting.')
+            self.makeOutputFilesInBackground()
 
     def cancelDownload(self):
         self.progress_label.setText("Download canceled.")
@@ -784,8 +809,6 @@ class MainWindow(QtGui.QWidget):
                         self.progress_label.setText(self.progress_label.text()+'.')
 
                         os.remove(nw_path)
-        except Exception as e:
-            QtGui.QMessageBox.information(self, 'Error!', str(e))
         finally:
             shutil.rmtree(tempDir)
 
