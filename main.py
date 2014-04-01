@@ -162,10 +162,24 @@ class MainWindow(QtGui.QWidget):
         if self.files_to_download:
             self.progress_bar.setVisible(True)
             cancel_button.setEnabled(True)
+            self.disableUIWhileWorking()
             setting = self.files_to_download.pop()
             self.downloadFile(setting.url, setting)
         else:
             QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
+
+    def disableUIWhileWorking(self):
+        self.ex_button.setEnabled(False)
+        self.app_settings_widget.setEnabled(False)
+        self.win_settings_widget.setEnabled(False)
+        self.ex_settings_widget.setEnabled(False)
+
+
+    def enableUI(self):
+        self.ex_button.setEnabled(True)
+        self.app_settings_widget.setEnabled(True)
+        self.win_settings_widget.setEnabled(True)
+        self.ex_settings_widget.setEnabled(True)
 
     def requiredSettingsFilled(self):
         proj_dir = self.projectDir()
@@ -283,6 +297,7 @@ class MainWindow(QtGui.QWidget):
             self.progress_label.setText('Done')
             self.cancel_button.setEnabled(False)
             self.progress_bar.setVisible(False)
+            self.enableUI()
             self.extractFilesInBackground()
 
     def runInBackground(self, method_name, callback):
@@ -322,11 +337,14 @@ class MainWindow(QtGui.QWidget):
         self.ex_button.setEnabled(True)
         self.progress_label.setText('Done Extracting.')
         self.makeOutputFilesInBackground()
+        self.enableUI()
 
     def cancelDownload(self):
         self.progress_label.setText("Download canceled.")
+        self.cancel_button.setEnabled(False)
         self.httpRequestAborted = True
         self.http.abort()
+        self.enableUI()
 
     def updateProgressBar(self, bytesRead, totalBytes):
         if self.httpRequestAborted:
@@ -350,6 +368,7 @@ class MainWindow(QtGui.QWidget):
             QtGui.QMessageBox.information(self, 'Error',
                     'Unable to save the file %s: %s.' % (fileName, self.outFile.errorString()))
             self.outFile = None
+            self.enableUI()
             return
 
         mode = QHttp.ConnectionModeHttp
@@ -700,12 +719,11 @@ class MainWindow(QtGui.QWidget):
                         setting.value = os.path.basename(setting.value)
                         shutil.copy(setting.value, self.projectDir())
                     except shutil.Error as e:#same file warning
-                        pass
-                        #print 'Warning: {}'.format(e)
+                        print 'Warning: {}'.format(e)
+
         os.chdir(old_dir)
 
     def makeOutputDirs(self):
-
         try:
             self.progress_label.setText('Removing old output directory...')
 
@@ -769,7 +787,6 @@ class MainWindow(QtGui.QWidget):
         except Exception as e:
             QtGui.QMessageBox.information(self, 'Error!', str(e))
         finally:
-            #pass
             shutil.rmtree(tempDir)
 
     def show_and_raise(self):
