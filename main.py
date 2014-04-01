@@ -1,11 +1,19 @@
 from utils import zip_files, join_files
-import sys, os, glob, json, re, shutil, stat, tarfile, zipfile
+import sys, os, glob, json, re, shutil, stat, tarfile, zipfile, traceback
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFileInfo, QFile, QIODevice
 from zipfile import ZipFile
 from tarfile import TarFile
+
+frozen = getattr(sys, 'frozen', '')
+
+if frozen:
+    CWD = os.path.dirname(sys.executable)
+    os.chdir(CWD)
+else:
+    CWD = os.getcwd()
 
 class WThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
@@ -322,6 +330,8 @@ class MainWindow(QtGui.QWidget):
     def doneMakingFiles(self):
         self.ex_button.setEnabled(True)
         self.progress_label.setText('Done Exporting.')
+        if self.output_err:
+            QtGui.QMessageBox.information(self, 'Error!', str(self.output_err))
 
     def extractFilesInBackground(self):
         self.progress_label.setText('Extracting')
@@ -735,7 +745,7 @@ class MainWindow(QtGui.QWidget):
         return str(val)
 
     def copyFilesToProjectFolder(self):
-        old_dir = os.getcwd()
+        old_dir = CWD
         os.chdir(self.projectDir())
         for sgroup in self._setting_groups:
             for setting in sgroup.values():
@@ -749,6 +759,7 @@ class MainWindow(QtGui.QWidget):
         os.chdir(old_dir)
 
     def makeOutputDirs(self):
+        self.output_err = ''
         try:
             self.progress_label.setText('Removing old output directory...')
 
@@ -809,6 +820,8 @@ class MainWindow(QtGui.QWidget):
                         self.progress_label.setText(self.progress_label.text()+'.')
 
                         os.remove(nw_path)
+        except Exception as e:
+            self.output_err += ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
         finally:
             shutil.rmtree(tempDir)
 
