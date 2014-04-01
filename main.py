@@ -335,6 +335,7 @@ class MainWindow(QtGui.QWidget):
     def doneMakingFiles(self):
         self.ex_button.setEnabled(True)
         self.progress_label.setText('Done Exporting.')
+        self.enableUI()
         if self.output_err:
             QtGui.QMessageBox.information(self, 'Error!', str(self.output_err))
 
@@ -371,7 +372,6 @@ class MainWindow(QtGui.QWidget):
 
     def doneExtracting(self):
         self.ex_button.setEnabled(True)
-        self.enableUI()
         if self.extract_error:
             self.progress_label.setText('Error extracting.')
             QtGui.QMessageBox.information(self, 'Error!', 'There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
