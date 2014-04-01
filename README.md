@@ -16,6 +16,30 @@ python main.py
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
 
+Prebuild Binaries
+-----------------
+
+###Mac OS X
+
+[Mac OS X 10.7+ download](http://www.mediafire.com/download/9gc23kmdonqqp5p/Web2ExeMac.zip)
+
+You can just put the app where ever you want and double click to run it.
+
+###Windows
+
+[Windows download](http://www.mediafire.com/download/utbddnfn27rc5uq/Web2ExeWin.zip)
+
+Double click the Win2Exe.exe file inside the extracted folder.
+
+###Linux
+
+[Linux 64bit download](http://www.mediafire.com/download/purz88rpayt99ri/Web2ExeLinux64.zip)
+
+[Linux 32bit download](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip)
+
+chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line.
+
+
 Features
 --------
 
