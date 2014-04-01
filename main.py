@@ -115,19 +115,17 @@ class MainWindow(QtGui.QWidget):
                                           dest_file='nw.exe'),
                        'mac': Setting('mac', default_value=False, type='check',
                                       url=base_url+'node-webkit-v0.9.2-osx-ia32.zip',
-                                      extract_file=os.path.join('node-webkit.app','Contents',
-                                                                'Frameworks','node-webkit Framework.framework',
-                                                                'node-webkit Framework'),
+                                      extract_file='node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
                                       dest_file=os.path.join('node-webkit.app','Contents',
                                                                 'Frameworks','node-webkit Framework.framework',
                                                                 'node-webkit Framework')),
                        'linux-x64': Setting('linux-x64', default_value=False, type='check',
                                             url=base_url+'node-webkit-v0.9.2-linux-x64.tar.gz',
-                                            extract_file=os.path.join('node-webkit-v0.9.2-linux-x64','nw'),
+                                            extract_file='node-webkit-v0.9.2-linux-x64/nw',
                                             dest_file='nw'),
                        'linux-x32': Setting('linux-x32', default_value=False, type='check',
                                             url=base_url+'node-webkit-v0.9.2-linux-ia32.tar.gz',
-                                            extract_file=os.path.join('node-webkit-v0.9.2-linux-ia32','nw'),
+                                            extract_file='node-webkit-v0.9.2-linux-ia32/nw',
                                             dest_file='nw')}
 
     _setting_groups = [app_settings, webkit_settings, window_settings, export_settings]
@@ -321,7 +319,6 @@ class MainWindow(QtGui.QWidget):
             self.progress_label.setText('Done')
             self.cancel_button.setEnabled(False)
             self.progress_bar.setVisible(False)
-            self.enableUI()
             self.extractFilesInBackground()
 
     def runInBackground(self, method_name, callback):
