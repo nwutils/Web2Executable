@@ -1,5 +1,5 @@
 from utils import zip_files, join_files
-import sys, os, glob, json, re, shutil, stat, tarfile, zipfile, traceback
+import sys, os, glob, json, re, shutil, stat, tarfile, zipfile, traceback, platform
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
@@ -7,6 +7,8 @@ from PySide.QtCore import QUrl, QFileInfo, QFile, QIODevice
 from zipfile import ZipFile
 from tarfile import TarFile
 
+
+#if this is a mac application
 frozen = getattr(sys, 'frozen', '')
 
 if frozen:
@@ -14,6 +16,12 @@ if frozen:
     os.chdir(CWD)
 else:
     CWD = os.getcwd()
+
+if platform.system() == 'Windows':
+    TEMP_DIR = os.path.join('c:/','windows','temp')
+else:
+    TEMP_DIR = os.path.sep+'tmp'
+
 
 class WThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
@@ -42,7 +50,7 @@ class Setting(object):
         if self.value is None:
             self.value = self.default_value
 
-        self.save_path = kwargs.pop('save_path', os.path.sep+'tmp')
+        self.save_path = kwargs.pop('save_path', TEMP_DIR)
 
         if hasattr(self, 'url'):
             self.file_name = self.url.split('/')[-1]
@@ -764,7 +772,7 @@ class MainWindow(QtGui.QWidget):
             self.progress_label.setText('Removing old output directory...')
 
             outputDir = os.path.join(self.outputDir(), self.projectName())
-            tempDir = os.path.join(os.path.sep+'tmp', 'webexectemp')
+            tempDir = os.path.join(TEMP_DIR, 'webexectemp')
             if os.path.exists(tempDir):
                 shutil.rmtree(tempDir)
 
