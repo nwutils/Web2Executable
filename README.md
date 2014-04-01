@@ -27,7 +27,7 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows download](http://www.mediafire.com/download/utbddnfn27rc5uq/Web2ExeWin.zip)
+[Windows 7+ download](http://www.mediafire.com/download/utbddnfn27rc5uq/Web2ExeWin.zip)
 
 Double click the Win2Exe.exe file inside the extracted folder.
 
