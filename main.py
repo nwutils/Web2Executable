@@ -826,8 +826,8 @@ class MainWindow(QtGui.QWidget):
                         os.chmod(dest_binary_path, sevenfivefive)
 
                         self.progress_label.setText(self.progress_label.text()+'.')
-
-                        os.remove(nw_path)
+                        if os.path.exists(nw_path):
+                            os.remove(nw_path)
         except Exception as e:
             self.output_err += ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
         finally:
