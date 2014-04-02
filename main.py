@@ -1,4 +1,4 @@
-from utils import zip_files, join_files
+from utils import zip_files, join_files, log, get_temp_dir
 import sys, os, glob, json, re, shutil, stat, tarfile, zipfile, traceback, platform
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
@@ -7,26 +7,21 @@ from PySide.QtCore import QUrl, QFileInfo, QFile, QIODevice
 from zipfile import ZipFile
 from tarfile import TarFile
 
+inside_mac_app = getattr(sys, 'frozen', '')
 
-#if this is a mac application
-frozen = getattr(sys, 'frozen', '')
-
-if frozen:
+if inside_mac_app:
     CWD = os.path.dirname(sys.executable)
     os.chdir(CWD)
 else:
     CWD = os.getcwd()
 
-if platform.system() == 'Windows':
-    TEMP_DIR = os.path.join('c:/','windows','temp')
-else:
-    TEMP_DIR = os.path.sep+'tmp'
+TEMP_DIR = get_temp_dir()
 
 
-class WThread(QtCore.QThread):
+class BackgroundThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
         QtCore.QThread.__init__(self, parent)
-        self.widget=widget
+        self.widget = widget
         self.method_name = method_name
 
     def run(self):
@@ -43,15 +38,19 @@ class Setting(object):
         self.required = required
         self.type = type
         self.file_types = file_types
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
         self.default_value = kwargs.pop('default_value', None)
+
+        self.set_extra_attributes_from_keyword_args(kwargs)
+
         if self.value is None:
             self.value = self.default_value
 
         self.save_path = kwargs.pop('save_path', TEMP_DIR)
 
+        self.get_file_information_from_url()
+
+    def get_file_information_from_url(self):
         if hasattr(self, 'url'):
             self.file_name = self.url.split('/')[-1]
             self.full_file_path = os.path.join(self.save_path, self.file_name)
@@ -63,6 +62,10 @@ class Setting(object):
                 self.extract_class = TarFile.open
                 self.extract_args = ('r:gz',)
 
+    def set_extra_attributes_from_keyword_args(self, kwargs):
+        for undefined_key, undefined_value in kwargs.items():
+            setattr(self, undefined_key, undefined_value)
+
     def get_file_bytes(self):
         fbytes = None
         file = self.extract_class(self.full_file_path, *self.extract_args)
@@ -72,9 +75,9 @@ class Setting(object):
             fbytes = file.read(self.extract_file)
         return fbytes
 
-
     def __repr__(self):
         return 'Setting: (name={}, display_name={}, value={}, required={}, type={})'.format(self.name, self.display_name, self.value, self.required, self.type)
+
 
 class MainWindow(QtGui.QWidget):
 
@@ -133,6 +136,7 @@ class MainWindow(QtGui.QWidget):
     application_setting_order = ['main', 'node-main', 'name', 'description', 'version', 'keywords',
                                  'nodejs', 'single-instance', 'plugin',
                                  'java', 'page-cache']
+
     window_setting_order = ['title', 'icon', 'width', 'height', 'min_width', 'min_height',
                             'max_width', 'max_height', 'toolbar', 'always-on-top', 'frame',
                             'show_in_taskbar', 'visible', 'resizable', 'fullscreen']
@@ -150,58 +154,82 @@ class MainWindow(QtGui.QWidget):
 
         self.extract_error = None
 
-        layout = QtGui.QVBoxLayout()
-        dl_bar = self.createDownloadBar()
-        self.app_settings_widget = self.createApplicationSettings()
-        self.win_settings_widget = self.createWindowSettings()
-        self.ex_settings_widget = self.createExportSettings()
+        self.create_application_layout()
 
-        self.app_settings_widget.setEnabled(False)
-        self.win_settings_widget.setEnabled(False)
-        self.ex_settings_widget.setEnabled(False)
-
-        layout.addWidget(self.createDirectoryChoose())
-        layout.addWidget(self.app_settings_widget)
-        layout.addWidget(self.win_settings_widget)
-        layout.addWidget(self.ex_settings_widget)
-        layout.addLayout(dl_bar)
-        self.setLayout(layout)
+        self.option_settings_enabled(False)
 
         self.setWindowTitle("Web2Executable")
 
+    def create_application_layout(self):
+        self.main_layout = QtGui.QVBoxLayout()
+
+        self.create_layout_widgets()
+
+        self.add_widgets_to_main_layout()
+
+        self.setLayout(self.main_layout)
+
+    def create_layout_widgets(self):
+        self.download_bar_widget = self.createDownloadBar()
+        self.app_settings_widget = self.createApplicationSettings()
+        self.win_settings_widget = self.createWindowSettings()
+        self.ex_settings_widget = self.createExportSettings()
+        self.directory_chooser_widget = self.createDirectoryChoose()
+
+    def add_widgets_to_main_layout(self):
+        self.main_layout.addWidget(self.directory_chooser_widget)
+        self.main_layout.addWidget(self.app_settings_widget)
+        self.main_layout.addWidget(self.win_settings_widget)
+        self.main_layout.addWidget(self.ex_settings_widget)
+        self.main_layout.addLayout(self.download_bar_widget)
+
+    def option_settings_enabled(self, is_enabled):
+        self.ex_button.setEnabled(is_enabled)
+        self.app_settings_widget.setEnabled(is_enabled)
+        self.win_settings_widget.setEnabled(is_enabled)
+        self.ex_settings_widget.setEnabled(is_enabled)
+
     def export(self, export_button, cancel_button):
+        self.get_files_to_download()
+        self.try_to_download_files()
+
+    def get_files_to_download(self):
         self.files_to_download = []
         for setting_name, setting in self.export_settings.items():
             if setting.value == True:
                 self.files_to_download.append(setting)
 
+    def try_to_download_files(self):
         if self.files_to_download:
             self.progress_bar.setVisible(True)
-            cancel_button.setEnabled(True)
+            self.cancel_button.setEnabled(True)
             self.disableUIWhileWorking()
-            setting = self.files_to_download.pop()
-            try:
-                self.downloadFile(setting.url, setting)
-            except Exception as e:
-                if os.path.exists(setting.full_file_path):
-                    os.remove(setting.full_file_path)
-                QtGui.QMessageBox.information(self, 'Error!', str(e))
 
+            self.download_file_with_error_handling()
         else:
+            #This shouldn't happen since we disable the UI if there are no options selected
+            #But in the weird event that this does happen, we are prepared!
             QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
 
-    def disableUIWhileWorking(self):
-        self.ex_button.setEnabled(False)
-        self.app_settings_widget.setEnabled(False)
-        self.win_settings_widget.setEnabled(False)
-        self.ex_settings_widget.setEnabled(False)
+    def download_file_with_error_handling(self):
+        setting = self.files_to_download.pop()
+        try:
+            self.downloadFile(setting.url, setting)
+        except Exception as e:
+            if os.path.exists(setting.full_file_path):
+                os.remove(setting.full_file_path)
 
+            error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+            self.show_error(error)
+
+    def show_error(self, exception):
+        QtGui.QMessageBox.information(self, 'Error!', str(exception))
+
+    def disableUIWhileWorking(self):
+        self.option_settings_enabled(False)
 
     def enableUI(self):
-        self.ex_button.setEnabled(True)
-        self.app_settings_widget.setEnabled(True)
-        self.win_settings_widget.setEnabled(True)
-        self.ex_settings_widget.setEnabled(True)
+        self.option_settings_enabled(True)
 
     def requiredSettingsFilled(self):
         proj_dir = self.projectDir()
@@ -219,7 +247,7 @@ class MainWindow(QtGui.QWidget):
                 if setting.required and not setting.value:
                     return False
                 if setting.type == 'file' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
-                    print setting.value, "does not exist"
+                    log(setting.value, "does not exist")
                     settings_valid = False
 
         export_chosen = False
@@ -278,7 +306,6 @@ class MainWindow(QtGui.QWidget):
         http.dataReadProgress.connect(self.updateProgressBar)
         http.responseHeaderReceived.connect(self.readResponseHeader)
         self.http = http
-        self.cancel_button = cancel_button
         self.ex_button = ex_button
 
         return hlayout
@@ -286,8 +313,7 @@ class MainWindow(QtGui.QWidget):
     def readResponseHeader(self, response_header):
         # Check for genuine error conditions.
         if response_header.statusCode() not in (200, 300, 301, 302, 303, 307):
-            QtGui.QMessageBox.information(self, 'Error',
-                    'Download failed: %s.' % response_header.reasonPhrase())
+            self.show_error('Download failed: {}.'.format(response_header.reasonPhrase()))
             self.httpRequestAborted = True
             self.http.abort()
 
@@ -306,8 +332,7 @@ class MainWindow(QtGui.QWidget):
 
         if error:
             self.outFile.remove()
-            QtGui.QMessageBox.information(self, 'Error',
-                    'Download failed: %s.' % self.http.errorString())
+            self.show_error('Download failed: {}.'.format(self.http.errorString()))
 
         self.continueDownloadingOrExtract()
 
@@ -316,14 +341,22 @@ class MainWindow(QtGui.QWidget):
             setting = self.files_to_download.pop()
             self.downloadFile(setting.url, setting)
         else:
-            self.progress_label.setText('Done')
+            self.progress_text = 'Done.'
             self.cancel_button.setEnabled(False)
             self.progress_bar.setVisible(False)
             self.extractFilesInBackground()
 
+    @property
+    def progress_text(self):
+        return self.progress_label.text()
+
+    @progress_text.setter
+    def progress_text(self, value):
+        self.progress_label.setText(str(value))
+
     def runInBackground(self, method_name, callback):
 
-        self.thread = WThread(self, method_name)
+        self.thread = BackgroundThread(self, method_name)
         self.thread.finished.connect(callback)
         self.thread.start()
 
@@ -334,13 +367,13 @@ class MainWindow(QtGui.QWidget):
 
     def doneMakingFiles(self):
         self.ex_button.setEnabled(True)
-        self.progress_label.setText('Done Exporting.')
+        self.progress_text = 'Done Exporting.'
         self.enableUI()
         if self.output_err:
-            QtGui.QMessageBox.information(self, 'Error!', str(self.output_err))
+            self.show_error(self.output_err)
 
     def extractFilesInBackground(self):
-        self.progress_label.setText('Extracting')
+        self.progress_text = 'Extracting.'
         self.ex_button.setEnabled(False)
 
         self.runInBackground('extractFiles', self.doneExtracting)
@@ -360,7 +393,7 @@ class MainWindow(QtGui.QWidget):
                         if os.path.exists(setting.full_file_path):
                             os.remove(setting.full_file_path) #remove the zip/tar since we don't need it anymore
 
-                    self.progress_label.setText(self.progress_label.text()+'.')
+                    self.progress_text += '.'
 
             except (tarfile.ReadError, zipfile.BadZipfile) as e:
                 if os.path.exists(setting.full_file_path):
@@ -373,14 +406,14 @@ class MainWindow(QtGui.QWidget):
     def doneExtracting(self):
         self.ex_button.setEnabled(True)
         if self.extract_error:
-            self.progress_label.setText('Error extracting.')
-            QtGui.QMessageBox.information(self, 'Error!', 'There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
+            self.progress_text = 'Error extracting.'
+            self.show_error('There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
         else:
-            self.progress_label.setText('Done Extracting.')
+            self.progress_text = 'Done extracting.'
             self.makeOutputFilesInBackground()
 
     def cancelDownload(self):
-        self.progress_label.setText("Download canceled.")
+        self.progress_text = 'Download cancelled.'
         self.cancel_button.setEnabled(False)
         self.httpRequestAborted = True
         self.http.abort()
@@ -393,7 +426,7 @@ class MainWindow(QtGui.QWidget):
         self.progress_bar.setValue(bytesRead)
 
     def downloadFile(self, path, setting):
-        self.progress_label.setText('Downloading {}'.format(path.replace(self.base_url,'')))
+        self.progress_text = 'Downloading {}'.format(path.replace(self.base_url,''))
 
         url = QUrl(path)
         fileInfo = QFileInfo(url.path())
@@ -405,8 +438,7 @@ class MainWindow(QtGui.QWidget):
 
         self.outFile = QFile(fileName)
         if not self.outFile.open(QIODevice.WriteOnly):
-            QtGui.QMessageBox.information(self, 'Error',
-                    'Unable to save the file %s: %s.' % (fileName, self.outFile.errorString()))
+            self.show_error('Unable to save the file {}: {}.'.format(fileName, self.outFile.errorString()))
             self.outFile = None
             self.enableUI()
             return
@@ -722,7 +754,7 @@ class MainWindow(QtGui.QWidget):
             try:
                 self.load_from_json(json_str)
             except ValueError: #Json file is invalid
-                print 'Warning: Json file invalid.'
+                log( 'Warning: Json file invalid.')
 
 
     def load_from_json(self, json_str):
@@ -759,21 +791,21 @@ class MainWindow(QtGui.QWidget):
                         setting.value = os.path.basename(setting.value)
                         shutil.copy(setting.value, self.projectDir())
                     except shutil.Error as e:#same file warning
-                        print 'Warning: {}'.format(e)
+                        log( 'Warning: {}'.format(e))
 
         os.chdir(old_dir)
 
     def makeOutputDirs(self):
         self.output_err = ''
         try:
-            self.progress_label.setText('Removing old output directory...')
+            self.progress_text = 'Removing old output directory...'
 
             outputDir = os.path.join(self.outputDir(), self.projectName())
             tempDir = os.path.join(TEMP_DIR, 'webexectemp')
             if os.path.exists(tempDir):
                 shutil.rmtree(tempDir)
 
-            self.progress_label.setText('Making new directories...')
+            self.progress_text = 'Making new directories...'
 
             if not os.path.exists(outputDir):
                 os.makedirs(outputDir)
@@ -792,7 +824,7 @@ class MainWindow(QtGui.QWidget):
             zip_files(zip_file, self.projectDir(), exclude_paths=[outputDir])
             for ex_setting in self.export_settings.values():
                 if ex_setting.value:
-                    self.progress_label.setText('Making files for {}'.format(ex_setting.display_name))
+                    self.progress_text = 'Making files for {}'.format(ex_setting.display_name)
                     export_dest = os.path.join(outputDir, ex_setting.name)
 
                     if os.path.exists(export_dest):
@@ -800,16 +832,17 @@ class MainWindow(QtGui.QWidget):
 
                     #shutil will make the directory for us
                     shutil.copytree(os.path.join('files', ex_setting.name), export_dest)
-                    self.progress_label.setText(self.progress_label.text()+'.')
+                    self.progress_text += '.'
+
                     if ex_setting.name == 'mac':
                         app_path = os.path.join(export_dest, self.projectName()+'.app')
                         shutil.move(os.path.join(export_dest, 'node-webkit.app'), app_path)
 
-                        self.progress_label.setText(self.progress_label.text()+'.')
+                        self.progress_text += '.'
 
-                        shutil.move(zip_file, os.path.join(app_path, 'Contents', 'Resources', 'app.nw'))
+                        shutil.copy(zip_file, os.path.join(app_path, 'Contents', 'Resources', 'app.nw'))
 
-                        self.progress_label.setText(self.progress_label.text()+'.')
+                        self.progress_text += '.'
                     else:
                         ext = ''
                         if ex_setting.name == 'windows':
@@ -822,9 +855,11 @@ class MainWindow(QtGui.QWidget):
                         sevenfivefive = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
                         os.chmod(dest_binary_path, sevenfivefive)
 
-                        self.progress_label.setText(self.progress_label.text()+'.')
+                        self.progress_text += '.'
+
                         if os.path.exists(nw_path):
                             os.remove(nw_path)
+
         except Exception as e:
             self.output_err += ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
         finally:

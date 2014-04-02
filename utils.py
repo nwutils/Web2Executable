@@ -1,5 +1,22 @@
-import os, zipfile, io
+from __future__ import print_function
+import os, zipfile, io, platform
 import sys
+
+DEBUG = False
+
+def is_windows():
+    return platform.system() == 'Windows'
+
+def get_temp_dir():
+    if is_windows():
+        temp_dir = os.path.join('c:/','windows','temp')
+    else:
+        temp_dir = os.path.sep+'tmp'
+    return temp_dir
+
+def log(*args):
+    if DEBUG:
+        print(*args)
 
 def zip_files(zip_file_name, *args, **kwargs):
     zip_file = zipfile.ZipFile(zip_file_name, 'w')
@@ -22,12 +39,12 @@ def zip_files(zip_file_name, *args, **kwargs):
                         for file in files:
                             file_loc = os.path.relpath(os.path.join(root, file), directory)
                             if verbose:
-                                print file_loc
+                                log(file_loc)
                             zip_file.write(file_loc)
                         for direc in dirs:
                             dir_loc = os.path.relpath(os.path.join(root, direc), directory)
                             if verbose:
-                                print dir_loc
+                                log(dir_loc)
                             zip_file.write(dir_loc)
 
             else:
@@ -36,7 +53,7 @@ def zip_files(zip_file_name, *args, **kwargs):
                 os.chdir(directory)
                 file_loc = os.path.relpath(arg, directory)
                 if verbose:
-                    print file_loc
+                    log(file_loc)
                 zip_file.write(file_loc)
 
     os.chdir(old_path)
