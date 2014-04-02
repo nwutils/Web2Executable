@@ -50,6 +50,9 @@ Future Features
 
 - Automatic replacement of icon files inside of Mac apps and Windows exes. Right now, the only way to have a custom Mac icon is to convert your image to .icns format and put it in the resources folder of the app. For windows, you have to use a utility like Resource Hacker.
 
+Screenshots
+-----------
+
 ![Screenshot](http://i.imgur.com/V1609ea.png) 
 
 
