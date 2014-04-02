@@ -227,9 +227,11 @@ class MainWindow(QtGui.QWidget):
 
     def disableUIWhileWorking(self):
         self.option_settings_enabled(False)
+        self.directory_chooser_widget.setEnabled(False)
 
     def enableUI(self):
         self.option_settings_enabled(True)
+        self.directory_chooser_widget.setEnabled(True)
 
     def requiredSettingsFilled(self):
         proj_dir = self.projectDir()
