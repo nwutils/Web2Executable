@@ -33,9 +33,9 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 ###Linux
 
-[Linux 64bit download](http://www.mediafire.com/download/purz88rpayt99ri/Web2ExeLinux64.zip)
+[Linux 64bit download](http://www.mediafire.com/download/purz88rpayt99ri/Web2ExeLinux64.zip) (Broken Right Now)
 
-[Linux 32bit download](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip)
+[Linux 32bit download](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip) (Broken Right Now)
 
 chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line.
 
