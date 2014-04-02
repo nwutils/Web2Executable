@@ -3,7 +3,7 @@ Web2Executable
 
 Uses node-webkit to generate "native" apps for already existing web apps.
 
-Requires the pyside library to run. 
+Requires the pyside library and python 2.X to run. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
 
 Getting Started
 ---------------
