@@ -39,6 +39,8 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line.
 
+Note: For some reason, these linux binaries are not working correctly on vanilla systems. I'm looking into the issue and will update them when I figure out what is going on.
+
 
 Features
 --------
