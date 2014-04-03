@@ -37,7 +37,12 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 [Linux 32bit download](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip) (Only works on Ubuntu 12.04 right now, as that is what I built it on.)
 
-chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line.
+chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. 
+
+```
+chmod 755 Web2Exe
+sudo cp *.so.* /usr/lib/
+```
 
 Note: For some reason, these linux binaries are not working correctly on vanilla systems. I'm looking into the issue and will update them when I figure out what is going on.
 
