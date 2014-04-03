@@ -16,28 +16,49 @@ python main.py
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
 
+What's New In v0.1.0b?
+----------------------
+
+Not too much. Some stability fixes and proper disabling of UI during download and extraction.
+
 Prebuilt Binaries
 -----------------
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download](http://www.mediafire.com/download/9gc23kmdonqqp5p/Web2ExeMac.zip)
+[Mac OS X 10.7+ download - v0.1.0b](http://www.mediafire.com/download/gw9z0hr76e78y5y/Web2ExeMac-v0.1.0b.zip)
+
+Older Versions:
+
+[Mac OS X 10.7+ download - v0.0.9b](http://www.mediafire.com/download/9gc23kmdonqqp5p/Web2ExeMac.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download](http://www.mediafire.com/download/utbddnfn27rc5uq/Web2ExeWin.zip)
+[Windows 7+ download - v0.1.0b](http://www.mediafire.com/download/q2baslvbs9bfa2z/Web2ExeWin-v.0.1.0b.zip)
+
+Older Versions:
+
+[Windows 7+ download - v0.0.9b](http://www.mediafire.com/download/utbddnfn27rc5uq/Web2ExeWin.zip)
 
 Double click the Win2Exe.exe file inside the extracted folder.
 
 ###Linux
 
-[Linux 64bit download](http://www.mediafire.com/download/purz88rpayt99ri/Web2ExeLinux64.zip) (Broken Right Now)
+Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
 
-[Linux 32bit download](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip) (Only works on Ubuntu 12.04 right now, as that is what I built it on.)
+[Linux 64bit download - v0.1.0b](http://www.mediafire.com/download/csd3bhdnmpam73v/Web2ExeLinux64-v0.1.0b.zip)
 
-chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. 
+[Linux 32bit download - v0.1.0b](http://www.mediafire.com/download/g20gqguh2qw8dp8/Web2ExeLinux32-v0.1.0b.zip)
+
+Older versions:
+
+[Linux 64bit download - v0.0.9b](http://www.mediafire.com/download/purz88rpayt99ri/Web2ExeLinux64.zip) 
+
+[Linux 32bit download - v0.0.9b](http://www.mediafire.com/download/pfiabmhbxdge9a3/Web2ExeLinux32.zip)
+
+chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
 
 ```
 chmod 755 Web2Exe
