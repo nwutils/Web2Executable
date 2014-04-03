@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os, zipfile, io, platform
-import sys
+import sys, tempfile
 
 DEBUG = False
 
@@ -8,11 +8,7 @@ def is_windows():
     return platform.system() == 'Windows'
 
 def get_temp_dir():
-    if is_windows():
-        temp_dir = os.path.join('c:/','windows','temp')
-    else:
-        temp_dir = os.path.sep+'tmp'
-    return temp_dir
+    return tempfile.gettempdir()
 
 def log(*args):
     if DEBUG:
