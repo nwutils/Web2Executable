@@ -149,6 +149,7 @@ class MainWindow(QtGui.QWidget):
         self.httpGetId = 0
         self.httpRequestAborted = False
         self.thread = None
+        self.original_packagejson = {}
 
         self.resize(width,height)
 
@@ -719,8 +720,12 @@ class MainWindow(QtGui.QWidget):
         return hlayout
 
     def generate_json(self):
-        dic = {'webkit':{},
-               'window':{}}
+        if 'webkit' not in self.original_packagejson:
+            self.original_packagejson['webkit'] = {}
+        if 'window' not in self.original_packagejson:
+            self.original_packagejson['window'] = {}
+
+        dic = self.original_packagejson
 
         for setting_name, setting in self.app_settings.items():
             if setting.value is not None:
@@ -761,9 +766,10 @@ class MainWindow(QtGui.QWidget):
 
     def load_from_json(self, json_str):
         dic = json.loads(json_str)
-        stack = [dic]
+        self.original_packagejson = dic
+        stack = [('root',dic)]
         while stack:
-            new_dic = stack.pop()
+            parent, new_dic = stack.pop()
             for item in new_dic:
                 setting_field = self.findChildByName(item)
                 setting = self.getSetting(item)
@@ -776,7 +782,7 @@ class MainWindow(QtGui.QWidget):
                         setting_field.setChecked(new_dic[item])
                         setting.value = new_dic[item]
                 if isinstance(new_dic[item], dict):
-                    stack.append(new_dic[item])
+                    stack.append((item,new_dic[item]))
 
     def convert_val_to_str(self, val):
         if isinstance(val, (list,tuple)):
