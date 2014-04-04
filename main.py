@@ -790,8 +790,8 @@ class MainWindow(QtGui.QWidget):
             for setting in sgroup.values():
                 if setting.type == 'file' and setting.value:
                     try:
-                        setting.value = os.path.basename(setting.value)
                         shutil.copy(setting.value, self.projectDir())
+                        setting.value = os.path.basename(setting.value)
                     except shutil.Error as e:#same file warning
                         log( 'Warning: {}'.format(e))
 
