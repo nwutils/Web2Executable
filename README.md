@@ -5,6 +5,8 @@ Uses node-webkit to generate "native" apps for already existing web apps.
 
 Requires the pyside library and python 2.X to run. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
 
+Note: I have tested this with an already existing node application (leximail) and it currently will overwrite any existing package.json. I'm going to fix it to only touch the json fields that it needs to instead of overwriting the whole file. Until then, make backups of your package.json!
+
 Getting Started
 ---------------
 
