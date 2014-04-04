@@ -391,7 +391,7 @@ class MainWindow(QtGui.QWidget):
                     if not os.path.exists(os.path.join(extract_path, setting.dest_file)):
                         fbytes = setting.get_file_bytes()
 
-                        with open(os.path.join(extract_path, setting.dest_file), 'wb') as d:
+                        with open(os.path.join(extract_path, setting.dest_file), 'wb+') as d:
                             d.write(fbytes)
                         if os.path.exists(setting.full_file_path):
                             os.remove(setting.full_file_path) #remove the zip/tar since we don't need it anymore
