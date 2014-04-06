@@ -202,9 +202,12 @@ class MainWindow(QtGui.QWidget):
 
     def setup_nw_versions(self):
         nw_version = self.getSetting('nw_version')
-        f = open(os.path.join(CWD, 'files','nw-versions.txt'))
-        for line in f:
-            nw_version.values.append(line.strip())
+        try:
+            f = open(os.path.join(CWD, 'files','nw-versions.txt'))
+            for line in f:
+                nw_version.values.append(line.strip())
+        except IOError:
+            nw_version.values.append(nw_version.default_value)
 
     def create_application_layout(self):
         self.main_layout = QtGui.QVBoxLayout()
