@@ -20,6 +20,8 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 What's New?
 ----------------------
 
+NOTE!: There is a small bug with the main file attribute. Please rename it to "index.html" or whatever path you have your main html file in instead of the full path. I will update the binary and code when I have time.
+
 v0.1.3b
 
 - Added the ability to choose node-webkit versions if 0.9.2 is not what you want*
