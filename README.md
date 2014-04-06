@@ -83,13 +83,19 @@ Note: For some reason, these linux binaries are not working correctly on vanilla
 Features
 --------
 
-Supports exporting web applications to Mac, Linux, and Windows. So far, it works with all the apps I've tested it with. It supports Phaser and I assume it supports all other html5 and javascript libraries because it uses the same engine Google Chrome uses.
+- Cross platform to Mac, Windows, Linux
+- Easy to use and straightforward
+- Streamlined workflow from project -> working standalone exe
+- Same performance as Google Chrome
+- Works with Phaser; should work with other HTML5 game libraries
+- Export web applications to all platforms from your current OS
+- Ability to specify a node-webkit version to download
 
 Future Features
 ---------------
 
 - Automatic replacement of icon files inside of Mac apps and Windows exes. Right now, the only way to have a custom Mac icon is to convert your image to .icns format and put it in the resources folder of the app. For windows, you have to use a utility like Resource Hacker.
-- Ability to specify a node-webkit version. Currently, it just grabs v0.9.2.
+
 
 Screenshots
 -----------
