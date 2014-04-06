@@ -1,5 +1,6 @@
 from utils import zip_files, join_files, log, get_temp_dir
-import sys, os, glob, json, re, shutil, stat, tarfile, zipfile, traceback, platform
+import sys, os, glob, json, re, shutil, stat, tarfile
+import zipfile, traceback, platform, filecmp
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
@@ -62,17 +63,36 @@ class Setting(object):
                 self.extract_class = TarFile.open
                 self.extract_args = ('r:gz',)
 
+    def save_file_path(self, version):
+        if self.full_file_path:
+            return self.full_file_path.format(version)
+        return ''
+
+    def extract_file_path(self, version):
+        if self.extract_file:
+            return self.extract_file.format(version)
+        return ''
+
     def set_extra_attributes_from_keyword_args(self, kwargs):
         for undefined_key, undefined_value in kwargs.items():
             setattr(self, undefined_key, undefined_value)
 
-    def get_file_bytes(self):
-        fbytes = None
-        file = self.extract_class(self.full_file_path, *self.extract_args)
-        if self.file_ext == '.gz':
-            fbytes = file.extractfile(self.extract_file).read()
-        elif self.file_ext == '.zip':
-            fbytes = file.read(self.extract_file)
+    def get_file_bytes(self, version):
+        fbytes = []
+        file = self.extract_class(self.save_file_path(version), *self.extract_args)
+        for extract_path, dest_path in zip(self.extract_files, self.dest_files):
+            new_bytes = None
+            try:
+                if self.file_ext == '.gz':
+                    new_bytes = file.extractfile(extract_path.format(version)).read()
+                elif self.file_ext == '.zip':
+                    new_bytes = file.read(extract_path.format(version))
+            except KeyError as e:
+                log(e)
+
+            if new_bytes is not None:
+                fbytes.append((dest_path, new_bytes))
+
         return fbytes
 
     def __repr__(self):
@@ -81,20 +101,20 @@ class Setting(object):
 
 class MainWindow(QtGui.QWidget):
 
-    base_url = 'http://node-webkit.s3-website-us-east-1.amazonaws.com/v0.9.2/'
+    base_url = 'http://node-webkit.s3-website-us-east-1.amazonaws.com/v{}/'
 
     app_settings = {'main': Setting(name='main', display_name='Main file', required=True, type='file', file_types='*.html *.php *.htm'),
-                'name': Setting(name='name', display_name='App Name', required=True, type='string'),
-                'description': Setting(name='description', default_default_value='', type='string'),
-                'version': Setting(name='version', default_value='0.1.0', type='string'),
-                'keywords':Setting(name='keywords', default_value='', type='string'),
-                'nodejs': Setting('nodejs', 'Include Nodejs', default_value=True, type='check'),
-                'node-main': Setting('node-main', 'Custom Nodejs Path', default_value='', type='file', file_types='*.js'),
-                'single-instance': Setting('single-instance', 'Single Instance', default_value=True, type='check')}
+                    'name': Setting(name='name', display_name='App Name', required=True, type='string'),
+                    'description': Setting(name='description', default_default_value='', type='string'),
+                    'version': Setting(name='version', default_value='0.1.0', type='string'),
+                    'keywords':Setting(name='keywords', default_value='', type='string'),
+                    'nodejs': Setting('nodejs', 'Include Nodejs', default_value=True, type='check'),
+                    'node-main': Setting('node-main', 'Alt. Nodejs', default_value='', type='file', file_types='*.js'),
+                    'single-instance': Setting('single-instance', 'Single Instance', default_value=True, type='check')}
 
     webkit_settings = {'plugin': Setting('plugin', 'Load plugins', default_value=False, type='check'),
                        'java': Setting('java', 'Load Java', default_value=False, type='check'),
-                       'page-cache': Setting('page-cache', 'Enable Page Cache', default_value=False, type='check')}
+                       'page-cache': Setting('page-cache', 'Page Cache', default_value=False, type='check')}
 
     window_settings = {'title': Setting(name='title', default_value='', type='string'),
                        'icon': Setting('icon', 'Window Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg'),
@@ -106,32 +126,44 @@ class MainWindow(QtGui.QWidget):
                        'max_height': Setting('max_height', default_value=None, type='string'),
                        'toolbar': Setting('toolbar', 'Show Toolbar', default_value=False, type='check'),
                        'always-on-top': Setting('always-on-top', 'Always on top', default_value=False, type='check'),
-                       'frame': Setting('frame', 'Show Window Frame', default_value=True, type='check'),
-                       'show_in_taskbar': Setting('show_in_taskbar', 'Show In Taskbar', default_value=True, type='check'),
+                       'frame': Setting('frame', 'Window Frame', default_value=True, type='check'),
+                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar', default_value=True, type='check'),
                        'visible': Setting('visible', default_value=True, type='check'),
                        'resizable': Setting('resizable', default_value=False, type='check'),
                        'fullscreen': Setting('fullscreen', default_value=False, type='check')}
 
     export_settings = {'windows': Setting('windows', default_value=False, type='check',
-                                          url=base_url+'node-webkit-v0.9.2-win-ia32.zip',
-                                          extract_file='nw.exe',
-                                          dest_file='nw.exe'),
+                                          url=base_url+'node-webkit-v{}-win-ia32.zip',
+                                          extract_files=['nw.exe', 'nw.pak', 'icudt.dll', 'libEGL.dll', 'libGLESv2.dll'],
+                                          dest_files=['nw.exe', 'nw.pak', 'icudt.dll', 'libEGL.dll', 'libGLESv2.dll']),
                        'mac': Setting('mac', default_value=False, type='check',
-                                      url=base_url+'node-webkit-v0.9.2-osx-ia32.zip',
+                                      url=base_url+'node-webkit-v{}-osx-ia32.zip',
                                       extract_file='node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                      dest_file=os.path.join('node-webkit.app','Contents',
+                                      extract_files=['node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
+                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak'],
+                                      dest_files=[os.path.join('node-webkit.app','Contents',
                                                                 'Frameworks','node-webkit Framework.framework',
-                                                                'node-webkit Framework')),
+                                                                'node-webkit Framework'),
+                                                  os.path.join('node-webkit.app','Contents',
+                                                                'Frameworks','node-webkit Framework.framework',
+                                                                'Resources', 'nw.pak')]),
                        'linux-x64': Setting('linux-x64', default_value=False, type='check',
-                                            url=base_url+'node-webkit-v0.9.2-linux-x64.tar.gz',
-                                            extract_file='node-webkit-v0.9.2-linux-x64/nw',
-                                            dest_file='nw'),
+                                            url=base_url+'node-webkit-v{}-linux-x64.tar.gz',
+                                            extract_file='node-webkit-v{}-linux-x64/nw',
+                                            extract_files=['node-webkit-v{}-linux-x64/nw',
+                                                           'node-webkit-v{}-linux-x64/nw.pak'],
+                                            dest_files=['nw', 'nw.pak']),
                        'linux-x32': Setting('linux-x32', default_value=False, type='check',
-                                            url=base_url+'node-webkit-v0.9.2-linux-ia32.tar.gz',
-                                            extract_file='node-webkit-v0.9.2-linux-ia32/nw',
-                                            dest_file='nw')}
+                                            url=base_url+'node-webkit-v{}-linux-ia32.tar.gz',
+                                            extract_file='node-webkit-v{}-linux-ia32/nw',
+                                            extract_files=['node-webkit-v{}-linux-ia32/nw',
+                                                           'node-webkit-v{}-linux-ia32/nw.pak'],
+                                            dest_files=['nw', 'nw.pak'])}
 
-    _setting_groups = [app_settings, webkit_settings, window_settings, export_settings]
+    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', type='list'),
+                         'force_download': Setting('force_download', default_value=False, type='check')}
+
+    _setting_groups = [app_settings, webkit_settings, window_settings, export_settings, download_settings]
 
     application_setting_order = ['main', 'node-main', 'name', 'description', 'version', 'keywords',
                                  'nodejs', 'single-instance', 'plugin',
@@ -142,6 +174,8 @@ class MainWindow(QtGui.QWidget):
                             'show_in_taskbar', 'visible', 'resizable', 'fullscreen']
 
     export_setting_order = ['windows', 'linux-x64', 'mac', 'linux-x32']
+
+    download_setting_order = ['nw_version', 'force_download']
 
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -175,6 +209,7 @@ class MainWindow(QtGui.QWidget):
         self.app_settings_widget = self.createApplicationSettings()
         self.win_settings_widget = self.createWindowSettings()
         self.ex_settings_widget = self.createExportSettings()
+        self.dl_settings_widget = self.createDownloadSettings()
         self.directory_chooser_widget = self.createDirectoryChoose()
 
     def add_widgets_to_main_layout(self):
@@ -182,6 +217,7 @@ class MainWindow(QtGui.QWidget):
         self.main_layout.addWidget(self.app_settings_widget)
         self.main_layout.addWidget(self.win_settings_widget)
         self.main_layout.addWidget(self.ex_settings_widget)
+        self.main_layout.addWidget(self.dl_settings_widget)
         self.main_layout.addLayout(self.download_bar_widget)
 
     def option_settings_enabled(self, is_enabled):
@@ -189,10 +225,22 @@ class MainWindow(QtGui.QWidget):
         self.app_settings_widget.setEnabled(is_enabled)
         self.win_settings_widget.setEnabled(is_enabled)
         self.ex_settings_widget.setEnabled(is_enabled)
+        self.dl_settings_widget.setEnabled(is_enabled)
 
     def export(self, export_button, cancel_button):
+        #self.delete_files_if_forced()
         self.get_files_to_download()
         self.try_to_download_files()
+
+    def delete_files_if_forced(self):
+        forced = self.getSetting('force_download').value
+
+        if forced:
+            for ex_setting in self.export_settings.values():
+                for dest_file in ex_setting.dest_files:
+                    f_path = os.path.join('files', ex_setting.name, dest_file)
+                    if os.path.exists(f_path):
+                        os.remove(f_path)
 
     def get_files_to_download(self):
         self.files_to_download = []
@@ -212,16 +260,27 @@ class MainWindow(QtGui.QWidget):
             #But in the weird event that this does happen, we are prepared!
             QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
 
+    def selected_version(self):
+        print self.getSetting('nw_version').value
+        return self.getSetting('nw_version').value
+
     def download_file_with_error_handling(self):
         setting = self.files_to_download.pop()
         try:
-            self.downloadFile(setting.url, setting)
+            self.downloadFile(setting.url.format(self.selected_version(), self.selected_version()), setting)
         except Exception as e:
-            if os.path.exists(setting.full_file_path):
-                os.remove(setting.full_file_path)
+            if os.path.exists(setting.save_file_path(self.selected_version())):
+                os.remove(setting.save_file_path(self.selected_version()))
 
             error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
             self.show_error(error)
+            self.enable_ui_after_error()
+
+    def enable_ui_after_error(self):
+        self.enableUI()
+        self.progress_text = ''
+        self.progress_bar.setVisible(False)
+        self.cancel_button.setEnabled(False)
 
     def show_error(self, exception):
         QtGui.QMessageBox.information(self, 'Error!', str(exception))
@@ -319,6 +378,7 @@ class MainWindow(QtGui.QWidget):
             self.show_error('Download failed: {}.'.format(response_header.reasonPhrase()))
             self.httpRequestAborted = True
             self.http.abort()
+            self.enable_ui_after_error()
 
     def httpRequestFinished(self, requestId, error):
         if requestId != self.httpGetId:
@@ -336,13 +396,17 @@ class MainWindow(QtGui.QWidget):
         if error:
             self.outFile.remove()
             self.show_error('Download failed: {}.'.format(self.http.errorString()))
+            self.enable_ui_after_error()
 
         self.continueDownloadingOrExtract()
 
     def continueDownloadingOrExtract(self):
         if self.files_to_download:
-            setting = self.files_to_download.pop()
-            self.downloadFile(setting.url, setting)
+            self.progress_bar.setVisible(True)
+            self.cancel_button.setEnabled(True)
+            self.disableUIWhileWorking()
+
+            self.download_file_with_error_handling()
         else:
             self.progress_text = 'Done.'
             self.cancel_button.setEnabled(False)
@@ -365,15 +429,15 @@ class MainWindow(QtGui.QWidget):
 
     def makeOutputFilesInBackground(self):
         self.ex_button.setEnabled(False)
-
         self.runInBackground('makeOutputDirs', self.doneMakingFiles)
 
     def doneMakingFiles(self):
-        self.ex_button.setEnabled(True)
+        self.ex_button.setEnabled(self.requiredSettingsFilled())
         self.progress_text = 'Done Exporting.'
         self.enableUI()
         if self.output_err:
             self.show_error(self.output_err)
+            self.enable_ui_after_error()
 
     def extractFilesInBackground(self):
         self.progress_text = 'Extracting.'
@@ -384,33 +448,38 @@ class MainWindow(QtGui.QWidget):
     def extractFiles(self):
         self.extract_error = None
         for setting_name, setting in self.export_settings.items():
+            save_file_path = setting.save_file_path(self.selected_version())
             try:
                 if setting.value:
                     extract_path = os.path.join('files', setting.name)
 
-                    if not os.path.exists(os.path.join(extract_path, setting.dest_file)):
-                        fbytes = setting.get_file_bytes()
+                    if os.path.exists(save_file_path):
+                        for dest_file, fbytes in setting.get_file_bytes(self.selected_version()):
+                            with open(os.path.join(extract_path, dest_file), 'wb+') as d:
+                                d.write(fbytes)
+                            self.progress_text += '.'
 
-                        with open(os.path.join(extract_path, setting.dest_file), 'wb+') as d:
-                            d.write(fbytes)
-                        if os.path.exists(setting.full_file_path):
-                            os.remove(setting.full_file_path) #remove the zip/tar since we don't need it anymore
+                    if os.path.exists(save_file_path):
+                        os.remove(save_file_path) #remove the zip/tar since we don't need it anymore
 
                     self.progress_text += '.'
 
             except (tarfile.ReadError, zipfile.BadZipfile) as e:
-                if os.path.exists(setting.full_file_path):
-                    os.remove(setting.full_file_path)
+                if os.path.exists(save_file_path):
+                    os.remove(save_file_path)
                 self.extract_error = e
                 #cannot use GUI in thread to notify user. Save it for later
 
 
 
     def doneExtracting(self):
-        self.ex_button.setEnabled(True)
+        self.ex_button.setEnabled(self.requiredSettingsFilled())
         if self.extract_error:
             self.progress_text = 'Error extracting.'
             self.show_error('There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
+
+            self.enable_ui_after_error()
+
         else:
             self.progress_text = 'Done extracting.'
             self.makeOutputFilesInBackground()
@@ -429,13 +498,23 @@ class MainWindow(QtGui.QWidget):
         self.progress_bar.setValue(bytesRead)
 
     def downloadFile(self, path, setting):
-        self.progress_text = 'Downloading {}'.format(path.replace(self.base_url,''))
+        self.progress_text = 'Downloading {}'.format(path.replace(self.base_url.format(self.selected_version()),''))
 
         url = QUrl(path)
         fileInfo = QFileInfo(url.path())
-        fileName = setting.full_file_path
+        fileName = setting.save_file_path(self.selected_version())
 
-        if QFile.exists(fileName) or QFile.exists(os.path.join('files', setting.name, setting.dest_file)):
+        archive_exists = QFile.exists(fileName)
+
+        dest_files_exist = True
+
+        for dest_file in setting.dest_files:
+            dest_file_path = os.path.join('files', setting.name, dest_file)
+            dest_files_exist &= QFile.exists(dest_file_path)
+
+        forced = self.getSetting('force_download').value
+
+        if (archive_exists or dest_files_exist) and not forced:
             self.continueDownloadingOrExtract()
             return #QFile.remove(fileName)
 
@@ -571,6 +650,8 @@ class MainWindow(QtGui.QWidget):
             return self.createTextInputWithFileSetting(name)
         elif setting.type == 'check':
             return self.createCheckSetting(name)
+        elif setting.type == 'list':
+            return self.createListSetting(name)
 
 
     def createWindowSettings(self):
@@ -587,7 +668,15 @@ class MainWindow(QtGui.QWidget):
         groupBox.setLayout(vlayout)
         return groupBox
 
-    def createLayout(self, settings, cols=2):
+
+    def createDownloadSettings(self):
+        groupBox = QtGui.QGroupBox("Download Settings")
+        vlayout = self.createLayout(self.download_setting_order)
+
+        groupBox.setLayout(vlayout)
+        return groupBox
+
+    def createLayout(self, settings, cols=3):
         hlayout = QtGui.QHBoxLayout()
 
         layouts = []
@@ -662,16 +751,22 @@ class MainWindow(QtGui.QWidget):
         for sgroup in self._setting_groups:
             for setting in sgroup.values():
                 widget = self.findChildByName(setting.name)
+
                 if setting.type == 'string' or setting.type == 'file':
                     old_val = ''
+
                     if setting.default_value is not None:
                         old_val = setting.default_value
+
                     setting.value = old_val
                     widget.setText(str(old_val))
+
                 elif setting.type == 'check':
                     old_val = False
+
                     if setting.default_value is not None:
                         old_val = setting.default_value
+
                     setting.value = old_val
                     widget.setChecked(old_val)
 
@@ -681,6 +776,8 @@ class MainWindow(QtGui.QWidget):
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
+        elif setting.type == 'list':
+            setting.value = obj.currentText()
 
         self.ex_button.setEnabled(self.requiredSettingsFilled())
 
@@ -692,9 +789,7 @@ class MainWindow(QtGui.QWidget):
             if os.path.exists(self.projectDir()):
                 dirs_filled_out = True
 
-        self.app_settings_widget.setEnabled(dirs_filled_out)
-        self.win_settings_widget.setEnabled(dirs_filled_out)
-        self.ex_settings_widget.setEnabled(dirs_filled_out)
+        self.option_settings_enabled(dirs_filled_out)
 
     def getSetting(self, name):
         for setting_group in self._setting_groups:
@@ -716,6 +811,26 @@ class MainWindow(QtGui.QWidget):
         check.setChecked(setting.value)
 
         hlayout.addWidget(check)
+
+        return hlayout
+
+    def createListSetting(self, name):
+        hlayout = QtGui.QHBoxLayout()
+
+        setting = self.getSetting(name)
+
+        combo = QtGui.QComboBox()
+
+        combo.setObjectName(setting.name)
+
+        combo.currentIndexChanged.connect(self.callWithObject('settingChanged', combo, setting))
+        combo.editTextChanged.connect(self.callWithObject('settingChanged', combo, setting))
+
+        if combo.findData(setting.value) == -1:
+            combo.addItem(setting.value)
+            combo.addItem('0.8.5')
+
+        hlayout.addWidget(combo)
 
         return hlayout
 
@@ -856,7 +971,7 @@ class MainWindow(QtGui.QWidget):
                         if ex_setting.name == 'windows':
                             ext = '.exe'
 
-                        nw_path = os.path.join(export_dest, ex_setting.dest_file)
+                        nw_path = os.path.join(export_dest, ex_setting.dest_files[0])
                         dest_binary_path = os.path.join(export_dest, self.projectName()+ext)
                         join_files(os.path.join(export_dest, self.projectName()+ext), nw_path, zip_file)
 
