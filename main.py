@@ -125,12 +125,15 @@ class MainWindow(QtGui.QWidget):
                        'max_width': Setting('max_width', default_value=None, type='string'),
                        'max_height': Setting('max_height', default_value=None, type='string'),
                        'toolbar': Setting('toolbar', 'Show Toolbar', default_value=False, type='check'),
-                       'always-on-top': Setting('always-on-top', 'Always on top', default_value=False, type='check'),
+                       'always-on-top': Setting('always-on-top', 'Keep on top', default_value=False, type='check'),
                        'frame': Setting('frame', 'Window Frame', default_value=True, type='check'),
                        'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar', default_value=True, type='check'),
                        'visible': Setting('visible', default_value=True, type='check'),
                        'resizable': Setting('resizable', default_value=False, type='check'),
-                       'fullscreen': Setting('fullscreen', default_value=False, type='check')}
+                       'fullscreen': Setting('fullscreen', default_value=False, type='check'),
+                       'position': Setting('position','Position by', default_value=None, values=[None, 'mouse', 'center'], type='list'),
+                       'as_desktop': Setting('as_desktop', default_value=False, type='check'),
+                       }
 
     export_settings = {'windows': Setting('windows', default_value=False, type='check',
                                           url=base_url+'node-webkit-v{}-win-ia32.zip',
@@ -160,18 +163,18 @@ class MainWindow(QtGui.QWidget):
                                                            'node-webkit-v{}-linux-ia32/nw.pak'],
                                             dest_files=['nw', 'nw.pak'])}
 
-    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', type='list'),
+    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', values=[], type='list'),
                          'force_download': Setting('force_download', default_value=False, type='check')}
 
     _setting_groups = [app_settings, webkit_settings, window_settings, export_settings, download_settings]
 
-    application_setting_order = ['main', 'node-main', 'name', 'description', 'version', 'keywords',
+    application_setting_order = ['main', 'name', 'node-main', 'description', 'version', 'keywords',
                                  'nodejs', 'single-instance', 'plugin',
                                  'java', 'page-cache']
 
-    window_setting_order = ['title', 'icon', 'width', 'height', 'min_width', 'min_height',
+    window_setting_order = ['title', 'icon', 'position', 'width', 'height', 'min_width', 'min_height',
                             'max_width', 'max_height', 'toolbar', 'always-on-top', 'frame',
-                            'show_in_taskbar', 'visible', 'resizable', 'fullscreen']
+                            'show_in_taskbar', 'visible', 'resizable', 'fullscreen', 'as_desktop']
 
     export_setting_order = ['windows', 'linux-x64', 'mac', 'linux-x32']
 
@@ -179,6 +182,8 @@ class MainWindow(QtGui.QWidget):
 
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
+
+        self.setup_nw_versions()
 
         self.httpGetId = 0
         self.httpRequestAborted = False
@@ -194,6 +199,12 @@ class MainWindow(QtGui.QWidget):
         self.option_settings_enabled(False)
 
         self.setWindowTitle("Web2Executable")
+
+    def setup_nw_versions(self):
+        nw_version = self.getSetting('nw_version')
+        f = open(os.path.join(CWD, 'files','nw-versions.txt'))
+        for line in f:
+            nw_version.values.append(line.strip())
 
     def create_application_layout(self):
         self.main_layout = QtGui.QVBoxLayout()
@@ -261,7 +272,6 @@ class MainWindow(QtGui.QWidget):
             QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
 
     def selected_version(self):
-        print self.getSetting('nw_version').value
         return self.getSetting('nw_version').value
 
     def download_file_with_error_handling(self):
@@ -677,35 +687,24 @@ class MainWindow(QtGui.QWidget):
         return groupBox
 
     def createLayout(self, settings, cols=3):
-        hlayout = QtGui.QHBoxLayout()
-
-        layouts = []
-
-        for i in xrange(cols):
-            l = QtGui.QFormLayout()
-            l.setSpacing(10)
-            l.setVerticalSpacing(10)
-            layouts.append(l)
+        glayout = QtGui.QGridLayout()
 
         col = 0
         row = 0
 
         for setting_name in settings:
             setting = self.getSetting(setting_name)
-            if col >= cols:
+            if col >= cols*2:
                 row += 1
                 col = 0
-            vlayout = layouts[col]
             display_name = setting.display_name+':'
             if setting.required:
                 display_name += '*'
-            vlayout.addRow(display_name, self.createSetting(setting_name))
-            col += 1
+            glayout.addWidget(QtGui.QLabel(display_name),row,col)
+            glayout.addLayout(self.createSetting(setting_name),row,col+1)
+            col += 2
 
-        for l in layouts:
-            hlayout.addLayout(l)
-        hlayout.setSpacing(20)
-        return hlayout
+        return glayout
 
     def createTextInputSetting(self, name):
         hlayout = QtGui.QHBoxLayout()
@@ -826,9 +825,12 @@ class MainWindow(QtGui.QWidget):
         combo.currentIndexChanged.connect(self.callWithObject('settingChanged', combo, setting))
         combo.editTextChanged.connect(self.callWithObject('settingChanged', combo, setting))
 
-        if combo.findData(setting.value) == -1:
-            combo.addItem(setting.value)
-            combo.addItem('0.8.5')
+        for val in setting.values:
+            combo.addItem(val)
+
+        default_index = combo.findData(setting.default_value)
+        if default_index != -1:
+            combo.setCurrentIndex(default_index)
 
         hlayout.addWidget(combo)
 
@@ -995,7 +997,7 @@ class MainWindow(QtGui.QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    frame = MainWindow(700, 500)
+    frame = MainWindow(800, 500)
     frame.show_and_raise()
 
     sys.exit(app.exec_())
