@@ -22,8 +22,11 @@ What's New?
 
 v0.1.3b
 
-- Added the ability to choose node-webkit versions if 0.9.2 is not what you want
+- Added the ability to choose node-webkit versions if 0.9.2 is not what you want*
 - Modified the UI slightly for people with smaller monitors
+- Added a force-download option to overwrite files
+
+*Note: If you have already downloaded, say, 0.9.2 of webkit, then you select 0.8.5, you will have to select "Force download" in order to update the files properly. I'm not sure how to reliably/efficiently detect and store multiple versions of the node-webkit files.
 
 v0.1.2b
 
