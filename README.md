@@ -17,8 +17,15 @@ python main.py
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
 
-What's New In v0.1.2b?
+What's New?
 ----------------------
+
+v0.1.3b
+
+- Added the ability to choose node-webkit versions if 0.9.2 is not what you want
+- Modified the UI slightly for people with smaller monitors
+
+v0.1.2b
 
 - Fixed an issue with icon copying
 - Fixed a bug that overwrote existing package.json files.
@@ -28,12 +35,20 @@ Prebuilt Binaries
 
 ###Mac OS X
 
+[Mac OS X 10.7+ download - v0.1.3b](http://www.mediafire.com/download/xlt355pvl07y029/Web2ExeMac-v0.1.3b.zip)
+
+Previous Version:
+
 [Mac OS X 10.7+ download - v0.1.2b](http://www.mediafire.com/download/uz9aaod7ttvdhyr/Web2ExeMac-v0.1.2b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
 
 ###Windows
+
+[Windows 7+ download - v0.1.3b](http://www.mediafire.com/download/809teb4l93030r4/Web2ExeWin-v0.1.3b.zip)
+
+Previous Version:
 
 [Windows 7+ download - v0.1.2b](http://www.mediafire.com/download/zdnm8y6183215zd/Web2ExeWin-v0.1.2b.zip)
 
@@ -43,6 +58,12 @@ Double click the Win2Exe.exe file inside the extracted folder.
 ###Linux
 
 Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
+
+[Linux 64bit download - v0.1.3b](http://www.mediafire.com/download/2fwb5k3vo2ic371/Web2ExeLinux64-v0.1.3b.zip)
+
+[Linux 32bit download - v0.1.3b](http://www.mediafire.com/download/u46ug222e99a077/Web2ExeLinux32-v0.1.3b.zip)
+
+Previous Version:
 
 [Linux 64bit download - v0.1.2b](http://www.mediafire.com/download/5rm1d68zeyckbde/Web2ExeLinux64-v0.1.2b.zip)
 
@@ -72,6 +93,12 @@ Future Features
 
 Screenshots
 -----------
+
+v0.1.3b
+
+![Screenshot2](http://i.imgur.com/jZ7TE63.png)
+
+v0.1.2b
 
 ![Screenshot](http://i.imgur.com/V1609ea.png) 
 
