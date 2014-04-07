@@ -625,7 +625,7 @@ class MainWindow(QtGui.QWidget):
             files = glob.glob(os.path.join(directory,'index.html')) + glob.glob(os.path.join(directory,'index.php')) + glob.glob(os.path.join(directory,'index.htm'))
             if not setting_input.text():
                 if files:
-                    setting_input.setText(files[0])
+                    setting_input.setText(files[0].replace(self.projectDir()+os.path.sep,''))
 
             app_name_input = self.findChildByName('name')
             title_input = self.findChildByName('title')
@@ -645,6 +645,7 @@ class MainWindow(QtGui.QWidget):
     def getFile(self, obj, text_obj, setting, *args, **kwargs):
         file, junk = QtGui.QFileDialog.getOpenFileName(self, 'Choose File', self.projectDir() or QtCore.QDir.currentPath(), setting.file_types)
         if file:
+            file = file.replace(self.projectDir()+os.path.sep,'')
             text_obj.setText(file)
 
 
