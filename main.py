@@ -908,7 +908,7 @@ class MainWindow(QtGui.QWidget):
     def convert_val_to_str(self, val):
         if isinstance(val, (list,tuple)):
             return ', '.join(val)
-        return str(val)
+        return str(val).replace(self.projectDir()+os.path.sep,'')
 
     def copyFilesToProjectFolder(self):
         old_dir = CWD
