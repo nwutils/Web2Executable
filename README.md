@@ -20,7 +20,9 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 What's New?
 ----------------------
 
-NOTE!: There is a small bug with the main file attribute. Please rename it to "index.html" or whatever path you have your main html file in instead of the full path. I will update the binary and code when I have time.
+v0.1.4b
+
+- fixed an issue where index.html would be found with absolute path, which would cause a "require not found" error
 
 v0.1.3b
 
@@ -40,22 +42,22 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.3b](http://www.mediafire.com/download/xlt355pvl07y029/Web2ExeMac-v0.1.3b.zip)
+[Mac OS X 10.7+ download - v0.1.4b](http://www.mediafire.com/download/599sw3owu4h5x4u/Web2ExeMac-v0.1.4b.zip)
 
 Previous Version:
 
-[Mac OS X 10.7+ download - v0.1.2b](http://www.mediafire.com/download/uz9aaod7ttvdhyr/Web2ExeMac-v0.1.2b.zip)
+[Mac OS X 10.7+ download - v0.1.3b](http://www.mediafire.com/download/xlt355pvl07y029/Web2ExeMac-v0.1.3b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.3b](http://www.mediafire.com/download/809teb4l93030r4/Web2ExeWin-v0.1.3b.zip)
+[Windows 7+ download - v0.1.4b](http://www.mediafire.com/download/zccalcxcmi96czl/Web2ExeWin-v0.1.4b.zip)
 
 Previous Version:
 
-[Windows 7+ download - v0.1.2b](http://www.mediafire.com/download/zdnm8y6183215zd/Web2ExeWin-v0.1.2b.zip)
+[Windows 7+ download - v0.1.3b](http://www.mediafire.com/download/809teb4l93030r4/Web2ExeWin-v0.1.3b.zip)
 
 
 Double click the Win2Exe.exe file inside the extracted folder.
@@ -64,21 +66,21 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
 
+[Linux 64bit download - v0.1.4b](http://www.mediafire.com/download/9ea54irgops8jif/Web2ExeLinux64-v0.1.4b.zip)
+
+[Linux 32bit download - v0.1.4b](http://www.mediafire.com/download/b79seh7m8839aw9/Web2ExeLinux32-v0.1.4b.zip)
+
+Previous Version:
+
 [Linux 64bit download - v0.1.3b](http://www.mediafire.com/download/2fwb5k3vo2ic371/Web2ExeLinux64-v0.1.3b.zip)
 
 [Linux 32bit download - v0.1.3b](http://www.mediafire.com/download/u46ug222e99a077/Web2ExeLinux32-v0.1.3b.zip)
 
-Previous Version:
 
-[Linux 64bit download - v0.1.2b](http://www.mediafire.com/download/5rm1d68zeyckbde/Web2ExeLinux64-v0.1.2b.zip)
-
-[Linux 32bit download - v0.1.2b](http://www.mediafire.com/download/2rga5pzznnksw0v/Web2ExeLinux32-v0.1.2b.zip)
-
-
-chmod 755 the Web2Exe binary inside the extracted folder and then run by double clicking or ./Web2Exe from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
+chmod 755 the main binary inside the extracted folder and then run by double clicking or ./main from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
 
 ```
-chmod 755 Web2Exe
+chmod 755 main
 sudo cp *.so.* /usr/lib/
 ```
 
