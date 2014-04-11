@@ -8,7 +8,7 @@ Requires the pyside library and python 2.X to run. I've only tested the code on 
 Note!!
 ------
 
-When building linux applications using this application, there is an issue on the newer versions of Ubuntu and similar distros that causes the error: Shared library libudev.so.0 does not exist. If you are distributing to these platforms, you'll need to instruct your users to either manually symlink the file or make an install script following the directions [here](https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0). This is an issue with node-webkit and not this application itself.
+When building linux applications using this application, there is an issue on the newer versions of Ubuntu (13.XX) and similar distros that causes the error: Shared library libudev.so.0 does not exist. If you are distributing an application by exporting to these platforms, you'll need to instruct your users to either manually symlink the file or make an install script following the directions [here](https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0). This is an issue with node-webkit and not this application itself.
 
 Getting Started
 ---------------
