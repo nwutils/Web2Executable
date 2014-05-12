@@ -46,22 +46,22 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.4b](http://www.mediafire.com/download/599sw3owu4h5x4u/Web2ExeMac-v0.1.4b.zip)
+[Mac OS X 10.7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
 
 Previous Version:
 
-[Mac OS X 10.7+ download - v0.1.3b](http://www.mediafire.com/download/xlt355pvl07y029/Web2ExeMac-v0.1.3b.zip)
+[Mac OS X 10.7+ download - v0.1.4b](http://www.mediafire.com/download/599sw3owu4h5x4u/Web2ExeMac-v0.1.4b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.4b](http://www.mediafire.com/download/zccalcxcmi96czl/Web2ExeWin-v0.1.4b.zip)
+[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
 
 Previous Version:
 
-[Windows 7+ download - v0.1.3b](http://www.mediafire.com/download/809teb4l93030r4/Web2ExeWin-v0.1.3b.zip)
+[Windows 7+ download - v0.1.4b](http://www.mediafire.com/download/zccalcxcmi96czl/Web2ExeWin-v0.1.4b.zip)
 
 
 Double click the Win2Exe.exe file inside the extracted folder.
