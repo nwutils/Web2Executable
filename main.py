@@ -18,6 +18,13 @@ else:
 
 TEMP_DIR = get_temp_dir()
 
+def get_base_url():
+    url = None
+    try:
+        url = open(os.path.join(CWD, 'files', 'base_url.txt')).read().strip()
+    except (OSError, IOError):
+        url = 'http://dl.node-webkit.org/v{}/'
+    return url
 
 class BackgroundThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
@@ -101,7 +108,7 @@ class Setting(object):
 
 class MainWindow(QtGui.QWidget):
 
-    base_url = 'http://node-webkit.s3-website-us-east-1.amazonaws.com/v{}/'
+    base_url = get_base_url()
 
     app_settings = {'main': Setting(name='main', display_name='Main file', required=True, type='file', file_types='*.html *.php *.htm'),
                     'name': Setting(name='name', display_name='App Name', required=True, type='string'),
