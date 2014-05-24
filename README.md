@@ -57,7 +57,7 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
+[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/bnebaylw7e38eb1/Web2ExeWin-v0.1.5b.zip)
 
 Previous Version:
 
