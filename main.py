@@ -486,7 +486,7 @@ class MainWindow(QtGui.QWidget):
 
         combo.clear()
         combo.addItems(nw_version.values)
-
+        f = None
         try:
             f = open(os.path.join(CWD, 'files','nw-versions.txt'), 'w')
             for v in nw_version.values:
@@ -496,7 +496,8 @@ class MainWindow(QtGui.QWidget):
             self.show_error(error)
             self.enable_ui_after_error()
         finally:
-            f.close()
+            if f:
+                f.close()
 
 
     def doneGettingVersions(self):
