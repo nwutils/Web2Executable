@@ -225,7 +225,7 @@ class MainWindow(QtGui.QWidget):
         self.option_settings_enabled(False)
 
         self.setWindowTitle("Web2Executable")
-        self.getVersions()
+        self.update_nw_versions(None)
 
     def setup_nw_versions(self):
         nw_version = self.getSetting('nw_version')
