@@ -1,10 +1,16 @@
 from utils import zip_files, join_files, log, get_temp_dir
+
+import urllib2, re
 import sys, os, glob, json, re, shutil, stat, tarfile
 import zipfile, traceback, platform, filecmp
+
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFileInfo, QFile, QIODevice
+
+from distutils.version import LooseVersion
+
 from zipfile import ZipFile
 from tarfile import TarFile
 
@@ -48,6 +54,8 @@ class Setting(object):
         self.file_types = file_types
 
         self.default_value = kwargs.pop('default_value', None)
+        self.button = kwargs.pop('button', None)
+        self.button_callback = kwargs.pop('button_callback', None)
 
         self.set_extra_attributes_from_keyword_args(kwargs)
 
@@ -144,33 +152,44 @@ class MainWindow(QtGui.QWidget):
 
     export_settings = {'windows': Setting('windows', default_value=False, type='check',
                                           url=base_url+'node-webkit-v{}-win-ia32.zip',
-                                          extract_files=['nw.exe', 'nw.pak', 'icudt.dll', 'libEGL.dll', 'libGLESv2.dll'],
-                                          dest_files=['nw.exe', 'nw.pak', 'icudt.dll', 'libEGL.dll', 'libGLESv2.dll']),
+                                          extract_files=['nw.exe', 'nw.pak', 'icudtl.dat', 'libEGL.dll', 'libGLESv2.dll'],
+                                          dest_files=['nw.exe', 'nw.pak', 'icudtl.dat', 'libEGL.dll', 'libGLESv2.dll']),
                        'mac': Setting('mac', default_value=False, type='check',
                                       url=base_url+'node-webkit-v{}-osx-ia32.zip',
                                       extract_file='node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
                                       extract_files=['node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak'],
+                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak',
+                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/icudtl.dat'],
                                       dest_files=[os.path.join('node-webkit.app','Contents',
                                                                 'Frameworks','node-webkit Framework.framework',
                                                                 'node-webkit Framework'),
                                                   os.path.join('node-webkit.app','Contents',
                                                                 'Frameworks','node-webkit Framework.framework',
-                                                                'Resources', 'nw.pak')]),
+                                                                'Resources', 'nw.pak'),
+                                                  os.path.join('node-webkit.app','Contents',
+                                                                'Frameworks','node-webkit Framework.framework',
+                                                                'Resources', 'icudtl.dat')]
+                                                  ),
                        'linux-x64': Setting('linux-x64', default_value=False, type='check',
                                             url=base_url+'node-webkit-v{}-linux-x64.tar.gz',
                                             extract_file='node-webkit-v{}-linux-x64/nw',
                                             extract_files=['node-webkit-v{}-linux-x64/nw',
-                                                           'node-webkit-v{}-linux-x64/nw.pak'],
-                                            dest_files=['nw', 'nw.pak']),
+                                                           'node-webkit-v{}-linux-x64/nw.pak',
+                                                           'node-webkit-v{}-linux-x64/icudtl.dat'],
+                                            dest_files=['nw', 'nw.pak', 'icudtl.dat']),
                        'linux-x32': Setting('linux-x32', default_value=False, type='check',
                                             url=base_url+'node-webkit-v{}-linux-ia32.tar.gz',
                                             extract_file='node-webkit-v{}-linux-ia32/nw',
                                             extract_files=['node-webkit-v{}-linux-ia32/nw',
-                                                           'node-webkit-v{}-linux-ia32/nw.pak'],
+                                                           'node-webkit-v{}-linux-ia32/nw.pak',
+                                                           'node-webkit-v{}-linux-ia32/icudtl.dat'],
                                             dest_files=['nw', 'nw.pak'])}
 
-    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', values=[], type='list'),
+    def update_nw_versions(self, button):
+        self.getVersions()
+
+
+    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', values=[], type='list', button='Update NW Versions', button_callback=update_nw_versions),
                          'force_download': Setting('force_download', default_value=False, type='check')}
 
     _setting_groups = [app_settings, webkit_settings, window_settings, export_settings, download_settings]
@@ -206,6 +225,7 @@ class MainWindow(QtGui.QWidget):
         self.option_settings_enabled(False)
 
         self.setWindowTitle("Web2Executable")
+        self.update_nw_versions(None)
 
     def setup_nw_versions(self):
         nw_version = self.getSetting('nw_version')
@@ -446,6 +466,44 @@ class MainWindow(QtGui.QWidget):
         self.thread = BackgroundThread(self, method_name)
         self.thread.finished.connect(callback)
         self.thread.start()
+
+    def getVersionsInBackground(self):
+        self.ex_button.setEnabled(False)
+        self.runInBackground('getVersions', self.doneGettingVersions)
+
+    def getVersions(self):
+        response = urllib2.urlopen('https://raw.githubusercontent.com/rogerwang/node-webkit/master/CHANGELOG.md')
+        html = response.read()
+
+        nw_version = self.getSetting('nw_version')
+
+        old_versions = set(nw_version.values)
+        new_versions = set(re.findall('(\S+) / \S+', html))
+
+        versions = sorted(list(old_versions.union(new_versions)), key=LooseVersion, reverse=True)
+        nw_version.values = versions
+        combo = self.findChildByName(nw_version.name)
+
+        combo.clear()
+        combo.addItems(nw_version.values)
+
+        try:
+            f = open(os.path.join(CWD, 'files','nw-versions.txt'), 'w')
+            for v in nw_version.values:
+                f.write(v+os.linesep)
+        except IOError as e:
+            error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+            self.show_error(error)
+            self.enable_ui_after_error()
+        finally:
+            f.close()
+
+
+    def doneGettingVersions(self):
+        self.ex_button.setEnabled(self.requiredSettingsFilled())
+        self.progress_text = 'Done retrieving versions.'
+
+        self.enableUI()
 
     def makeOutputFilesInBackground(self):
         self.ex_button.setEnabled(False)
@@ -829,6 +887,10 @@ class MainWindow(QtGui.QWidget):
 
         setting = self.getSetting(name)
 
+        button = None
+        if setting.button:
+            button = QtGui.QPushButton(setting.button)
+            button.clicked.connect(lambda: setting.button_callback(self, button))
         combo = QtGui.QComboBox()
 
         combo.setObjectName(setting.name)
@@ -844,6 +906,8 @@ class MainWindow(QtGui.QWidget):
             combo.setCurrentIndex(default_index)
 
         hlayout.addWidget(combo)
+        if button:
+            hlayout.addWidget(button)
 
         return hlayout
 
