@@ -186,7 +186,7 @@ class MainWindow(QtGui.QWidget):
                                             dest_files=['nw', 'nw.pak'])}
 
     def update_nw_versions(self, button):
-        self.getVersions()
+        self.getVersionsInBackground()
 
 
     download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', values=[], type='list', button='Update NW Versions', button_callback=update_nw_versions),
@@ -225,7 +225,7 @@ class MainWindow(QtGui.QWidget):
         self.option_settings_enabled(False)
 
         self.setWindowTitle("Web2Executable")
-        self.update_nw_versions(None)
+        self.getVersions()
 
     def setup_nw_versions(self):
         nw_version = self.getSetting('nw_version')
@@ -504,7 +504,6 @@ class MainWindow(QtGui.QWidget):
         self.ex_button.setEnabled(self.requiredSettingsFilled())
         self.progress_text = 'Done retrieving versions.'
 
-        self.enableUI()
 
     def makeOutputFilesInBackground(self):
         self.ex_button.setEnabled(False)
