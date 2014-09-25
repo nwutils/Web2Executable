@@ -24,6 +24,10 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 What's New?
 ----------------------
 
+v0.1.5b
+
+- added the ability to get newer NodeWebkit versions automatically from the changelog of node-webkit. Also fixed compatibility with 0.10.X.
+
 v0.1.4b
 
 - fixed an issue where index.html would be found with absolute path, which would cause a "require not found" error
