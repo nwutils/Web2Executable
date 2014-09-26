@@ -23,6 +23,11 @@ else:
     CWD = os.getcwd()
 
 TEMP_DIR = get_temp_dir()
+DEFAULT_DOWNLOAD_PATH = os.path.join(CWD, 'files', 'downloads')
+try:
+    os.makedirs(DEFAULT_DOWNLOAD_PATH)
+except:
+    pass
 
 def get_base_url():
     url = None
@@ -49,6 +54,7 @@ class Setting(object):
         self.name = name
         self.display_name = display_name if display_name else name.replace('_',' ').capitalize()
         self.value = value
+        self.last_value = None
         self.required = required
         self.type = type
         self.file_types = file_types
@@ -62,7 +68,7 @@ class Setting(object):
         if self.value is None:
             self.value = self.default_value
 
-        self.save_path = kwargs.pop('save_path', TEMP_DIR)
+        self.save_path = kwargs.pop('save_path', '')
 
         self.get_file_information_from_url()
 
@@ -78,7 +84,13 @@ class Setting(object):
                 self.extract_class = TarFile.open
                 self.extract_args = ('r:gz',)
 
-    def save_file_path(self, version):
+    def save_file_path(self, version, location=None):
+        if location:
+            self.save_path = location
+        else:
+            self.save_path = DEFAULT_DOWNLOAD_PATH
+        self.get_file_information_from_url()
+
         if self.full_file_path:
             return self.full_file_path.format(version)
         return ''
@@ -94,6 +106,7 @@ class Setting(object):
 
     def get_file_bytes(self, version):
         fbytes = []
+
         file = self.extract_class(self.save_file_path(version), *self.extract_args)
         for extract_path, dest_path in zip(self.extract_files, self.dest_files):
             new_bytes = None
@@ -207,8 +220,12 @@ class MainWindow(QtGui.QWidget):
         self.getVersionsInBackground()
 
 
-    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2', values=[], type='list', button='Update NW Versions', button_callback=update_nw_versions),
-                         'force_download': Setting('force_download', default_value=False, type='check')}
+    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2',
+                                              values=[], type='list', button='Update',
+                                              button_callback=update_nw_versions),
+                         'force_download': Setting('force_download', default_value=False, type='check'),
+                         'download_dir': Setting('download_dir', 'Download Location', default_value=DEFAULT_DOWNLOAD_PATH, type='folder'),
+                         }
 
     _setting_groups = [app_settings, webkit_settings, window_settings, export_settings, download_settings]
 
@@ -222,10 +239,11 @@ class MainWindow(QtGui.QWidget):
 
     export_setting_order = ['windows', 'linux-x64', 'mac', 'linux-x32']
 
-    download_setting_order = ['nw_version', 'force_download']
+    download_setting_order = ['nw_version', 'download_dir','force_download']
 
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
+        self.update_json = False
 
         self.setup_nw_versions()
 
@@ -324,11 +342,12 @@ class MainWindow(QtGui.QWidget):
 
     def download_file_with_error_handling(self):
         setting = self.files_to_download.pop()
+        location = self.getSetting('download_dir').value
         try:
             self.downloadFile(setting.url.format(self.selected_version(), self.selected_version()), setting)
         except Exception as e:
-            if os.path.exists(setting.save_file_path(self.selected_version())):
-                os.remove(setting.save_file_path(self.selected_version()))
+            if os.path.exists(setting.save_file_path(self.selected_version(), location)):
+                os.remove(setting.save_file_path(self.selected_version(), location))
 
             error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
             self.show_error(error)
@@ -368,6 +387,8 @@ class MainWindow(QtGui.QWidget):
                     return False
                 if setting.type == 'file' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
                     log(setting.value, "does not exist")
+                    settings_valid = False
+                if setting.type == 'folder' and setting.value and not os.path.exists(setting.value):
                     settings_valid = False
 
         export_chosen = False
@@ -543,8 +564,9 @@ class MainWindow(QtGui.QWidget):
 
     def extractFiles(self):
         self.extract_error = None
+        location = self.getSetting('download_dir').value
         for setting_name, setting in self.export_settings.items():
-            save_file_path = setting.save_file_path(self.selected_version())
+            save_file_path = setting.save_file_path(self.selected_version(), location)
             try:
                 if setting.value:
                     extract_path = os.path.join('files', setting.name)
@@ -555,8 +577,8 @@ class MainWindow(QtGui.QWidget):
                                 d.write(fbytes)
                             self.progress_text += '.'
 
-                    if os.path.exists(save_file_path):
-                        os.remove(save_file_path) #remove the zip/tar since we don't need it anymore
+                    #if os.path.exists(save_file_path):
+                    #    os.remove(save_file_path) #remove the zip/tar since we don't need it anymore
 
                     self.progress_text += '.'
 
@@ -596,17 +618,19 @@ class MainWindow(QtGui.QWidget):
     def downloadFile(self, path, setting):
         self.progress_text = 'Downloading {}'.format(path.replace(self.base_url.format(self.selected_version()),''))
 
+        location = self.getSetting('download_dir').value
+
         url = QUrl(path)
         fileInfo = QFileInfo(url.path())
-        fileName = setting.save_file_path(self.selected_version())
+        fileName = setting.save_file_path(self.selected_version(), location)
 
         archive_exists = QFile.exists(fileName)
 
-        dest_files_exist = True
+        dest_files_exist = False
 
-        for dest_file in setting.dest_files:
-            dest_file_path = os.path.join('files', setting.name, dest_file)
-            dest_files_exist &= QFile.exists(dest_file_path)
+        #for dest_file in setting.dest_files:
+        #    dest_file_path = os.path.join('files', setting.name, dest_file)
+        #    dest_files_exist &= QFile.exists(dest_file_path)
 
         forced = self.getSetting('force_download').value
 
@@ -695,6 +719,7 @@ class MainWindow(QtGui.QWidget):
         return self.findChildByName('name').text()
 
     def browseDir(self):
+        self.update_json = False
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Find Project Directory",
                 self.projectDir() or QtCore.QDir.currentPath())
         if directory:
@@ -718,18 +743,29 @@ class MainWindow(QtGui.QWidget):
                 title_input.setText(proj_name)
 
             self.loadPackageJson()
+            self.update_json = True
 
     def browseOutDir(self):
+        self.update_json=False
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
-                self.projectDir() or QtCore.QDir.currentPath())
+                self.output_line.text() or self.projectDir() or QtCore.QDir.currentPath())
         if directory:
             self.output_line.setText(directory)
+            self.update_json = True
 
     def getFile(self, obj, text_obj, setting, *args, **kwargs):
-        file, junk = QtGui.QFileDialog.getOpenFileName(self, 'Choose File', self.projectDir() or QtCore.QDir.currentPath(), setting.file_types)
+        file, junk = QtGui.QFileDialog.getOpenFileName(self, 'Choose File', setting.last_value or self.projectDir() or QtCore.QDir.currentPath(), setting.file_types)
         if file:
             file = file.replace(self.projectDir()+os.path.sep,'')
             text_obj.setText(file)
+            setting.last_value = file
+
+    def getFolder(self, obj, text_obj, setting, *args, **kwargs):
+        folder = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Folder', setting.last_value or QtCore.QDir.currentPath())
+        if folder:
+            folder = folder.replace(self.projectDir()+os.path.sep,'')
+            text_obj.setText(folder)
+            setting.last_value = folder
 
 
     def createApplicationSettings(self):
@@ -745,6 +781,8 @@ class MainWindow(QtGui.QWidget):
             return self.createTextInputSetting(name)
         elif setting.type == 'file':
             return self.createTextInputWithFileSetting(name)
+        elif setting.type == 'folder':
+            return self.createTextInputWithFolderSetting(name)
         elif setting.type == 'check':
             return self.createCheckSetting(name)
         elif setting.type == 'list':
@@ -833,12 +871,36 @@ class MainWindow(QtGui.QWidget):
 
         return hlayout
 
+    def createTextInputWithFolderSetting(self, name):
+        hlayout = QtGui.QHBoxLayout()
+
+        setting = self.getSetting(name)
+
+        text = QtGui.QLineEdit()
+        text.setObjectName(setting.name)
+
+        button = QtGui.QPushButton('...')
+        button.setMaximumWidth(30)
+        button.setMaximumHeight(26)
+
+        button.clicked.connect(self.callWithObject('getFolder', button, text, setting))
+
+        if setting.value:
+            text.setText(str(setting.value))
+
+        text.textChanged.connect(self.callWithObject('settingChanged', text, setting))
+
+        hlayout.addWidget(text)
+        hlayout.addWidget(button)
+
+        return hlayout
+
     def resetSettings(self):
         for sgroup in self._setting_groups:
             for setting in sgroup.values():
                 widget = self.findChildByName(setting.name)
 
-                if setting.type == 'string' or setting.type == 'file':
+                if setting.type == 'string' or setting.type == 'file' or setting.type == 'folder':
                     old_val = ''
 
                     if setting.default_value is not None:
@@ -858,12 +920,18 @@ class MainWindow(QtGui.QWidget):
 
 
     def settingChanged(self, obj, setting, *args, **kwargs):
-        if setting.type == 'string' or setting.type == 'file':
+        if setting.type == 'string' or setting.type == 'file' or setting.type == 'folder':
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
         elif setting.type == 'list':
             setting.value = obj.currentText()
+
+        if self.update_json:
+            json_file = os.path.join(self.projectDir(), 'package.json')
+
+            with open(json_file, 'w+') as f:
+                f.write(self.generate_json())
 
         self.ex_button.setEnabled(self.requiredSettingsFilled())
 
@@ -934,6 +1002,8 @@ class MainWindow(QtGui.QWidget):
             self.original_packagejson['webkit'] = {}
         if 'window' not in self.original_packagejson:
             self.original_packagejson['window'] = {}
+        if 'webexe_settings' not in self.original_packagejson:
+            self.original_packagejson['webexe_settings'] = {}
 
         dic = self.original_packagejson
 
@@ -957,6 +1027,10 @@ class MainWindow(QtGui.QWidget):
         for setting_name, setting in self.webkit_settings.items():
             if setting.value is not None:
                 dic['webkit'][setting_name] = setting.value
+
+        for setting_name, setting in self.download_settings.items()+self.export_settings.items():
+            if setting.value is not None:
+                dic['webexe_settings'][setting_name] = setting.value
 
         s = json.dumps(dic, indent=4)
 
@@ -984,7 +1058,7 @@ class MainWindow(QtGui.QWidget):
                 setting_field = self.findChildByName(item)
                 setting = self.getSetting(item)
                 if setting_field:
-                    if setting.type == 'file' or setting.type == 'string':
+                    if setting.type == 'file' or setting.type == 'string' or setting.type == 'folder':
                         val_str = self.convert_val_to_str(new_dic[item])
                         setting_field.setText(val_str)
                         setting.value = val_str
