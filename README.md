@@ -50,22 +50,23 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
+[Mac OS X 10.7+ 32 bit download - v0.1.6b](http://www.mediafire.com/download/ng5dexzbjkffbje/Web2ExeMac-v0.1.6b.zip)
 
 Previous Version:
 
-[Mac OS X 10.7+ download - v0.1.4b](http://www.mediafire.com/download/599sw3owu4h5x4u/Web2ExeMac-v0.1.4b.zip)
+[Mac OS X 10.7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/bnebaylw7e38eb1/Web2ExeWin-v0.1.5b.zip)
+[Windows 7+ download - v0.1.6b](http://www.mediafire.com/download/897khtso5btm0qb/Web2ExeWin-v0.1.6b.zip)
+
 
 Previous Version:
 
-[Windows 7+ download - v0.1.4b](http://www.mediafire.com/download/zccalcxcmi96czl/Web2ExeWin-v0.1.4b.zip)
+[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/bnebaylw7e38eb1/Web2ExeWin-v0.1.5b.zip)
 
 
 Double click the Win2Exe.exe file inside the extracted folder.
@@ -74,15 +75,13 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
 
-[Linux 64bit download - v0.1.4b](http://www.mediafire.com/download/9ea54irgops8jif/Web2ExeLinux64-v0.1.4b.zip)
+[Linux 64bit download - v0.1.6b](http://www.mediafire.com/download/7iozo8tfbn6rea8/Web2ExeLinux64-v0.1.6b.zip)
 
-[Linux 32bit download - v0.1.4b](http://www.mediafire.com/download/b79seh7m8839aw9/Web2ExeLinux32-v0.1.4b.zip)
 
 Previous Version:
 
-[Linux 64bit download - v0.1.3b](http://www.mediafire.com/download/2fwb5k3vo2ic371/Web2ExeLinux64-v0.1.3b.zip)
+[Linux 64bit download - v0.1.4b](http://www.mediafire.com/download/9ea54irgops8jif/Web2ExeLinux64-v0.1.4b.zip)
 
-[Linux 32bit download - v0.1.3b](http://www.mediafire.com/download/u46ug222e99a077/Web2ExeLinux32-v0.1.3b.zip)
 
 
 chmod 755 the main binary inside the extracted folder and then run by double clicking or ./main from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
@@ -109,6 +108,7 @@ Features
 Future Features
 ---------------
 
+- A download manager! It's getting annoying downloading stuff over and over.
 - Automatic replacement of icon files inside of Mac apps and Windows exes. Right now, the only way to have a custom Mac icon is to convert your image to .icns format and put it in the resources folder of the app. For windows, you have to use a utility like Resource Hacker.
 
 
