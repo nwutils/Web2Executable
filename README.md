@@ -50,7 +50,7 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ 32 bit download - v0.1.6b](http://www.mediafire.com/download/ng5dexzbjkffbje/Web2ExeMac-v0.1.6b.zip)
+[Mac OS X 10.7+ download - v0.1.6b](http://www.mediafire.com/download/ng5dexzbjkffbje/Web2ExeMac-v0.1.6b.zip)
 
 Previous Version:
 
