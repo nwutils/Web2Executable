@@ -104,6 +104,7 @@ class Setting(object):
                     new_bytes = file.read(extract_path.format(version))
             except KeyError as e:
                 log(e)
+                print e
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -150,16 +151,33 @@ class MainWindow(QtGui.QWidget):
                        'as_desktop': Setting('as_desktop', default_value=False, type='check'),
                        }
 
+    win_32_dir_prefix = 'node-webkit-v{}-win-ia32'
+    mac_32_dir_prefix = 'node-webkit-v{}-mac-ia32'
+    linux_32_dir_prefix = 'node-webkit-v{}-linux-ia32'
+
+    win_64_dir_prefix = 'node-webkit-v{}-win-x64'
+    mac_64_dir_prefix = 'node-webkit-v{}-mac-x64'
+    linux_64_dir_prefix = 'node-webkit-v{}-linux-x64'
+
+
     export_settings = {'windows': Setting('windows', default_value=False, type='check',
                                           url=base_url+'node-webkit-v{}-win-ia32.zip',
-                                          extract_files=['nw.exe', 'nw.pak', 'icudtl.dat', 'libEGL.dll', 'libGLESv2.dll'],
-                                          dest_files=['nw.exe', 'nw.pak', 'icudtl.dat', 'libEGL.dll', 'libGLESv2.dll']),
+                                          extract_files=[win_32_dir_prefix+'/nw.exe',
+                                                         win_32_dir_prefix+'/nw.pak',
+                                                         win_32_dir_prefix+'/icudtl.dat',
+                                                         win_32_dir_prefix+'/libEGL.dll',
+                                                         win_32_dir_prefix+'/libGLESv2.dll'],
+                                          dest_files=['nw.exe',
+                                                      'nw.pak',
+                                                      'icudtl.dat',
+                                                      'libEGL.dll',
+                                                      'libGLESv2.dll']),
                        'mac': Setting('mac', default_value=False, type='check',
                                       url=base_url+'node-webkit-v{}-osx-ia32.zip',
-                                      extract_file='node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                      extract_files=['node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak',
-                                                     'node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/icudtl.dat'],
+                                      extract_file=mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
+                                      extract_files=[mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
+                                                     mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak',
+                                                     mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/icudtl.dat'],
                                       dest_files=[os.path.join('node-webkit.app','Contents',
                                                                 'Frameworks','node-webkit Framework.framework',
                                                                 'node-webkit Framework'),
@@ -171,19 +189,19 @@ class MainWindow(QtGui.QWidget):
                                                                 'Resources', 'icudtl.dat')]
                                                   ),
                        'linux-x64': Setting('linux-x64', default_value=False, type='check',
-                                            url=base_url+'node-webkit-v{}-linux-x64.tar.gz',
-                                            extract_file='node-webkit-v{}-linux-x64/nw',
-                                            extract_files=['node-webkit-v{}-linux-x64/nw',
-                                                           'node-webkit-v{}-linux-x64/nw.pak',
-                                                           'node-webkit-v{}-linux-x64/icudtl.dat'],
+                                            url=base_url+linux_64_dir_prefix+'.tar.gz',
+                                            extract_file=linux_64_dir_prefix+'/nw',
+                                            extract_files=[linux_64_dir_prefix+'/nw',
+                                                           linux_64_dir_prefix+'/nw.pak',
+                                                           linux_64_dir_prefix+'/icudtl.dat'],
                                             dest_files=['nw', 'nw.pak', 'icudtl.dat']),
                        'linux-x32': Setting('linux-x32', default_value=False, type='check',
-                                            url=base_url+'node-webkit-v{}-linux-ia32.tar.gz',
-                                            extract_file='node-webkit-v{}-linux-ia32/nw',
-                                            extract_files=['node-webkit-v{}-linux-ia32/nw',
-                                                           'node-webkit-v{}-linux-ia32/nw.pak',
-                                                           'node-webkit-v{}-linux-ia32/icudtl.dat'],
-                                            dest_files=['nw', 'nw.pak'])}
+                                            url=base_url+linux_32_dir_prefix+'.tar.gz',
+                                            extract_file=linux_32_dir_prefix+'/nw',
+                                            extract_files=[linux_32_dir_prefix+'/nw',
+                                                           linux_32_dir_prefix+'/nw.pak',
+                                                           linux_32_dir_prefix+'/icudtl.dat'],
+                                            dest_files=['nw', 'nw.pak', 'icudtl.dat'])}
 
     def update_nw_versions(self, button):
         self.getVersionsInBackground()
