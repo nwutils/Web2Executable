@@ -117,6 +117,17 @@ class Setting(object):
                     new_bytes = file.read(extract_path.format(version))
             except KeyError as e:
                 log(e)
+                #dirty hack to support old versions of nw
+                if 'no item named' in str(e):
+                    extract_path='/'.join(extract_path.split('/')[1:])
+                    try:
+                        if self.file_ext == '.gz':
+                            new_bytes = file.extractfile(extract_path).read()
+                        elif self.file_ext == '.zip':
+                            new_bytes = file.read(extract_path)
+                    except KeyError as e:
+                        log(e)
+                        print e
                 print e
 
             if new_bytes is not None:
@@ -186,7 +197,7 @@ class MainWindow(QtGui.QWidget):
                                                       'libEGL.dll',
                                                       'libGLESv2.dll']),
                        'mac': Setting('mac', default_value=False, type='check',
-                                      url=base_url+'node-webkit-v{}-osx-ia32.zip',
+                                      url=base_url+mac_32_dir_prefix+'.zip',
                                       extract_file=mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
                                       extract_files=[mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
                                                      mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak',
