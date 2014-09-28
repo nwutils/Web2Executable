@@ -88,7 +88,7 @@ class Setting(object):
         if location:
             self.save_path = location
         else:
-            self.save_path = DEFAULT_DOWNLOAD_PATH
+            self.save_path = self.save_path or DEFAULT_DOWNLOAD_PATH
         self.get_file_information_from_url()
 
         if self.full_file_path:
@@ -165,11 +165,11 @@ class MainWindow(QtGui.QWidget):
                        }
 
     win_32_dir_prefix = 'node-webkit-v{}-win-ia32'
-    mac_32_dir_prefix = 'node-webkit-v{}-mac-ia32'
+    mac_32_dir_prefix = 'node-webkit-v{}-osx-ia32'
     linux_32_dir_prefix = 'node-webkit-v{}-linux-ia32'
 
     win_64_dir_prefix = 'node-webkit-v{}-win-x64'
-    mac_64_dir_prefix = 'node-webkit-v{}-mac-x64'
+    mac_64_dir_prefix = 'node-webkit-v{}-osx-x64'
     linux_64_dir_prefix = 'node-webkit-v{}-linux-x64'
 
 
@@ -1046,6 +1046,9 @@ class MainWindow(QtGui.QWidget):
                 self.load_from_json(json_str)
             except ValueError: #Json file is invalid
                 log( 'Warning: Json file invalid.')
+
+
+            self.ex_button.setEnabled(self.requiredSettingsFilled())
 
 
     def load_from_json(self, json_str):
