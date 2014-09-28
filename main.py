@@ -998,7 +998,7 @@ class MainWindow(QtGui.QWidget):
         for val in setting.values:
             combo.addItem(val)
 
-        default_index = combo.findData(setting.default_value)
+        default_index = combo.findText(setting.default_value)
         if default_index != -1:
             combo.setCurrentIndex(default_index)
 
@@ -1055,10 +1055,9 @@ class MainWindow(QtGui.QWidget):
                 json_str = f.read()
             try:
                 self.load_from_json(json_str)
-            except ValueError: #Json file is invalid
+            except ValueError as e: #Json file is invalid
                 log( 'Warning: Json file invalid.')
-
-
+                print e
             self.ex_button.setEnabled(self.requiredSettingsFilled())
 
 
@@ -1079,6 +1078,12 @@ class MainWindow(QtGui.QWidget):
                     if setting.type == 'check':
                         setting_field.setChecked(new_dic[item])
                         setting.value = new_dic[item]
+                    if setting.type == 'list':
+                        val_str = self.convert_val_to_str(new_dic[item])
+                        index = setting_field.findText(val_str)
+                        if index != -1:
+                            setting_field.setCurrentIndex(index)
+                        setting.value = val_str
                 if isinstance(new_dic[item], dict):
                     stack.append((item,new_dic[item]))
 
