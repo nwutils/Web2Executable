@@ -24,6 +24,9 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 What's New?
 ----------------------
 
+v0.1.7b
+- added better download management so there is no redownloading things. Also a bunch of bugs were fixed up.
+
 v0.1.6b
 
 - added the ability to get newer NodeWebkit versions automatically from the changelog of node-webkit. Also fixed compatibility with 0.10.X.
@@ -50,7 +53,7 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.6b](http://www.mediafire.com/download/ng5dexzbjkffbje/Web2ExeMac-v0.1.6b.zip)
+[Mac OS X 10.7+ download - v0.1.7b](http://www.mediafire.com/download/99zb3w9ct95ougl/Web2ExeMac-v0.1.7b.zip)
 
 Previous Version:
 
@@ -61,12 +64,13 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.6b](http://www.mediafire.com/download/897khtso5btm0qb/Web2ExeWin-v0.1.6b.zip)
+[Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
 
 
 Previous Version:
 
-[Windows 7+ download - v0.1.5b](http://www.mediafire.com/download/bnebaylw7e38eb1/Web2ExeWin-v0.1.5b.zip)
+[Windows 7+ download - v0.1.6b](http://www.mediafire.com/download/897khtso5btm0qb/Web2ExeWin-v0.1.6b.zip)
+
 
 
 Double click the Win2Exe.exe file inside the extracted folder.
@@ -75,13 +79,12 @@ Double click the Win2Exe.exe file inside the extracted folder.
 
 Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
 
-[Linux 64bit download - v0.1.6b](http://www.mediafire.com/download/7iozo8tfbn6rea8/Web2ExeLinux64-v0.1.6b.zip)
 
+[Linux 64bit download - v0.1.7b](http://www.mediafire.com/download/4cujo6qdjzr337f/Web2ExeLinux64-v0.1.7b.zip)
 
 Previous Version:
 
-[Linux 64bit download - v0.1.4b](http://www.mediafire.com/download/9ea54irgops8jif/Web2ExeLinux64-v0.1.4b.zip)
-
+[Linux 64bit download - v0.1.6b](http://www.mediafire.com/download/7iozo8tfbn6rea8/Web2ExeLinux64-v0.1.6b.zip)
 
 
 chmod 755 the main binary inside the extracted folder and then run by double clicking or ./main from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
