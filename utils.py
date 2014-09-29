@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os, zipfile, io, platform
 import sys, tempfile
+import subprocess
 
 DEBUG = False
 
@@ -13,6 +14,15 @@ def get_temp_dir():
 def log(*args):
     if DEBUG:
         print(*args)
+
+
+def open_folder_in_explorer(path):
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
 
 def zip_files(zip_file_name, *args, **kwargs):
     zip_file = zipfile.ZipFile(zip_file_name, 'w')

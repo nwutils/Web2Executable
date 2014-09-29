@@ -1,4 +1,4 @@
-from utils import zip_files, join_files, log, get_temp_dir
+from utils import zip_files, join_files, log, get_temp_dir, open_folder_in_explorer
 
 import urllib2, re
 import sys, os, glob, json, re, shutil, stat, tarfile
@@ -320,6 +320,9 @@ class MainWindow(QtGui.QWidget):
         self.get_files_to_download()
         self.try_to_download_files()
 
+    def open_export(self, open_export_button):
+        open_folder_in_explorer(self.outputDir())
+
     def delete_files_if_forced(self):
         forced = self.getSetting('force_download').value
 
@@ -439,10 +442,18 @@ class MainWindow(QtGui.QWidget):
         cancel_button = QtGui.QPushButton('Cancel Download')
         cancel_button.setEnabled(False)
 
+        open_export_button = QtGui.QPushButton()
+        open_export_button.setEnabled(False)
+        open_export_button.setIcon(QtGui.QIcon(os.path.join('files','images','folder_open.png')))
+        open_export_button.setToolTip('Open Export Folder')
+        open_export_button.setMaximumWidth(30)
+
         ex_button.clicked.connect(self.callWithObject('export', ex_button, cancel_button))
         cancel_button.clicked.connect(self.cancelDownload)
+        open_export_button.clicked.connect(self.callWithObject('open_export', open_export_button))
 
         buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton(open_export_button, QtGui.QDialogButtonBox.NoRole)
         buttonBox.addButton(cancel_button, QtGui.QDialogButtonBox.RejectRole)
         buttonBox.addButton(ex_button, QtGui.QDialogButtonBox.AcceptRole)
 
@@ -452,6 +463,7 @@ class MainWindow(QtGui.QWidget):
         self.progress_label = progress_label
         self.progress_bar = progress_bar
         self.cancel_button = cancel_button
+        self.open_export_button = open_export_button
 
         http = QHttp(self)
         http.requestFinished.connect(self.httpRequestFinished)
@@ -754,6 +766,7 @@ class MainWindow(QtGui.QWidget):
                 title_input.setText(proj_name)
 
             self.loadPackageJson()
+            self.open_export_button.setEnabled(True)
             self.update_json = True
 
     def browseOutDir(self):
