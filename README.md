@@ -14,6 +14,8 @@ Note!!
 
 When building linux applications using this application, there is an issue on the newer versions of Ubuntu (13.XX) and similar distros that causes the error: Shared library libudev.so.0 does not exist. If you are distributing an application by exporting to these platforms, you'll need to instruct your users to either manually symlink the file or make an install script following the directions [here](https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0). This is an issue with node-webkit and not this application itself.
 
+Also, there might be an issue with Mac OS X where it just doesn't start up. You can work around this by installing PySide for Mac, but I'm trying to find a way around it.
+
 Getting Started
 ---------------
 
@@ -27,6 +29,10 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 
 What's New?
 ----------------------
+
+v0.1.8b
+- added an "Open to export folder" button that makes things a little easier to navigate to.
+- attempted to fix Mac OS X issues with crashing
 
 v0.1.7b
 - added better download management so there is no redownloading things. Also a bunch of bugs were fixed up.
@@ -57,7 +63,7 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.7b](http://www.mediafire.com/download/99zb3w9ct95ougl/Web2ExeMac-v0.1.7b.zip)
+[Mac OS X 10.7+ download - v0.1.8b](http://www.mediafire.com/download/ahjnnom0vaf291r/Web2ExeMac-v0.1.8b.zip)
 
 Previous Version:
 
