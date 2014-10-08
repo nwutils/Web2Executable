@@ -63,11 +63,11 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.8b](http://www.mediafire.com/download/jpkygqrlpj4rnu9/Web2Executable-v0.1.8b.zip)
+[Mac OS X 10.7+ download - v0.1.9b](http://www.mediafire.com/download/saazkyniauznlgh/Web2ExeMac-v0.1.9b.zip)
 
 Previous Version:
 
-[Mac OS X 10.7+ download - v0.1.5b](http://www.mediafire.com/download/lpd33ttatgvfrbn/Web2ExeMac-v0.1.5b.zip)
+[Mac OS X 10.7+ download - v0.1.8b](http://www.mediafire.com/download/jpkygqrlpj4rnu9/Web2Executable-v0.1.8b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
@@ -128,6 +128,10 @@ Future Features
 
 Screenshots
 -----------
+
+v0.1.9b Mac OS X
+
+![ScreenshotMac](http://i.imgur.com/Kdd6DcC.png)
 
 v0.1.8b
 
