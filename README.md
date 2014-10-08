@@ -129,6 +129,9 @@ Future Features
 Screenshots
 -----------
 
+v0.1.8b
+![Screenshot3](http://imgur.com/It3px3K)
+
 v0.1.3b
 
 ![Screenshot2](http://i.imgur.com/jZ7TE63.png)
