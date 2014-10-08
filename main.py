@@ -285,6 +285,7 @@ class MainWindow(QtGui.QWidget):
 
     def create_application_layout(self):
         self.main_layout = QtGui.QVBoxLayout()
+        self.main_layout.setContentsMargins(10,5,10,5)
 
         self.create_layout_widgets()
 
@@ -427,10 +428,15 @@ class MainWindow(QtGui.QWidget):
         hlayout = QtGui.QHBoxLayout()
 
         vlayout = QtGui.QVBoxLayout()
+        vlayout.setContentsMargins(5,5,5,5)
+        vlayout.setSpacing(5)
+        hlayout.setSpacing(5)
+        hlayout.setContentsMargins(5,5,5,5)
 
         progress_label = QtGui.QLabel('')
         progress_bar = QtGui.QProgressBar()
         progress_bar.setVisible(False)
+        progress_bar.setContentsMargins(5,5,5,5)
 
         vlayout.addWidget(progress_label)
         vlayout.addWidget(progress_bar)
@@ -447,6 +453,7 @@ class MainWindow(QtGui.QWidget):
         open_export_button.setIcon(QtGui.QIcon(os.path.join('files','images','folder_open.png')))
         open_export_button.setToolTip('Open Export Folder')
         open_export_button.setMaximumWidth(30)
+        open_export_button.setMaximumHeight(30)
 
         ex_button.clicked.connect(self.callWithObject('export', ex_button, cancel_button))
         cancel_button.clicked.connect(self.cancelDownload)
@@ -712,6 +719,10 @@ class MainWindow(QtGui.QWidget):
         output_layout.addWidget(output_button)
 
         vlayout = QtGui.QVBoxLayout()
+
+        vlayout.setSpacing(5);
+        vlayout.setContentsMargins(10,5,10,5);
+
         vlayout.addLayout(input_layout)
         vlayout.addLayout(output_layout)
 
@@ -822,7 +833,7 @@ class MainWindow(QtGui.QWidget):
 
     def createExportSettings(self):
         groupBox = QtGui.QGroupBox("Export to")
-        vlayout = self.createLayout(self.export_setting_order)
+        vlayout = self.createLayout(self.export_setting_order, cols=4)
 
         groupBox.setLayout(vlayout)
         return groupBox
@@ -830,14 +841,15 @@ class MainWindow(QtGui.QWidget):
 
     def createDownloadSettings(self):
         groupBox = QtGui.QGroupBox("Download Settings")
-        vlayout = self.createLayout(self.download_setting_order)
+        vlayout = self.createLayout(self.download_setting_order, 2)
 
         groupBox.setLayout(vlayout)
         return groupBox
 
     def createLayout(self, settings, cols=3):
         glayout = QtGui.QGridLayout()
-
+        glayout.setContentsMargins(10,5,10,5)
+        glayout.setSpacing(10)
         col = 0
         row = 0
 
