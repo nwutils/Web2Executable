@@ -1,0 +1,1 @@
+cxfreeze.bat main.py --target-dir=Web2ExeWin --base-name=Win32GUI
