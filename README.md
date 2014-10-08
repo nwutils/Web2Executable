@@ -130,6 +130,7 @@ Screenshots
 -----------
 
 v0.1.8b
+
 ![Screenshot3](http://i.imgur.com/It3px3K.png)
 
 v0.1.3b
