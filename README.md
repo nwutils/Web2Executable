@@ -74,12 +74,13 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
+[Windows 7+ download - v0.1.8b](http://www.mediafire.com/download/cgpqdh8e5w9p31m/Web2ExeWin-v0.1.8b.zip)
 
 
 Previous Version:
 
-[Windows 7+ download - v0.1.6b](http://www.mediafire.com/download/897khtso5btm0qb/Web2ExeWin-v0.1.6b.zip)
+[Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
+
 
 
 
