@@ -14,7 +14,7 @@ Note!!
 
 When building linux applications using this application, there is an issue on the newer versions of Ubuntu (13.XX) and similar distros that causes the error: Shared library libudev.so.0 does not exist. If you are distributing an application by exporting to these platforms, you'll need to instruct your users to either manually symlink the file or make an install script following the directions [here](https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0). This is an issue with node-webkit and not this application itself.
 
-Also, there might be an issue with Mac OS X where it just doesn't start up. You can work around this by installing PySide for Mac, but I'm trying to find a way around it.
+Also, there was an issue for Mac with versions older that 0.1.8b where it wouldn't start up. Hopefully that is fixed now and you can enjoy the app!
 
 Getting Started
 ---------------
