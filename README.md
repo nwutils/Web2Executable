@@ -30,6 +30,10 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 What's New?
 ----------------------
 
+v0.1.9b
+- made UI more compact for small screens
+- fixed Mac issue with not loading! Yay!
+
 v0.1.8b
 - added an "Open to export folder" button that makes things a little easier to navigate to.
 - attempted to fix Mac OS X issues with crashing
