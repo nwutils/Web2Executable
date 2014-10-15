@@ -5,6 +5,8 @@ Uses node-webkit to generate "native" apps for already existing web apps.
 
 Requires the pyside library and python 2.X to run. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
 
+If you have an idea for a feature, please list it [here](https://github.com/jyapayne/Web2Executable/wiki/Feature-Requests).
+
 If you liked this project that I've committed many hours to, show whatever support you wish as a donation here: 
 
 <a href='https://pledgie.com/campaigns/26899'><img alt='Click here to lend your support to: Web2Executable Donations and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/26899.png?skin_name=chrome' border='0' ></a>
