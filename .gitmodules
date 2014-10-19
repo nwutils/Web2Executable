@@ -1,0 +1,3 @@
+[submodule "pepy"]
+	path = pepy
+	url = git://github.com/jyapayne/PePy.git
