@@ -1,4 +1,5 @@
 from utils import zip_files, join_files, log, get_temp_dir, open_folder_in_explorer
+from pepy.pe import PEFile
 
 import urllib2, re
 import sys, os, glob, json, re, shutil, stat, tarfile
@@ -191,7 +192,7 @@ class MainWindow(QtGui.QWidget):
                                                          win_32_dir_prefix+'/icudtl.dat',
                                                          win_32_dir_prefix+'/libEGL.dll',
                                                          win_32_dir_prefix+'/libGLESv2.dll'],
-                                          dest_files=['nw.exe',
+                                          dest_files=['nw.exe', #must be the first entry
                                                       'nw.pak',
                                                       'icudtl.dat',
                                                       'libEGL.dll',
@@ -1181,15 +1182,21 @@ class MainWindow(QtGui.QWidget):
                         self.progress_text += '.'
                     else:
                         ext = ''
+                        windows = False
                         if ex_setting.name == 'windows':
                             ext = '.exe'
+                            windows=True
 
                         nw_path = os.path.join(export_dest, ex_setting.dest_files[0])
                         dest_binary_path = os.path.join(export_dest, self.projectName()+ext)
-                        join_files(os.path.join(export_dest, self.projectName()+ext), nw_path, zip_file)
+
+                        join_files(dest_binary_path, nw_path, zip_file)
 
                         sevenfivefive = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
                         os.chmod(dest_binary_path, sevenfivefive)
+
+                        if windows:
+                            self.replace_icon_in_exe(dest_binary_path)
 
                         self.progress_text += '.'
 
@@ -1200,6 +1207,14 @@ class MainWindow(QtGui.QWidget):
             self.output_err += ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
         finally:
             shutil.rmtree(tempDir)
+
+    def replace_icon_in_exe(self, exe_path):
+        icon_setting = self.getSetting('icon')
+        if icon_setting.value:
+            p = PEFile(exe_path)
+            p.replace_icon(os.path.join(self.projectDir(), icon_setting.value))
+            p.write(exe_path)
+            p = None
 
     def show_and_raise(self):
         self.show()
