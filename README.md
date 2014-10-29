@@ -3,7 +3,7 @@ Web2Executable
 
 Uses node-webkit to generate "native" apps for already existing web apps.
 
-Requires the pyside library and python 2.X to run. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
+Requires the pyside library and python 2.X to run. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
 
 If you have an idea for a feature, please list it [here](https://github.com/jyapayne/Web2Executable/wiki/Feature-Requests).
 
@@ -28,6 +28,21 @@ python main.py
 ```
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
+
+FAQ
+---
+
+### What is the downloads folder for and where should I keep it?
+
+The downloads folder is where Web2Exe stores the node-webkit versions in zip or tar format. This location should be chosen as a central location, because Web2Exe will reuse the files to create executables every time the export button is pressed. It will also save time by not having to redownload the node-webkit files over and over.
+
+The Web2Executable/files/downloads folder is a good place to keep your downloads or any place that **isn't your project's directory**.
+
+### Where is the default downloads location and how can I change it back?
+
+For right now, the default location is in Web2Executable/files/downloads (Web2Executable.app/Contents/MacOS/files/downloads for Mac OSX).
+
+This location is stored on a by project basis, so it will load what you have set for a particular project from the package.json file. Right now, the only way to change it back to the default is to open the package.json file with a text editor and remove the download_dir option from it.
 
 What's New?
 ----------------------
