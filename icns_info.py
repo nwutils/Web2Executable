@@ -622,6 +622,7 @@ class ICNSInfo(Printable):
             icon_info.iconType = ICNS_NULL_TYPE
 
         icon_info.iconRawDataSize = icon_info.iconSize.height * icon_info.iconSize.width * icon_info.iconBitDepth/ICNS_BYTE_BITS
+        icon_info.data = bytearray(icon_info.iconRawDataSize)
 
         return icon_info
 
@@ -681,7 +682,7 @@ class ICNSHeader(Structure):
                 iconDataOffset = 0
                 maskDataOffset = 0
 
-                while iconDataOffset < icns_info.ImageDataSize and maskDataOffset < icns_mask.ImageDataSize:
+                while iconDataOffset < icns_info.iconRawDataSize and maskDataOffset < icns_mask.iconRawDataSize:
                     icns_mask.data[maskDataOffset] = icns_info.data[iconDataOffset+3]
                     iconDataOffset += 4
                     maskDataOffset += 1
