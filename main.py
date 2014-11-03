@@ -1,4 +1,5 @@
 from utils import zip_files, join_files, log, get_temp_dir, open_folder_in_explorer
+from pycns import save_icns
 from pepy.pe import PEFile
 
 import urllib2, re
@@ -63,6 +64,7 @@ class Setting(object):
         self.default_value = kwargs.pop('default_value', None)
         self.button = kwargs.pop('button', None)
         self.button_callback = kwargs.pop('button_callback', None)
+        self.description = kwargs.pop('description', '')
 
         self.set_extra_attributes_from_keyword_args(kwargs)
 
@@ -151,7 +153,7 @@ class MainWindow(QtGui.QWidget):
                     'keywords':Setting(name='keywords', default_value='', type='string'),
                     'nodejs': Setting('nodejs', 'Include Nodejs', default_value=True, type='check'),
                     'node-main': Setting('node-main', 'Alt. Nodejs', default_value='', type='file', file_types='*.js'),
-                    'single-instance': Setting('single-instance', 'Single Instance', default_value=True, type='check')}
+                    'single-instance': Setting('single-instance', 'Single Instance', default_value=True, type='check', description='Restrict the app to run with only a single instance allowed at a time.')}
 
     webkit_settings = {'plugin': Setting('plugin', 'Load plugins', default_value=False, type='check'),
                        'java': Setting('java', 'Load Java', default_value=False, type='check'),
@@ -159,6 +161,8 @@ class MainWindow(QtGui.QWidget):
 
     window_settings = {'title': Setting(name='title', default_value='', type='string'),
                        'icon': Setting('icon', 'Window Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg'),
+                       'mac_app_icon': Setting('mac_icon', 'Mac Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg *.icns', description='The icon to be displayed for the Mac Application. Defaults to Window Icon.'),
+                       'exe_icon': Setting('exe_icon', 'Exe Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg', description='The icon to be displayed in the windows exe of the app. Defaults to Window Icon.'),
                        'width': Setting('width', default_value=640, type='string'),
                        'height': Setting('height', default_value=480, type='string'),
                        'min_width': Setting('min_width', default_value=None, type='string'),
@@ -167,13 +171,13 @@ class MainWindow(QtGui.QWidget):
                        'max_height': Setting('max_height', default_value=None, type='string'),
                        'toolbar': Setting('toolbar', 'Show Toolbar', default_value=False, type='check'),
                        'always-on-top': Setting('always-on-top', 'Keep on top', default_value=False, type='check'),
-                       'frame': Setting('frame', 'Window Frame', default_value=True, type='check'),
-                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar', default_value=True, type='check'),
+                       'frame': Setting('frame', 'Window Frame', default_value=True, type='check', description='Show the frame of the window.'),
+                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar', default_value=True, type='check', description='Show the app running in the taskbar.'),
                        'visible': Setting('visible', default_value=True, type='check'),
                        'resizable': Setting('resizable', default_value=False, type='check'),
                        'fullscreen': Setting('fullscreen', default_value=False, type='check'),
-                       'position': Setting('position','Position by', default_value=None, values=[None, 'mouse', 'center'], type='list'),
-                       'as_desktop': Setting('as_desktop', default_value=False, type='check'),
+                       'position': Setting('position','Position by', default_value=None, values=[None, 'mouse', 'center'], type='list', description='The position to place the window when it opens.'),
+                       'as_desktop': Setting('as_desktop', default_value=False, type='check', description='Tries to render the app to the desktop background.'),
                        }
 
     win_32_dir_prefix = 'node-webkit-v{}-win-ia32'
@@ -245,7 +249,8 @@ class MainWindow(QtGui.QWidget):
                                  'nodejs', 'single-instance', 'plugin',
                                  'java', 'page-cache']
 
-    window_setting_order = ['title', 'icon', 'position', 'width', 'height', 'min_width', 'min_height',
+    window_setting_order = ['title', 'icon', 'mac_app_icon', 'exe_icon', 'position', 'width', 'height',
+                            'min_width', 'min_height',
                             'max_width', 'max_height', 'toolbar', 'always-on-top', 'frame',
                             'show_in_taskbar', 'visible', 'resizable', 'fullscreen', 'as_desktop']
 
@@ -404,7 +409,7 @@ class MainWindow(QtGui.QWidget):
                 if setting.type == 'file' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
                     log(setting.value, "does not exist")
                     settings_valid = False
-                if setting.type == 'folder' and setting.value and not os.path.exists(setting.value):
+                if setting.type == 'folder' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
                     settings_valid = False
 
         export_chosen = False
@@ -862,7 +867,9 @@ class MainWindow(QtGui.QWidget):
             display_name = setting.display_name+':'
             if setting.required:
                 display_name += '*'
-            glayout.addWidget(QtGui.QLabel(display_name),row,col)
+            setting_label = QtGui.QLabel(display_name)
+            setting_label.setToolTip(setting.description)
+            glayout.addWidget(setting_label,row,col)
             glayout.addLayout(self.createSetting(setting_name),row,col+1)
             col += 2
 
@@ -1178,6 +1185,7 @@ class MainWindow(QtGui.QWidget):
                         self.progress_text += '.'
 
                         shutil.copy(zip_file, os.path.join(app_path, 'Contents', 'Resources', 'app.nw'))
+                        self.create_icns_for_app(os.path.join(app_path, 'Contents', 'Resources', 'nw.icns'))
 
                         self.progress_text += '.'
                     else:
@@ -1208,11 +1216,24 @@ class MainWindow(QtGui.QWidget):
         finally:
             shutil.rmtree(tempDir)
 
+    def create_icns_for_app(self, icns_path):
+        icon_setting, mac_app_icon_setting = self.getSetting('icon'), self.getSetting('mac_app_icon')
+        icon_path = mac_app_icon_setting.value if mac_app_icon_setting.value else icon_setting.value
+
+        if icon_path:
+            icon_path = os.path.join(self.projectDir(), icon_path)
+            if not icon_path.endswith('.icns'):
+                save_icns(icon_path, icns_path)
+            else:
+                shutil.copy(icon_path, icns_path)
+
+
     def replace_icon_in_exe(self, exe_path):
-        icon_setting = self.getSetting('icon')
-        if icon_setting.value:
+        icon_setting, exe_icon_setting = self.getSetting('icon'), self.getSetting('exe_icon')
+        icon_path = exe_icon_setting.value if exe_icon_setting.value else icon_setting.value
+        if icon_path:
             p = PEFile(exe_path)
-            p.replace_icon(os.path.join(self.projectDir(), icon_setting.value))
+            p.replace_icon(os.path.join(self.projectDir(), icon_path))
             p.write(exe_path)
             p = None
 
