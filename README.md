@@ -21,6 +21,8 @@ Also, there was an issue for Mac with versions older that 0.1.8b where it wouldn
 Getting Started
 ---------------
 
+Install dependencies **PIL or Pillow** for icon and icns exporting.
+
 Initiate submodules:
 
 ```
