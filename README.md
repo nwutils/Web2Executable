@@ -55,6 +55,9 @@ This location is stored on a by project basis, so it will load what you have set
 What's New?
 ----------------------
 
+v0.1.10b
+- added the ability to specify an icon for both mac and windows export applications
+
 v0.1.9b
 - made UI more compact for small screens
 - fixed Mac issue with not loading! Yay!
@@ -92,9 +95,11 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.9b](http://www.mediafire.com/download/saazkyniauznlgh/Web2ExeMac-v0.1.9b.zip)
+[Mac OS X 10.7+ download - v0.1.10b](http://www.mediafire.com/download/619jpc1ftjxc2sh/Web2ExeMac-v0.1.10b.zip)
 
-Previous Version:
+Previous Versions:
+
+[Mac OS X 10.7+ download - v0.1.9b](http://www.mediafire.com/download/saazkyniauznlgh/Web2ExeMac-v0.1.9b.zip)
 
 [Mac OS X 10.7+ download - v0.1.8b](http://www.mediafire.com/download/jpkygqrlpj4rnu9/Web2Executable-v0.1.8b.zip)
 
@@ -103,10 +108,11 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.8b](http://www.mediafire.com/download/cgpqdh8e5w9p31m/Web2ExeWin-v0.1.8b.zip)
+
 
 
 Previous Version:
+
 
 [Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
 
