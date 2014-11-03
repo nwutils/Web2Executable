@@ -21,6 +21,12 @@ Also, there was an issue for Mac with versions older that 0.1.8b where it wouldn
 Getting Started
 ---------------
 
+Initiate submodules:
+
+```
+git submodule update --init --recursive
+```
+
 Run with:
 
 ```
