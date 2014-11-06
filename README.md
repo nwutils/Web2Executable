@@ -7,7 +7,7 @@ Requires the pyside library and python 2.X to run. If you want to replace the ic
 
 If you have an idea for a feature, please list it [here](https://github.com/jyapayne/Web2Executable/wiki/Feature-Requests).
 
-If you liked this project that I've committed many hours to, show whatever support you wish as a donation here: 
+If you liked this project that I've committed many hours to, donate a dollar to the app: 
 
 <a href='https://pledgie.com/campaigns/26899'><img alt='Click here to lend your support to: Web2Executable Donations and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/26899.png?skin_name=chrome' border='0' ></a>
 
@@ -37,6 +37,18 @@ python main.py
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
 
+Features
+--------
+
+- Cross platform to Mac, Windows, Linux
+- Easy to use and straightforward
+- Streamlined workflow from project -> working standalone exe
+- Same performance as Google Chrome
+- Works with Phaser; should work with other HTML5 game libraries
+- Export web applications to all platforms from your current OS
+- Ability to specify a node-webkit version to download
+- Automatic insertion of icon files into Windows exe's or Mac Apps by filling out the icon fields as necessary
+
 FAQ
 ---
 
@@ -51,6 +63,18 @@ The Web2Executable/files/downloads folder is a good place to keep your downloads
 For right now, the default location is in Web2Executable/files/downloads (Web2Executable.app/Contents/MacOS/files/downloads for Mac OSX).
 
 This location is stored on a by project basis, so it will load what you have set for a particular project from the package.json file. Right now, the only way to change it back to the default is to open the package.json file with a text editor and remove the download_dir option from it.
+
+### How do I use the icon replacement?
+
+The icon replacement works by filling out the fields "Window Icon", "Exe Icon", or "Mac Icon". If "Window Icon" is filled out and the others aren't, Web2Exe will automatically use this field instead of "Exe Icon" or "Mac Icon" depending on if you export to Mac or Windows.
+
+If you fill "Exe Icon" out, this will be used to replace the icon inside the node-webkit exe from the default compass icon if you export to Windows. Only pngs and jpegs are supported right now.
+
+If you fill out "Mac Icon", this will convert the icon from png or jpeg to icns and copy it into the Mac app folder (or just copy if the icon is already in icns format). Of course, this is only when exporting to Mac.
+
+### Why don't you replace icons for Linux?
+
+Linux executables don't use icons, so there's nothing to replace. If you want to set an icon for when the app is running for Linux, simply fill out the "Window Icon" field.
 
 What's New?
 ----------------------
@@ -142,23 +166,6 @@ sudo cp *.so.* /usr/lib/
 
 Note: For some reason, these linux binaries are not working correctly on vanilla systems. I'm looking into the issue and will update them when I figure out what is going on.
 
-
-Features
---------
-
-- Cross platform to Mac, Windows, Linux
-- Easy to use and straightforward
-- Streamlined workflow from project -> working standalone exe
-- Same performance as Google Chrome
-- Works with Phaser; should work with other HTML5 game libraries
-- Export web applications to all platforms from your current OS
-- Ability to specify a node-webkit version to download
-
-Future Features
----------------
-
-- A download manager! It's getting annoying downloading stuff over and over.
-- Automatic replacement of icon files inside of Mac apps and Windows exes. Right now, the only way to have a custom Mac icon is to convert your image to .icns format and put it in the resources folder of the app. For windows, you have to use a utility like Resource Hacker.
 
 
 Screenshots
