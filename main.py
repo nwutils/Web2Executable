@@ -146,38 +146,132 @@ class MainWindow(QtGui.QWidget):
 
     base_url = get_base_url()
 
-    app_settings = {'main': Setting(name='main', display_name='Main file', required=True, type='file', file_types='*.html *.php *.htm'),
-                    'name': Setting(name='name', display_name='App Name', required=True, type='string'),
-                    'description': Setting(name='description', default_default_value='', type='string'),
-                    'version': Setting(name='version', default_value='0.1.0', type='string'),
-                    'keywords':Setting(name='keywords', default_value='', type='string'),
-                    'nodejs': Setting('nodejs', 'Include Nodejs', default_value=True, type='check'),
-                    'node-main': Setting('node-main', 'Alt. Nodejs', default_value='', type='file', file_types='*.js'),
-                    'single-instance': Setting('single-instance', 'Single Instance', default_value=True, type='check', description='Restrict the app to run with only a single instance allowed at a time.')}
+    app_settings = {'main': Setting(name='main',
+                                    display_name='Main file',
+                                    required=True, type='file',
+                                    file_types='*.html *.php *.htm'),
+                    'name': Setting(name='name',
+                                    display_name='App Name',
+                                    required=True, type='string'),
 
-    webkit_settings = {'plugin': Setting('plugin', 'Load plugins', default_value=False, type='check'),
-                       'java': Setting('java', 'Load Java', default_value=False, type='check'),
-                       'page-cache': Setting('page-cache', 'Page Cache', default_value=False, type='check')}
+                    'description': Setting(name='description',
+                                           default_default_value='',
+                                           type='string'),
 
-    window_settings = {'title': Setting(name='title', default_value='', type='string'),
-                       'icon': Setting('icon', 'Window Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg'),
-                       'mac_app_icon': Setting('mac_icon', 'Mac Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg *.icns', description='The icon to be displayed for the Mac Application. Defaults to Window Icon.'),
-                       'exe_icon': Setting('exe_icon', 'Exe Icon', default_value='', type='file', file_types='*.png *.jpg *.jpeg', description='The icon to be displayed in the windows exe of the app. Defaults to Window Icon.'),
-                       'width': Setting('width', default_value=640, type='string'),
-                       'height': Setting('height', default_value=480, type='string'),
-                       'min_width': Setting('min_width', default_value=None, type='string'),
-                       'min_height': Setting('min_height', default_value=None, type='string'),
-                       'max_width': Setting('max_width', default_value=None, type='string'),
-                       'max_height': Setting('max_height', default_value=None, type='string'),
-                       'toolbar': Setting('toolbar', 'Show Toolbar', default_value=False, type='check'),
-                       'always-on-top': Setting('always-on-top', 'Keep on top', default_value=False, type='check'),
-                       'frame': Setting('frame', 'Window Frame', default_value=True, type='check', description='Show the frame of the window.'),
-                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar', default_value=True, type='check', description='Show the app running in the taskbar.'),
-                       'visible': Setting('visible', default_value=True, type='check'),
-                       'resizable': Setting('resizable', default_value=False, type='check'),
-                       'fullscreen': Setting('fullscreen', default_value=False, type='check'),
-                       'position': Setting('position','Position by', default_value=None, values=[None, 'mouse', 'center'], type='list', description='The position to place the window when it opens.'),
-                       'as_desktop': Setting('as_desktop', default_value=False, type='check', description='Tries to render the app to the desktop background.'),
+                    'version': Setting(name='version',
+                                       default_value='0.1.0',
+                                       type='string'),
+
+                    'keywords':Setting(name='keywords',
+                                       default_value='',
+                                       type='string'),
+
+                    'nodejs': Setting('nodejs', 'Include Nodejs',
+                                      default_value=True, type='check'),
+
+                    'node-main': Setting('node-main', 'Alt. Nodejs',
+                                         default_value='', type='file',
+                                         file_types='*.js'),
+
+                    'single-instance': Setting('single-instance', 'Single Instance',
+                                               default_value=True, type='check',
+                                               description='Restrict the app \
+                                                            to run with only a \
+                                                            single instance \
+                                                            allowed at a time.')}
+
+    webkit_settings = {'plugin': Setting('plugin', 'Load plugins',
+                                         default_value=False,
+                                         type='check'),
+
+                       'java': Setting('java', 'Load Java',
+                                       default_value=False,
+                                       type='check'),
+
+                       'page-cache': Setting('page-cache', 'Page Cache',
+                                             default_value=False,
+                                             type='check')}
+
+    window_settings = {'title': Setting(name='title', default_value='',
+                                        type='string'),
+
+                       'icon': Setting('icon', 'Window Icon',
+                                       default_value='', type='file',
+                                       file_types='*.png *.jpg *.jpeg'),
+
+                       'mac_app_icon': Setting('mac_icon', 'Mac Icon',
+                                               default_value='', type='file',
+                                               file_types='*.png *.jpg *.jpeg *.icns',
+                                               description='The icon to be displayed for \
+                                                            the Mac Application. Defaults \
+                                                            to Window Icon.'),
+
+                       'exe_icon': Setting('exe_icon', 'Exe Icon',
+                                           default_value='', type='file',
+                                           file_types='*.png *.jpg *.jpeg',
+                                           description='The icon to be \
+                                                        displayed in the windows \
+                                                        exe of the app. Defaults \
+                                                        to Window Icon.'),
+
+                       'width': Setting('width', default_value=640,
+                                        type='string'),
+
+                       'height': Setting('height', default_value=480,
+                                         type='string'),
+
+                       'min_width': Setting('min_width',
+                                            default_value=None,
+                                            type='string'),
+
+                       'min_height': Setting('min_height',
+                                             default_value=None,
+                                             type='string'),
+
+                       'max_width': Setting('max_width',
+                                            default_value=None,
+                                            type='string'),
+
+                       'max_height': Setting('max_height',
+                                             default_value=None,
+                                             type='string'),
+
+                       'toolbar': Setting('toolbar', 'Show Toolbar',
+                                          default_value=False, type='check'),
+
+                       'always-on-top': Setting('always-on-top', 'Keep on top',
+                                                default_value=False,
+                                                type='check'),
+
+                       'frame': Setting('frame', 'Window Frame',
+                                        default_value=True, type='check',
+                                        description='Show the frame of the window.'),
+
+                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar',
+                                                  default_value=True, type='check',
+                                                  description='Show the app running \
+                                                               in the taskbar.'),
+
+                       'visible': Setting('visible', default_value=True,
+                                          type='check'),
+
+                       'resizable': Setting('resizable', default_value=False,
+                                            type='check'),
+
+                       'fullscreen': Setting('fullscreen', default_value=False,
+                                             type='check'),
+
+                       'position': Setting('position','Position by', default_value=None,
+                                           values=[None, 'mouse', 'center'],
+                                           type='list',
+                                           description='The position to place \
+                                                        the window when it opens.'),
+
+                       'as_desktop': Setting('as_desktop', default_value=False,
+                                             type='check',
+                                             description='Tries to render the \
+                                                          app to the desktop \
+                                                          background.'),
                        }
 
     win_32_dir_prefix = 'node-webkit-v{}-win-ia32'
