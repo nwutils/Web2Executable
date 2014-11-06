@@ -41,6 +41,7 @@ Features
 --------
 
 - Cross platform to Mac, Windows, Linux
+- Working media out of the box (sound and video)
 - Easy to use and straightforward
 - Streamlined workflow from project -> working standalone exe
 - Same performance as Google Chrome
