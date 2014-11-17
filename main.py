@@ -354,6 +354,7 @@ class MainWindow(QtGui.QWidget):
 
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
+        self.setWindowIcon(QtGui.QIcon('icon.png'))
         self.update_json = False
 
         self.setup_nw_versions()
@@ -631,7 +632,6 @@ class MainWindow(QtGui.QWidget):
         self.progress_label.setText(str(value))
 
     def runInBackground(self, method_name, callback):
-
         self.thread = BackgroundThread(self, method_name)
         self.thread.finished.connect(callback)
         self.thread.start()
@@ -668,11 +668,9 @@ class MainWindow(QtGui.QWidget):
             if f:
                 f.close()
 
-
     def doneGettingVersions(self):
         self.ex_button.setEnabled(self.requiredSettingsFilled())
         self.progress_text = 'Done retrieving versions.'
-
 
     def makeOutputFilesInBackground(self):
         self.ex_button.setEnabled(False)
@@ -1225,11 +1223,13 @@ class MainWindow(QtGui.QWidget):
         for sgroup in self._setting_groups:
             for setting in sgroup.values():
                 if setting.type == 'file' and setting.value:
-                    try:
-                        shutil.copy(setting.value, self.projectDir())
-                        setting.value = os.path.basename(setting.value)
-                    except shutil.Error as e:#same file warning
-                        log( 'Warning: {}'.format(e))
+                    f_path = setting.value.replace(self.projectDir(),'')
+                    if not os.path.exists(f_path):
+                        try:
+                            shutil.copy(setting.value, self.projectDir())
+                            setting.value = os.path.basename(setting.value)
+                        except shutil.Error as e:#same file warning
+                            log( 'Warning: {}'.format(e))
 
         os.chdir(old_dir)
 
