@@ -80,6 +80,9 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 What's New?
 ----------------------
 
+v0.1.11b
+- fixed a bug that overwrote the index.html path if it was not in the root directory
+
 v0.1.10b
 - added the ability to specify an icon for both mac and windows export applications
 
@@ -120,9 +123,11 @@ Prebuilt Binaries
 
 ###Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.10b](http://www.mediafire.com/download/619jpc1ftjxc2sh/Web2ExeMac-v0.1.10b.zip)
+[Mac OS X 10.7+ download - v0.1.11b](http://www.mediafire.com/download/c2gp7y74ejd764g/Web2ExeMac-v0.1.11b.zip)
 
 Previous Versions:
+
+[Mac OS X 10.7+ download - v0.1.10b](http://www.mediafire.com/download/619jpc1ftjxc2sh/Web2ExeMac-v0.1.10b.zip)
 
 [Mac OS X 10.7+ download - v0.1.9b](http://www.mediafire.com/download/saazkyniauznlgh/Web2ExeMac-v0.1.9b.zip)
 
@@ -133,9 +138,11 @@ You can just put the app where ever you want and double click to run it.
 
 ###Windows
 
-[Windows 7+ download - v0.1.10b](http://www.mediafire.com/download/s8492uwf5l4t99b/Web2ExeWin-v0.1.10b.zip)
+[Windows 7+ download - v0.1.11b](http://www.mediafire.com/download/xh7sha57scqe2mb/Web2ExeWin-v0.1.11b.zip)
 
 Previous Version:
+
+[Windows 7+ download - v0.1.10b](http://www.mediafire.com/download/s8492uwf5l4t99b/Web2ExeWin-v0.1.10b.zip)
 
 [Windows 7+ download - v0.1.8b](http://www.mediafire.com/download/cgpqdh8e5w9p31m/Web2ExeWin-v0.1.8b.zip)
 
