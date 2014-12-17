@@ -50,6 +50,12 @@ Features
 - Ability to specify a node-webkit version to download
 - Automatic insertion of icon files into Windows exe's or Mac Apps by filling out the icon fields as necessary
 
+Planned Features
+----------------
+
+- Compression options using UPX to minimize the exe size
+- Minification of javascript, html, css before zipping
+
 FAQ
 ---
 
