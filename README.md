@@ -55,6 +55,7 @@ Planned Features
 
 - Compression options using UPX to minimize the exe size
 - Minification of javascript, html, css before zipping
+- A command line utility with functionality equivalent to the GUI. Useful for automated builds.
 
 FAQ
 ---
