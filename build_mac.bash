@@ -39,4 +39,4 @@ install_name_tool -change /usr/local/Cellar/qt/4.8.5/lib/QtCore.framework/Versio
 
 install_name_tool -change /usr/local/lib/libjpeg.8.dylib @executable_path/libjpeg.8.dylib Web2Executable.app/Contents/MacOS/PIL._imaging.so
 
-pyinstaller --hidden-import configobj --distpath output --onefile -n web2exe command_line.py
+pyinstaller --hidden-import configobj --distpath command_line_builds --onefile -n web2exe command_line.py
