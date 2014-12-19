@@ -1,5 +1,5 @@
 from icns_info import *
-from image_utils import Image, nearest_icon_size, resize
+from image_utils import Image
 import sys
 
 """This module takes any image that is readable by PIL and exports it to an icns file.
@@ -15,8 +15,9 @@ def encode_image_to_icns(image_path):
 
 def save_icns(image_path, icns_path):
     im_data = encode_image_to_icns(image_path)
-    icns_path = icns_path if icns_path.endswith('.icns') else icns_path+'.icns'
-    open(icns_path, 'wb+').write(im_data)
+    if im_data is not None:
+        icns_path = icns_path if icns_path.endswith('.icns') else icns_path+'.icns'
+        open(icns_path, 'wb+').write(im_data)
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

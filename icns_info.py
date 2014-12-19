@@ -1,5 +1,5 @@
 import struct
-from image_utils import Image, nearest_icon_size, resize
+import image_utils
 import png
 
 
@@ -638,7 +638,10 @@ class ICNSHeader(Structure):
         self.elements = []
 
     def parse_image(self, image):
-        icon_size = nearest_icon_size(image.size[0], image.size[1])
+        if not image_utils.IMAGE_UTILS_AVAILABLE:
+            return None
+
+        icon_size = image_utils.nearest_icon_size(image.size[0], image.size[1])
 
         icon_sizes = [icon_size]
 
@@ -649,7 +652,7 @@ class ICNSHeader(Structure):
         for icon_s in icon_sizes:
             icns_element = ICNSElement()
 
-            im_data = resize(image, (icon_s, icon_s))
+            im_data = image_utils.resize(image, (icon_s, icon_s))
 
             png_file = png.Reader(bytes=im_data)
 

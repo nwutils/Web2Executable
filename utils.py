@@ -3,6 +3,12 @@ import os, zipfile, io, platform
 import sys, tempfile
 import subprocess
 
+try:
+    import zlib
+    ZIP_MODE = zipfile.ZIP_DEFLATED
+except:
+    ZIP_MODE = zipfile.ZIP_STORED
+
 DEBUG = False
 
 def is_windows():
@@ -15,7 +21,6 @@ def log(*args):
     if DEBUG:
         print(*args)
 
-
 def open_folder_in_explorer(path):
     if platform.system() == "Windows":
         os.startfile(path)
@@ -25,7 +30,7 @@ def open_folder_in_explorer(path):
         subprocess.Popen(["xdg-open", path])
 
 def zip_files(zip_file_name, *args, **kwargs):
-    zip_file = zipfile.ZipFile(zip_file_name, 'w')
+    zip_file = zipfile.ZipFile(zip_file_name, 'w', ZIP_MODE)
     verbose = kwargs.pop('verbose', False)
     exclude_paths = kwargs.pop('exclude_paths', [])
     old_path = os.getcwd()
@@ -55,7 +60,7 @@ def zip_files(zip_file_name, *args, **kwargs):
 
             else:
                 file = os.path.abspath(arg)
-                directory = os.path.abspath(os.path.join(file,'..'))
+                directory = os.path.abspath(os.path.join(file, '..'))
                 os.chdir(directory)
                 file_loc = os.path.relpath(arg, directory)
                 if verbose:
@@ -76,29 +81,3 @@ def join_files(destination, *args, **kwargs):
                         if len(bytes) == 0:
                             break
                         dest_file.write(bytes)
-
-#def convert_icns_to_png(inputname, outputname, size=0, out_type='png'):
-#    try:
-#        # new_from_file_at_size() does not work, requires incremental loader
-#        pixbuf = GdkPixbuf.Pixbuf.new_from_file(inputname)
-#        if size:
-#            width, height = pixbuf.get_width(), pixbuf.get_height()
-#            if width > height:
-#                if width > size:
-#                    height = height * size / width
-#                    width  = size
-#            else:
-#                if height > size:
-#                    width  = width * size / height
-#                    height = size
-#
-#            scaled = GdkPixbuf.Pixbuf.scale_simple(pixbuf, width, height,
-#                                                   GdkPixbuf.InterpType.BILINEAR)
-#        else:
-#            scaled = pixbuf
-#
-#        scaled.savev(outputname, out_type, [], [])
-#
-#    except GLib.GError as e:
-#        sys.stderr.write("%s:%d: %s\n" % (e.domain, e.code, e))
-#        return e.code

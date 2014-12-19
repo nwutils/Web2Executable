@@ -1,6 +1,7 @@
 from cStringIO import StringIO
 try:
     from PIL import Image as im
+    IMAGE_UTILS_AVAILABLE = True
     Image = im.open
     def resize(image, size):
         output = StringIO()
@@ -17,7 +18,7 @@ try:
         output.close()
         return contents
 except ImportError:
-    raise Exception('Python image library PIL/pillow is required.')
+    IMAGE_UTILS_AVAILABLE = False
 
 LARGEST_ICON_SIZE = 1024
 SMALLEST_ICON_SIZE = 16

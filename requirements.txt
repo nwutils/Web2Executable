@@ -1,0 +1,3 @@
+pillow
+pyside
+configobj

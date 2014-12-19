@@ -1,43 +1,17 @@
-from utils import zip_files, join_files, log, get_temp_dir, open_folder_in_explorer
-from pycns import save_icns
-from pepy.pe import PEFile
+from utils import log, open_folder_in_explorer
 
-import urllib2, re
-import sys, os, glob, json, re, shutil, stat, tarfile
-import zipfile, traceback, platform, filecmp
+import os
+import glob
+import sys
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
-from PySide.QtCore import QUrl, QFileInfo, QFile, QIODevice
+from PySide.QtCore import QUrl, QFile, QIODevice
 
-from distutils.version import LooseVersion
 
-from zipfile import ZipFile
-from tarfile import TarFile
+from command_line import CWD, CommandBase
 
-inside_mac_app = getattr(sys, 'frozen', '')
-
-if inside_mac_app:
-    CWD = os.path.dirname(sys.executable)
-    os.chdir(CWD)
-else:
-    CWD = os.getcwd()
-
-TEMP_DIR = get_temp_dir()
-DEFAULT_DOWNLOAD_PATH = os.path.join(CWD, 'files', 'downloads')
-try:
-    os.makedirs(DEFAULT_DOWNLOAD_PATH)
-except:
-    pass
-
-def get_base_url():
-    url = None
-    try:
-        url = open(os.path.join(CWD, 'files', 'base_url.txt')).read().strip()
-    except (OSError, IOError):
-        url = 'http://dl.node-webkit.org/v{}/'
-    return url
 
 class BackgroundThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
@@ -51,320 +25,24 @@ class BackgroundThread(QtCore.QThread):
             func()
 
 
-class Setting(object):
-    def __init__(self, name='', display_name=None, value=None, required=False, type=None, file_types=None, *args, **kwargs):
-        self.name = name
-        self.display_name = display_name if display_name else name.replace('_',' ').capitalize()
-        self.value = value
-        self.last_value = None
-        self.required = required
-        self.type = type
-        self.file_types = file_types
-
-        self.default_value = kwargs.pop('default_value', None)
-        self.button = kwargs.pop('button', None)
-        self.button_callback = kwargs.pop('button_callback', None)
-        self.description = kwargs.pop('description', '')
-
-        self.set_extra_attributes_from_keyword_args(kwargs)
-
-        if self.value is None:
-            self.value = self.default_value
-
-        self.save_path = kwargs.pop('save_path', '')
-
-        self.get_file_information_from_url()
-
-    def get_file_information_from_url(self):
-        if hasattr(self, 'url'):
-            self.file_name = self.url.split('/')[-1]
-            self.full_file_path = os.path.join(self.save_path, self.file_name)
-            self.file_ext = os.path.splitext(self.file_name)[1]
-            if self.file_ext == '.zip':
-                self.extract_class = ZipFile
-                self.extract_args = ()
-            elif self.file_ext == '.gz':
-                self.extract_class = TarFile.open
-                self.extract_args = ('r:gz',)
-
-    def save_file_path(self, version, location=None):
-        if location:
-            self.save_path = location
-        else:
-            self.save_path = self.save_path or DEFAULT_DOWNLOAD_PATH
-        self.get_file_information_from_url()
-
-        if self.full_file_path:
-            return self.full_file_path.format(version)
-        return ''
-
-    def extract_file_path(self, version):
-        if self.extract_file:
-            return self.extract_file.format(version)
-        return ''
-
-    def set_extra_attributes_from_keyword_args(self, kwargs):
-        for undefined_key, undefined_value in kwargs.items():
-            setattr(self, undefined_key, undefined_value)
-
-    def get_file_bytes(self, version):
-        fbytes = []
-
-        file = self.extract_class(self.save_file_path(version), *self.extract_args)
-        for extract_path, dest_path in zip(self.extract_files, self.dest_files):
-            new_bytes = None
-            try:
-                if self.file_ext == '.gz':
-                    new_bytes = file.extractfile(extract_path.format(version)).read()
-                elif self.file_ext == '.zip':
-                    new_bytes = file.read(extract_path.format(version))
-            except KeyError as e:
-                log(e)
-                #dirty hack to support old versions of nw
-                if 'no item named' in str(e):
-                    extract_path='/'.join(extract_path.split('/')[1:])
-                    try:
-                        if self.file_ext == '.gz':
-                            new_bytes = file.extractfile(extract_path).read()
-                        elif self.file_ext == '.zip':
-                            new_bytes = file.read(extract_path)
-                    except KeyError as e:
-                        log(e)
-                        print e
-                print e
-
-            if new_bytes is not None:
-                fbytes.append((dest_path, new_bytes))
-
-        return fbytes
-
-    def __repr__(self):
-        return 'Setting: (name={}, display_name={}, value={}, required={}, type={})'.format(self.name, self.display_name, self.value, self.required, self.type)
-
-
-class MainWindow(QtGui.QWidget):
-
-    base_url = get_base_url()
-
-    app_settings = {'main': Setting(name='main',
-                                    display_name='Main file',
-                                    required=True, type='file',
-                                    file_types='*.html *.php *.htm'),
-                    'name': Setting(name='name',
-                                    display_name='App Name',
-                                    required=True, type='string'),
-
-                    'description': Setting(name='description',
-                                           default_default_value='',
-                                           type='string'),
-
-                    'version': Setting(name='version',
-                                       default_value='0.1.0',
-                                       type='string'),
-
-                    'keywords':Setting(name='keywords',
-                                       default_value='',
-                                       type='string'),
-
-                    'nodejs': Setting('nodejs', 'Include Nodejs',
-                                      default_value=True, type='check'),
-
-                    'node-main': Setting('node-main', 'Alt. Nodejs',
-                                         default_value='', type='file',
-                                         file_types='*.js'),
-
-                    'single-instance': Setting('single-instance', 'Single Instance',
-                                               default_value=True, type='check',
-                                               description='Restrict the app \
-                                                            to run with only a \
-                                                            single instance \
-                                                            allowed at a time.')}
-
-    webkit_settings = {'plugin': Setting('plugin', 'Load plugins',
-                                         default_value=False,
-                                         type='check'),
-
-                       'java': Setting('java', 'Load Java',
-                                       default_value=False,
-                                       type='check'),
-
-                       'page-cache': Setting('page-cache', 'Page Cache',
-                                             default_value=False,
-                                             type='check')}
-
-    window_settings = {'title': Setting(name='title', default_value='',
-                                        type='string'),
-
-                       'icon': Setting('icon', 'Window Icon',
-                                       default_value='', type='file',
-                                       file_types='*.png *.jpg *.jpeg'),
-
-                       'mac_app_icon': Setting('mac_icon', 'Mac Icon',
-                                               default_value='', type='file',
-                                               file_types='*.png *.jpg *.jpeg *.icns',
-                                               description='The icon to be displayed for \
-                                                            the Mac Application. Defaults \
-                                                            to Window Icon.'),
-
-                       'exe_icon': Setting('exe_icon', 'Exe Icon',
-                                           default_value='', type='file',
-                                           file_types='*.png *.jpg *.jpeg',
-                                           description='The icon to be \
-                                                        displayed in the windows \
-                                                        exe of the app. Defaults \
-                                                        to Window Icon.'),
-
-                       'width': Setting('width', default_value=640,
-                                        type='string'),
-
-                       'height': Setting('height', default_value=480,
-                                         type='string'),
-
-                       'min_width': Setting('min_width',
-                                            default_value=None,
-                                            type='string'),
-
-                       'min_height': Setting('min_height',
-                                             default_value=None,
-                                             type='string'),
-
-                       'max_width': Setting('max_width',
-                                            default_value=None,
-                                            type='string'),
-
-                       'max_height': Setting('max_height',
-                                             default_value=None,
-                                             type='string'),
-
-                       'toolbar': Setting('toolbar', 'Show Toolbar',
-                                          default_value=False, type='check'),
-
-                       'always-on-top': Setting('always-on-top', 'Keep on top',
-                                                default_value=False,
-                                                type='check'),
-
-                       'frame': Setting('frame', 'Window Frame',
-                                        default_value=True, type='check',
-                                        description='Show the frame of the window.'),
-
-                       'show_in_taskbar': Setting('show_in_taskbar', 'Taskbar',
-                                                  default_value=True, type='check',
-                                                  description='Show the app running \
-                                                               in the taskbar.'),
-
-                       'visible': Setting('visible', default_value=True,
-                                          type='check'),
-
-                       'resizable': Setting('resizable', default_value=False,
-                                            type='check'),
-
-                       'fullscreen': Setting('fullscreen', default_value=False,
-                                             type='check'),
-
-                       'position': Setting('position','Position by', default_value=None,
-                                           values=[None, 'mouse', 'center'],
-                                           type='list',
-                                           description='The position to place \
-                                                        the window when it opens.'),
-
-                       'as_desktop': Setting('as_desktop', default_value=False,
-                                             type='check',
-                                             description='Tries to render the \
-                                                          app to the desktop \
-                                                          background.'),
-                       }
-
-    win_32_dir_prefix = 'node-webkit-v{}-win-ia32'
-    mac_32_dir_prefix = 'node-webkit-v{}-osx-ia32'
-    linux_32_dir_prefix = 'node-webkit-v{}-linux-ia32'
-
-    win_64_dir_prefix = 'node-webkit-v{}-win-x64'
-    mac_64_dir_prefix = 'node-webkit-v{}-osx-x64'
-    linux_64_dir_prefix = 'node-webkit-v{}-linux-x64'
-
-
-    export_settings = {'windows': Setting('windows', default_value=False, type='check',
-                                          url=base_url+'node-webkit-v{}-win-ia32.zip',
-                                          extract_files=[win_32_dir_prefix+'/nw.exe',
-                                                         win_32_dir_prefix+'/nw.pak',
-                                                         win_32_dir_prefix+'/icudtl.dat',
-                                                         win_32_dir_prefix+'/libEGL.dll',
-                                                         win_32_dir_prefix+'/libGLESv2.dll'],
-                                          dest_files=['nw.exe', #must be the first entry
-                                                      'nw.pak',
-                                                      'icudtl.dat',
-                                                      'libEGL.dll',
-                                                      'libGLESv2.dll']),
-                       'mac': Setting('mac', default_value=False, type='check',
-                                      url=base_url+mac_32_dir_prefix+'.zip',
-                                      extract_file=mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                      extract_files=[mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/node-webkit Framework',
-                                                     mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/nw.pak',
-                                                     mac_32_dir_prefix+'/node-webkit.app/Contents/Frameworks/node-webkit Framework.framework/Resources/icudtl.dat'],
-                                      dest_files=[os.path.join('node-webkit.app','Contents',
-                                                                'Frameworks','node-webkit Framework.framework',
-                                                                'node-webkit Framework'),
-                                                  os.path.join('node-webkit.app','Contents',
-                                                                'Frameworks','node-webkit Framework.framework',
-                                                                'Resources', 'nw.pak'),
-                                                  os.path.join('node-webkit.app','Contents',
-                                                                'Frameworks','node-webkit Framework.framework',
-                                                                'Resources', 'icudtl.dat')]
-                                                  ),
-                       'linux-x64': Setting('linux-x64', default_value=False, type='check',
-                                            url=base_url+linux_64_dir_prefix+'.tar.gz',
-                                            extract_file=linux_64_dir_prefix+'/nw',
-                                            extract_files=[linux_64_dir_prefix+'/nw',
-                                                           linux_64_dir_prefix+'/nw.pak',
-                                                           linux_64_dir_prefix+'/icudtl.dat'],
-                                            dest_files=['nw', 'nw.pak', 'icudtl.dat']),
-                       'linux-x32': Setting('linux-x32', default_value=False, type='check',
-                                            url=base_url+linux_32_dir_prefix+'.tar.gz',
-                                            extract_file=linux_32_dir_prefix+'/nw',
-                                            extract_files=[linux_32_dir_prefix+'/nw',
-                                                           linux_32_dir_prefix+'/nw.pak',
-                                                           linux_32_dir_prefix+'/icudtl.dat'],
-                                            dest_files=['nw', 'nw.pak', 'icudtl.dat'])}
+class MainWindow(QtGui.QWidget, CommandBase):
 
     def update_nw_versions(self, button):
-        self.getVersionsInBackground()
-
-
-    download_settings = {'nw_version':Setting('nw_version', 'Node-webkit version', default_value='0.9.2',
-                                              values=[], type='list', button='Update',
-                                              button_callback=update_nw_versions),
-                         'force_download': Setting('force_download', default_value=False, type='check'),
-                         'download_dir': Setting('download_dir', 'Download Location', default_value=DEFAULT_DOWNLOAD_PATH, type='folder'),
-                         }
-
-    _setting_groups = [app_settings, webkit_settings, window_settings, export_settings, download_settings]
-
-    application_setting_order = ['main', 'name', 'node-main', 'description', 'version', 'keywords',
-                                 'nodejs', 'single-instance', 'plugin',
-                                 'java', 'page-cache']
-
-    window_setting_order = ['title', 'icon', 'mac_app_icon', 'exe_icon', 'position', 'width', 'height',
-                            'min_width', 'min_height',
-                            'max_width', 'max_height', 'toolbar', 'always-on-top', 'frame',
-                            'show_in_taskbar', 'visible', 'resizable', 'fullscreen', 'as_desktop']
-
-    export_setting_order = ['windows', 'linux-x64', 'mac', 'linux-x32']
-
-    download_setting_order = ['nw_version', 'download_dir','force_download']
+        self.get_versions_in_background()
 
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
+        CommandBase.__init__(self)
+        self.output_package_json = True
         self.setWindowIcon(QtGui.QIcon('icon.png'))
         self.update_json = False
 
         self.setup_nw_versions()
 
-        self.httpGetId = 0
-        self.httpRequestAborted = False
         self.thread = None
         self.original_packagejson = {}
 
-        self.resize(width,height)
+        self.resize(width, height)
 
         self.extract_error = None
 
@@ -376,9 +54,9 @@ class MainWindow(QtGui.QWidget):
         self.update_nw_versions(None)
 
     def setup_nw_versions(self):
-        nw_version = self.getSetting('nw_version')
+        nw_version = self.get_setting('nw_version')
         try:
-            f = open(os.path.join(CWD, 'files','nw-versions.txt'))
+            f = open(os.path.join(CWD, 'files', 'nw-versions.txt'))
             for line in f:
                 nw_version.values.append(line.strip())
         except IOError:
@@ -386,23 +64,23 @@ class MainWindow(QtGui.QWidget):
 
     def create_application_layout(self):
         self.main_layout = QtGui.QVBoxLayout()
-        self.main_layout.setContentsMargins(10,5,10,5)
+        self.main_layout.setContentsMargins(10, 5, 10, 5)
 
         self.create_layout_widgets()
 
-        self.add_widgets_to_main_layout()
+        self.addWidgets_to_main_layout()
 
         self.setLayout(self.main_layout)
 
     def create_layout_widgets(self):
-        self.download_bar_widget = self.createDownloadBar()
-        self.app_settings_widget = self.createApplicationSettings()
-        self.win_settings_widget = self.createWindowSettings()
-        self.ex_settings_widget = self.createExportSettings()
-        self.dl_settings_widget = self.createDownloadSettings()
-        self.directory_chooser_widget = self.createDirectoryChoose()
+        self.download_bar_widget = self.create_download_bar()
+        self.app_settings_widget = self.create_application_settings()
+        self.win_settings_widget = self.create_window_settings()
+        self.ex_settings_widget = self.create_export_settings()
+        self.dl_settings_widget = self.create_download_settings()
+        self.directory_chooser_widget = self.create_directory_choose()
 
-    def add_widgets_to_main_layout(self):
+    def addWidgets_to_main_layout(self):
         self.main_layout.addWidget(self.directory_chooser_widget)
         self.main_layout.addWidget(self.app_settings_widget)
         self.main_layout.addWidget(self.win_settings_widget)
@@ -418,59 +96,33 @@ class MainWindow(QtGui.QWidget):
         self.dl_settings_widget.setEnabled(is_enabled)
 
     def export(self, export_button, cancel_button):
-        #self.delete_files_if_forced()
         self.get_files_to_download()
         self.try_to_download_files()
 
     def open_export(self, open_export_button):
-        open_folder_in_explorer(self.outputDir())
-
-    def delete_files_if_forced(self):
-        forced = self.getSetting('force_download').value
-
-        if forced:
-            for ex_setting in self.export_settings.values():
-                for dest_file in ex_setting.dest_files:
-                    f_path = os.path.join('files', ex_setting.name, dest_file)
-                    if os.path.exists(f_path):
-                        os.remove(f_path)
-
-    def get_files_to_download(self):
-        self.files_to_download = []
-        for setting_name, setting in self.export_settings.items():
-            if setting.value == True:
-                self.files_to_download.append(setting)
+        open_folder_in_explorer(self.output_dir())
 
     def try_to_download_files(self):
         if self.files_to_download:
             self.progress_bar.setVisible(True)
             self.cancel_button.setEnabled(True)
-            self.disableUIWhileWorking()
+            self.disable_ui_while_working()
 
             self.download_file_with_error_handling()
         else:
-            #This shouldn't happen since we disable the UI if there are no options selected
-            #But in the weird event that this does happen, we are prepared!
-            QtGui.QMessageBox.information(self, 'Export Options Empty!', 'Please choose one of the export options!')
+            # This shouldn't happen since we disable the UI if there are no
+            # options selected
+            # But in the weird event that this does happen, we are prepared!
+            QtGui.QMessageBox.information(self,
+                                          'Export Options Empty!',
+                                          ('Please choose one of '
+                                           'the export options!'))
 
     def selected_version(self):
-        return self.getSetting('nw_version').value
-
-    def download_file_with_error_handling(self):
-        setting = self.files_to_download.pop()
-        location = self.getSetting('download_dir').value
-        try:
-            self.downloadFile(setting.url.format(self.selected_version(), self.selected_version()), setting)
-        except Exception as e:
-            if os.path.exists(setting.save_file_path(self.selected_version(), location)):
-                os.remove(setting.save_file_path(self.selected_version(), location))
-
-            error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-            self.show_error(error)
-            self.enable_ui_after_error()
+        return self.get_setting('nw_version').value
 
     def enable_ui_after_error(self):
-        self.enableUI()
+        self.enable_ui()
         self.progress_text = ''
         self.progress_bar.setVisible(False)
         self.cancel_button.setEnabled(False)
@@ -478,66 +130,72 @@ class MainWindow(QtGui.QWidget):
     def show_error(self, exception):
         QtGui.QMessageBox.information(self, 'Error!', str(exception))
 
-    def disableUIWhileWorking(self):
+    def disable_ui_while_working(self):
         self.option_settings_enabled(False)
         self.directory_chooser_widget.setEnabled(False)
 
-    def enableUI(self):
+    def enable_ui(self):
         self.option_settings_enabled(True)
         self.directory_chooser_widget.setEnabled(True)
 
-    def requiredSettingsFilled(self):
-        proj_dir = self.projectDir()
-        out_dir = self.outputDir()
-
-        valid_proj_dir = False
+    def required_settings_filled(self):
+        proj_dir = self.project_dir()
+        out_dir = self.output_dir()
 
         if proj_dir and out_dir:
             if os.path.exists(proj_dir):
                 valid_proj_dirs = True
 
         settings_valid = True
-        for sgroup in self._setting_groups:
+        for sgroup in self.settings['setting_groups']:
             for sname, setting in sgroup.items():
+                setting_path = os.path.join(self.project_dir(),
+                                            str(setting.value))
+
                 if setting.required and not setting.value:
                     return False
-                if setting.type == 'file' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
+
+                if (setting.type == 'file' and
+                    setting.value and
+                        not os.path.exists(setting_path)):
                     log(setting.value, "does not exist")
                     settings_valid = False
-                if setting.type == 'folder' and setting.value and not os.path.exists(os.path.join(self.projectDir(),setting.value)):
+
+                if (setting.type == 'folder' and
+                    setting.value and
+                        not os.path.exists(setting_path)):
                     settings_valid = False
 
         export_chosen = False
-        for setting_name, setting in self.export_settings.items():
+        for setting_name, setting in self.settings['export_settings'].items():
             if setting.value:
                 export_chosen = True
 
-
         return export_chosen and valid_proj_dirs and settings_valid
 
-    def projectDir(self):
+    def project_dir(self):
         if hasattr(self, 'input_line'):
             return self.input_line.text()
         return ''
 
-    def outputDir(self):
+    def output_dir(self):
         if hasattr(self, 'output_line'):
             return self.output_line.text()
         return ''
 
-    def createDownloadBar(self):
+    def create_download_bar(self):
         hlayout = QtGui.QHBoxLayout()
 
         vlayout = QtGui.QVBoxLayout()
-        vlayout.setContentsMargins(5,5,5,5)
+        vlayout.setContentsMargins(5, 5, 5, 5)
         vlayout.setSpacing(5)
         hlayout.setSpacing(5)
-        hlayout.setContentsMargins(5,5,5,5)
+        hlayout.setContentsMargins(5, 5, 5, 5)
 
         progress_label = QtGui.QLabel('')
         progress_bar = QtGui.QProgressBar()
         progress_bar.setVisible(False)
-        progress_bar.setContentsMargins(5,5,5,5)
+        progress_bar.setContentsMargins(5, 5, 5, 5)
 
         vlayout.addWidget(progress_label)
         vlayout.addWidget(progress_bar)
@@ -551,22 +209,22 @@ class MainWindow(QtGui.QWidget):
 
         open_export_button = QtGui.QPushButton()
         open_export_button.setEnabled(False)
-        open_export_button.setIcon(QtGui.QIcon(os.path.join('files','images','folder_open.png')))
+        open_export_button.setIcon(QtGui.QIcon(os.path.join('files', 'images', 'folder_open.png')))
         open_export_button.setToolTip('Open Export Folder')
         open_export_button.setMaximumWidth(30)
         open_export_button.setMaximumHeight(30)
 
-        ex_button.clicked.connect(self.callWithObject('export', ex_button, cancel_button))
-        cancel_button.clicked.connect(self.cancelDownload)
-        open_export_button.clicked.connect(self.callWithObject('open_export', open_export_button))
+        ex_button.clicked.connect(self.call_with_object('export', ex_button, cancel_button))
+        cancel_button.clicked.connect(self.cancel_download)
+        open_export_button.clicked.connect(self.call_with_object('open_export', open_export_button))
 
-        buttonBox = QtGui.QDialogButtonBox()
-        buttonBox.addButton(open_export_button, QtGui.QDialogButtonBox.NoRole)
-        buttonBox.addButton(cancel_button, QtGui.QDialogButtonBox.RejectRole)
-        buttonBox.addButton(ex_button, QtGui.QDialogButtonBox.AcceptRole)
+        button_box = QtGui.QDialogButtonBox()
+        button_box.addButton(open_export_button, QtGui.QDialogButtonBox.NoRole)
+        button_box.addButton(cancel_button, QtGui.QDialogButtonBox.RejectRole)
+        button_box.addButton(ex_button, QtGui.QDialogButtonBox.AcceptRole)
 
         hlayout.addLayout(vlayout)
-        hlayout.addWidget(buttonBox)
+        hlayout.addWidget(button_box)
 
         self.progress_label = progress_label
         self.progress_bar = progress_bar
@@ -574,54 +232,54 @@ class MainWindow(QtGui.QWidget):
         self.open_export_button = open_export_button
 
         http = QHttp(self)
-        http.requestFinished.connect(self.httpRequestFinished)
-        http.dataReadProgress.connect(self.updateProgressBar)
-        http.responseHeaderReceived.connect(self.readResponseHeader)
+        http.requestFinished.connect(self.http_request_finished)
+        http.dataReadProgress.connect(self.update_progress_bar)
+        http.responseHeaderReceived.connect(self.read_response_header)
         self.http = http
         self.ex_button = ex_button
 
         return hlayout
 
-    def readResponseHeader(self, response_header):
+    def read_response_header(self, response_header):
         # Check for genuine error conditions.
         if response_header.statusCode() not in (200, 300, 301, 302, 303, 307):
             self.show_error('Download failed: {}.'.format(response_header.reasonPhrase()))
-            self.httpRequestAborted = True
+            self.http_request_aborted = True
             self.http.abort()
             self.enable_ui_after_error()
 
-    def httpRequestFinished(self, requestId, error):
-        if requestId != self.httpGetId:
+    def http_request_finished(self, request_id, error):
+        if request_id != self.http_get_id:
             return
 
-        if self.httpRequestAborted:
-            if self.outFile is not None:
-                self.outFile.close()
-                self.outFile.remove()
-                self.outFile = None
+        if self.http_request_aborted:
+            if self.out_file is not None:
+                self.out_file.close()
+                self.out_file.remove()
+                self.out_file = None
             return
 
-        self.outFile.close()
+        self.out_file.close()
 
         if error:
-            self.outFile.remove()
+            self.out_file.remove()
             self.show_error('Download failed: {}.'.format(self.http.errorString()))
             self.enable_ui_after_error()
 
-        self.continueDownloadingOrExtract()
+        self.continue_downloading_or_extract()
 
-    def continueDownloadingOrExtract(self):
+    def continue_downloading_or_extract(self):
         if self.files_to_download:
             self.progress_bar.setVisible(True)
             self.cancel_button.setEnabled(True)
-            self.disableUIWhileWorking()
+            self.disable_ui_while_working()
 
             self.download_file_with_error_handling()
         else:
             self.progress_text = 'Done.'
             self.cancel_button.setEnabled(False)
             self.progress_bar.setVisible(False)
-            self.extractFilesInBackground()
+            self.extract_files_in_background()
 
     @property
     def progress_text(self):
@@ -631,146 +289,101 @@ class MainWindow(QtGui.QWidget):
     def progress_text(self, value):
         self.progress_label.setText(str(value))
 
-    def runInBackground(self, method_name, callback):
+    def run_in_background(self, method_name, callback):
         self.thread = BackgroundThread(self, method_name)
         self.thread.finished.connect(callback)
         self.thread.start()
 
-    def getVersionsInBackground(self):
+    def get_versions_in_background(self):
         self.ex_button.setEnabled(False)
-        self.runInBackground('getVersions', self.doneGettingVersions)
+        self.run_in_background('get_versions', self.done_getting_versions)
 
-    def getVersions(self):
-        response = urllib2.urlopen('https://raw.githubusercontent.com/rogerwang/node-webkit/master/CHANGELOG.md')
-        html = response.read()
+    def done_getting_versions(self):
+        self.ex_button.setEnabled(self.required_settings_filled())
+        self.progress_text = 'Done retrieving versions.'
 
-        nw_version = self.getSetting('nw_version')
-
-        old_versions = set(nw_version.values)
-        new_versions = set(re.findall('(\S+) / \S+', html))
-
-        versions = sorted(list(old_versions.union(new_versions)), key=LooseVersion, reverse=True)
-        nw_version.values = versions
-        combo = self.findChildByName(nw_version.name)
+        nw_version = self.get_setting('nw_version')
+        combo = self.find_child_by_name(nw_version.name)
 
         combo.clear()
         combo.addItems(nw_version.values)
-        f = None
-        try:
-            f = open(os.path.join(CWD, 'files','nw-versions.txt'), 'w')
-            for v in nw_version.values:
-                f.write(v+os.linesep)
-        except IOError as e:
-            error = ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-            self.show_error(error)
-            self.enable_ui_after_error()
-        finally:
-            if f:
-                f.close()
 
-    def doneGettingVersions(self):
-        self.ex_button.setEnabled(self.requiredSettingsFilled())
-        self.progress_text = 'Done retrieving versions.'
-
-    def makeOutputFilesInBackground(self):
+    def make_output_files_in_background(self):
         self.ex_button.setEnabled(False)
-        self.runInBackground('makeOutputDirs', self.doneMakingFiles)
+        self.run_in_background('make_output_dirs', self.done_making_files)
 
-    def doneMakingFiles(self):
-        self.ex_button.setEnabled(self.requiredSettingsFilled())
+    def done_making_files(self):
+        self.ex_button.setEnabled(self.required_settings_filled())
         self.progress_text = 'Done Exporting.'
-        self.enableUI()
+        self.enable_ui()
+        self.delete_files()
         if self.output_err:
             self.show_error(self.output_err)
             self.enable_ui_after_error()
 
-    def extractFilesInBackground(self):
+    def extract_files_in_background(self):
         self.progress_text = 'Extracting.'
         self.ex_button.setEnabled(False)
 
-        self.runInBackground('extractFiles', self.doneExtracting)
+        self.run_in_background('extract_files', self.done_extracting)
 
-    def extractFiles(self):
-        self.extract_error = None
-        location = self.getSetting('download_dir').value
-        for setting_name, setting in self.export_settings.items():
-            save_file_path = setting.save_file_path(self.selected_version(), location)
-            try:
-                if setting.value:
-                    extract_path = os.path.join('files', setting.name)
-
-                    if os.path.exists(save_file_path):
-                        for dest_file, fbytes in setting.get_file_bytes(self.selected_version()):
-                            with open(os.path.join(extract_path, dest_file), 'wb+') as d:
-                                d.write(fbytes)
-                            self.progress_text += '.'
-
-                    #if os.path.exists(save_file_path):
-                    #    os.remove(save_file_path) #remove the zip/tar since we don't need it anymore
-
-                    self.progress_text += '.'
-
-            except (tarfile.ReadError, zipfile.BadZipfile) as e:
-                if os.path.exists(save_file_path):
-                    os.remove(save_file_path)
-                self.extract_error = e
-                #cannot use GUI in thread to notify user. Save it for later
-
-
-
-    def doneExtracting(self):
-        self.ex_button.setEnabled(self.requiredSettingsFilled())
+    def done_extracting(self):
+        self.ex_button.setEnabled(self.required_settings_filled())
         if self.extract_error:
             self.progress_text = 'Error extracting.'
-            self.show_error('There were one or more errors with your zip/tar files. They were deleted. Please try to export again.')
+            self.show_error('There were one or more errors with your '
+                            'zip/tar files. They were deleted. Please '
+                            'try to export again.')
 
             self.enable_ui_after_error()
 
         else:
             self.progress_text = 'Done extracting.'
-            self.makeOutputFilesInBackground()
+            self.make_output_files_in_background()
 
-    def cancelDownload(self):
+    def cancel_download(self):
         self.progress_text = 'Download cancelled.'
         self.cancel_button.setEnabled(False)
-        self.httpRequestAborted = True
+        self.http_request_aborted = True
         self.http.abort()
-        self.enableUI()
+        self.enable_ui()
 
-    def updateProgressBar(self, bytesRead, totalBytes):
-        if self.httpRequestAborted:
+    def update_progress_bar(self, bytes_read, total_bytes):
+        if self.http_request_aborted:
             return
-        self.progress_bar.setMaximum(totalBytes)
-        self.progress_bar.setValue(bytesRead)
+        self.progress_bar.setMaximum(total_bytes)
+        self.progress_bar.setValue(bytes_read)
 
-    def downloadFile(self, path, setting):
-        self.progress_text = 'Downloading {}'.format(path.replace(self.base_url.format(self.selected_version()),''))
+    def download_file(self, path, setting):
+        version_file = self.settings['base_url'].format(self.selected_version())
+        self.progress_text = 'Downloading {}'.format(path.replace(version_file, ''))
 
-        location = self.getSetting('download_dir').value
+        location = self.get_setting('download_dir').value
 
         url = QUrl(path)
-        fileInfo = QFileInfo(url.path())
-        fileName = setting.save_file_path(self.selected_version(), location)
+        file_name = setting.save_file_path(self.selected_version(), location)
 
-        archive_exists = QFile.exists(fileName)
+        archive_exists = QFile.exists(file_name)
 
         dest_files_exist = False
 
-        #for dest_file in setting.dest_files:
+        # for dest_file in setting.dest_files:
         #    dest_file_path = os.path.join('files', setting.name, dest_file)
         #    dest_files_exist &= QFile.exists(dest_file_path)
 
-        forced = self.getSetting('force_download').value
+        forced = self.get_setting('force_download').value
 
         if (archive_exists or dest_files_exist) and not forced:
-            self.continueDownloadingOrExtract()
-            return #QFile.remove(fileName)
+            self.continue_downloading_or_extract()
+            return
 
-        self.outFile = QFile(fileName)
-        if not self.outFile.open(QIODevice.WriteOnly):
-            self.show_error('Unable to save the file {}: {}.'.format(fileName, self.outFile.errorString()))
-            self.outFile = None
-            self.enableUI()
+        self.out_file = QFile(file_name)
+        if not self.out_file.open(QIODevice.WriteOnly):
+            error = self.out_file.error_string()
+            self.show_error('Unable to save the file {}: {}.'.format(file_name,
+                                                                     error))
+            self.out_file = None
+            self.enable_ui()
             return
 
         mode = QHttp.ConnectionModeHttp
@@ -778,7 +391,7 @@ class MainWindow(QtGui.QWidget):
         if port == -1:
             port = 0
         self.http.setHost(url.host(), mode, port)
-        self.httpRequestAborted = False
+        self.http_request_aborted = False
 
         path = QUrl.toPercentEncoding(url.path(), "!$&'()*+,;=:@/")
         if path:
@@ -787,18 +400,18 @@ class MainWindow(QtGui.QWidget):
             path = '/'
 
         # Download the file.
-        self.httpGetId = self.http.get(path, self.outFile)
+        self.http_get_id = self.http.get(path, self.out_file)
 
-    def createDirectoryChoose(self):
-        groupBox = QtGui.QGroupBox("Choose Your Web Project")
+    def create_directory_choose(self):
+        group_box = QtGui.QGroupBox("Choose Your Web Project")
 
         input_layout = QtGui.QHBoxLayout()
 
         input_label = QtGui.QLabel('Project Directory:')
         self.input_line = QtGui.QLineEdit()
-        self.input_line.textChanged.connect(self.projectPathChanged)
+        self.input_line.textChanged.connect(self.project_path_changed)
         input_button = QtGui.QPushButton('...')
-        input_button.clicked.connect(self.browseDir)
+        input_button.clicked.connect(self.browse_dir)
 
         input_layout.addWidget(input_label)
         input_layout.addWidget(self.input_line)
@@ -808,9 +421,9 @@ class MainWindow(QtGui.QWidget):
 
         output_label = QtGui.QLabel('Output Directory:')
         self.output_line = QtGui.QLineEdit()
-        self.output_line.textChanged.connect(self.projectPathChanged)
+        self.output_line.textChanged.connect(self.project_path_changed)
         output_button = QtGui.QPushButton('...')
-        output_button.clicked.connect(self.browseOutDir)
+        output_button.clicked.connect(self.browse_out_dir)
 
         output_layout.addWidget(output_label)
         output_layout.addWidget(self.output_line)
@@ -818,17 +431,17 @@ class MainWindow(QtGui.QWidget):
 
         vlayout = QtGui.QVBoxLayout()
 
-        vlayout.setSpacing(5);
-        vlayout.setContentsMargins(10,5,10,5);
+        vlayout.setSpacing(5)
+        vlayout.setContentsMargins(10, 5, 10, 5)
 
         vlayout.addLayout(input_layout)
         vlayout.addLayout(output_layout)
 
-        groupBox.setLayout(vlayout)
+        group_box.setLayout(vlayout)
 
-        return groupBox
+        return group_box
 
-    def callWithObject(self, name, obj, *args, **kwargs):
+    def call_with_object(self, name, obj, *args, **kwargs):
         """Allows arguments to be passed to click events"""
         def call():
             if hasattr(self, name):
@@ -836,123 +449,130 @@ class MainWindow(QtGui.QWidget):
                 func(obj, *args, **kwargs)
         return call
 
-    def findChildByName(self, name):
+    def find_child_by_name(self, name):
         return self.findChild(QtCore.QObject, name)
 
-    def findAllChildren(self, names):
+    def find_all_children(self, names):
         children = []
-        for child in self.findChildren(QtCore.QObject):
-            if child.objectName() in names:
+        for child in self.find_children(QtCore.QObject):
+            if child.object_name() in names:
                 children.append(child)
 
         return children
 
-    def projectName(self):
-        return self.findChildByName('name').text()
+    def project_name(self):
+        return self.find_child_by_name('name').text()
 
-    def browseDir(self):
+    def browse_dir(self):
         self.update_json = False
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Find Project Directory",
-                self.projectDir() or QtCore.QDir.currentPath())
+                self.project_dir() or QtCore.QDir.currentPath())
         if directory:
-            self.resetSettings()
+            self.reset_settings()
             self.input_line.setText(directory)
-            self.output_line.setText(os.path.join(directory,'output'))
+            self.output_line.setText(os.path.join(directory, 'output'))
 
             proj_name = os.path.basename(directory)
 
-            setting_input = self.findChildByName('main')
-            files = glob.glob(os.path.join(directory,'index.html')) + glob.glob(os.path.join(directory,'index.php')) + glob.glob(os.path.join(directory,'index.htm'))
+            setting_input = self.find_child_by_name('main')
+            files = (glob.glob(os.path.join(directory, 'index.html')) +
+                     glob.glob(os.path.join(directory, 'index.php')) +
+                     glob.glob(os.path.join(directory, 'index.htm')))
             if not setting_input.text():
                 if files:
-                    setting_input.setText(files[0].replace(self.projectDir()+os.path.sep,''))
+                    setting_input.setText(files[0].replace(self.project_dir() + os.path.sep, ''))
 
-            app_name_input = self.findChildByName('name')
-            title_input = self.findChildByName('title')
+            app_name_input = self.find_child_by_name('name')
+            title_input = self.find_child_by_name('title')
             if not app_name_input.text():
                 app_name_input.setText(proj_name)
             if not title_input.text():
                 title_input.setText(proj_name)
 
-            self.loadPackageJson()
+            self.load_package_json()
             self.open_export_button.setEnabled(True)
             self.update_json = True
 
-    def browseOutDir(self):
-        self.update_json=False
+    def browse_out_dir(self):
+        self.update_json = False
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
-                self.output_line.text() or self.projectDir() or QtCore.QDir.currentPath())
+                                                             (self.output_line.text() or
+                                                              self.project_dir() or
+                                                              QtCore.QDir.currentPath()))
         if directory:
             self.output_line.setText(directory)
             self.update_json = True
 
-    def getFile(self, obj, text_obj, setting, *args, **kwargs):
-        file, junk = QtGui.QFileDialog.getOpenFileName(self, 'Choose File', setting.last_value or self.projectDir() or QtCore.QDir.currentPath(), setting.file_types)
-        if file:
-            file = file.replace(self.projectDir()+os.path.sep,'')
-            text_obj.setText(file)
-            setting.last_value = file
+    def get_file(self, obj, text_obj, setting, *args, **kwargs):
+        file_path, _ = QtGui.QFileDialog.getOpenFileName(self, 'Choose File',
+                                                         (setting.last_value or
+                                                          self.project_dir() or
+                                                          QtCore.QDir.currentPath()),
+                                                         setting.file_types)
+        if file_path:
+            file_path = file_path.replace(self.project_dir()+os.path.sep, '')
+            text_obj.setText(file_path)
+            setting.last_value = file_path
 
-    def getFolder(self, obj, text_obj, setting, *args, **kwargs):
-        folder = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Folder', setting.last_value or QtCore.QDir.currentPath())
+    def get_folder(self, obj, text_obj, setting, *args, **kwargs):
+        folder = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Folder',
+                                                        (setting.last_value or
+                                                         QtCore.QDir.currentPath()))
         if folder:
-            folder = folder.replace(self.projectDir()+os.path.sep,'')
+            folder = folder.replace(self.project_dir()+os.path.sep, '')
             text_obj.setText(folder)
             setting.last_value = folder
 
+    def create_application_settings(self):
+        group_box = QtGui.QGroupBox("Application Settings")
+        vlayout = self.create_layout(self.settings['order']['application_setting_order'])
 
-    def createApplicationSettings(self):
-        groupBox = QtGui.QGroupBox("Application Settings")
-        vlayout = self.createLayout(self.application_setting_order)
+        group_box.setLayout(vlayout)
+        return group_box
 
-        groupBox.setLayout(vlayout)
-        return groupBox
-
-    def createSetting(self, name):
-        setting = self.getSetting(name)
+    def create_setting(self, name):
+        setting = self.get_setting(name)
         if setting.type == 'string':
-            return self.createTextInputSetting(name)
+            return self.create_text_input_setting(name)
         elif setting.type == 'file':
-            return self.createTextInputWithFileSetting(name)
+            return self.create_text_input_with_file_setting(name)
         elif setting.type == 'folder':
-            return self.createTextInputWithFolderSetting(name)
+            return self.create_text_input_with_folder_setting(name)
         elif setting.type == 'check':
-            return self.createCheckSetting(name)
+            return self.create_check_setting(name)
         elif setting.type == 'list':
-            return self.createListSetting(name)
+            return self.create_list_setting(name)
 
+    def create_window_settings(self):
+        group_box = QtGui.QGroupBox("Window Settings")
+        vlayout = self.create_layout(self.settings['order']['window_setting_order'])
 
-    def createWindowSettings(self):
-        groupBox = QtGui.QGroupBox("Window Settings")
-        vlayout = self.createLayout(self.window_setting_order)
+        group_box.setLayout(vlayout)
+        return group_box
 
-        groupBox.setLayout(vlayout)
-        return groupBox
+    def create_export_settings(self):
+        group_box = QtGui.QGroupBox("Export to")
+        vlayout = self.create_layout(self.settings['order']['export_setting_order'], cols=4)
 
-    def createExportSettings(self):
-        groupBox = QtGui.QGroupBox("Export to")
-        vlayout = self.createLayout(self.export_setting_order, cols=4)
+        group_box.setLayout(vlayout)
+        return group_box
 
-        groupBox.setLayout(vlayout)
-        return groupBox
+    def create_download_settings(self):
+        group_box = QtGui.QGroupBox("Download Settings")
+        vlayout = self.create_layout(self.settings['order']['download_setting_order'], 2)
 
+        group_box.setLayout(vlayout)
+        return group_box
 
-    def createDownloadSettings(self):
-        groupBox = QtGui.QGroupBox("Download Settings")
-        vlayout = self.createLayout(self.download_setting_order, 2)
-
-        groupBox.setLayout(vlayout)
-        return groupBox
-
-    def createLayout(self, settings, cols=3):
+    def create_layout(self, settings, cols=3):
         glayout = QtGui.QGridLayout()
-        glayout.setContentsMargins(10,5,10,5)
+        glayout.setContentsMargins(10, 5, 10, 5)
         glayout.setSpacing(10)
         col = 0
         row = 0
 
         for setting_name in settings:
-            setting = self.getSetting(setting_name)
+            setting = self.get_setting(setting_name)
             if col >= cols*2:
                 row += 1
                 col = 0
@@ -961,21 +581,23 @@ class MainWindow(QtGui.QWidget):
                 display_name += '*'
             setting_label = QtGui.QLabel(display_name)
             setting_label.setToolTip(setting.description)
-            glayout.addWidget(setting_label,row,col)
-            glayout.addLayout(self.createSetting(setting_name),row,col+1)
+            glayout.addWidget(setting_label, row, col)
+            glayout.addLayout(self.create_setting(setting_name),
+                               row, col+1)
             col += 2
 
         return glayout
 
-    def createTextInputSetting(self, name):
+    def create_text_input_setting(self, name):
         hlayout = QtGui.QHBoxLayout()
 
-        setting = self.getSetting(name)
+        setting = self.get_setting(name)
 
         text = QtGui.QLineEdit()
         text.setObjectName(setting.name)
 
-        text.textChanged.connect(self.callWithObject('settingChanged', text, setting))
+        text.textChanged.connect(self.call_with_object('setting_changed',
+                                                        text, setting))
         if setting.value:
             text.setText(str(setting.value))
 
@@ -983,34 +605,10 @@ class MainWindow(QtGui.QWidget):
 
         return hlayout
 
-    def createTextInputWithFileSetting(self, name):
+    def create_text_input_with_file_setting(self, name):
         hlayout = QtGui.QHBoxLayout()
 
-        setting = self.getSetting(name)
-
-        text = QtGui.QLineEdit()
-        text.setObjectName(setting.name)
-
-        button = QtGui.QPushButton('...')
-        button.setMaximumWidth(30)
-        button.setMaximumHeight(26)
-
-        button.clicked.connect(self.callWithObject('getFile', button, text, setting))
-
-        if setting.value:
-            text.setText(str(setting.value))
-
-        text.textChanged.connect(self.callWithObject('settingChanged', text, setting))
-
-        hlayout.addWidget(text)
-        hlayout.addWidget(button)
-
-        return hlayout
-
-    def createTextInputWithFolderSetting(self, name):
-        hlayout = QtGui.QHBoxLayout()
-
-        setting = self.getSetting(name)
+        setting = self.get_setting(name)
 
         text = QtGui.QLineEdit()
         text.setObjectName(setting.name)
@@ -1019,24 +617,54 @@ class MainWindow(QtGui.QWidget):
         button.setMaximumWidth(30)
         button.setMaximumHeight(26)
 
-        button.clicked.connect(self.callWithObject('getFolder', button, text, setting))
+        button.clicked.connect(self.call_with_object('get_file', button,
+                                                     text, setting))
 
         if setting.value:
             text.setText(str(setting.value))
 
-        text.textChanged.connect(self.callWithObject('settingChanged', text, setting))
+        text.textChanged.connect(self.call_with_object('setting_changed',
+                                                        text, setting))
 
         hlayout.addWidget(text)
         hlayout.addWidget(button)
 
         return hlayout
 
-    def resetSettings(self):
-        for sgroup in self._setting_groups:
+    def create_text_input_with_folder_setting(self, name):
+        hlayout = QtGui.QHBoxLayout()
+
+        setting = self.get_setting(name)
+
+        text = QtGui.QLineEdit()
+        text.setObjectName(setting.name)
+
+        button = QtGui.QPushButton('...')
+        button.setMaximumWidth(30)
+        button.setMaximumHeight(26)
+
+        button.clicked.connect(self.call_with_object('get_folder', button,
+                                                   text, setting))
+
+        if setting.value:
+            text.setText(str(setting.value))
+
+        text.textChanged.connect(self.call_with_object('setting_changed',
+                                                     text, setting))
+
+        hlayout.addWidget(text)
+        hlayout.addWidget(button)
+
+        return hlayout
+
+    def reset_settings(self):
+        for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
-                widget = self.findChildByName(setting.name)
+                widget = self.find_child_by_name(setting.name)
 
-                if setting.type == 'string' or setting.type == 'file' or setting.type == 'folder':
+                if (setting.type == 'string' or
+                    setting.type == 'file' or
+                        setting.type == 'folder'):
                     old_val = ''
 
                     if setting.default_value is not None:
@@ -1054,9 +682,10 @@ class MainWindow(QtGui.QWidget):
                     setting.value = old_val
                     widget.setChecked(old_val)
 
-
-    def settingChanged(self, obj, setting, *args, **kwargs):
-        if setting.type == 'string' or setting.type == 'file' or setting.type == 'folder':
+    def setting_changed(self, obj, setting, *args, **kwargs):
+        if (setting.type == 'string' or
+            setting.type == 'file' or
+                setting.type == 'folder'):
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
@@ -1064,61 +693,57 @@ class MainWindow(QtGui.QWidget):
             setting.value = obj.currentText()
 
         if self.update_json:
-            json_file = os.path.join(self.projectDir(), 'package.json')
+            json_file = os.path.join(self.project_dir(), 'package.json')
 
             with open(json_file, 'w+') as f:
                 f.write(self.generate_json())
 
-        self.ex_button.setEnabled(self.requiredSettingsFilled())
+        self.ex_button.setEnabled(self.required_settings_filled())
 
-    def projectPathChanged(self):
-        self.ex_button.setEnabled(self.requiredSettingsFilled())
+    def project_path_changed(self):
+        self.ex_button.setEnabled(self.required_settings_filled())
 
         dirs_filled_out = False
-        if self.projectDir() and self.outputDir():
-            if os.path.exists(self.projectDir()):
+        if self.project_dir() and self.output_dir():
+            if os.path.exists(self.project_dir()):
                 dirs_filled_out = True
 
         self.option_settings_enabled(dirs_filled_out)
 
-    def getSetting(self, name):
-        for setting_group in self._setting_groups:
-            if name in setting_group:
-                setting = setting_group[name]
-                return setting
-
-
-    def createCheckSetting(self, name):
+    def create_check_setting(self, name):
         hlayout = QtGui.QHBoxLayout()
 
-        setting = self.getSetting(name)
+        setting = self.get_setting(name)
 
         check = QtGui.QCheckBox()
 
         check.setObjectName(setting.name)
 
-        check.clicked.connect(self.callWithObject('settingChanged', check, setting))
+        check.clicked.connect(self.call_with_object('setting_changed',
+                                                    check, setting))
         check.setChecked(setting.value)
 
         hlayout.addWidget(check)
 
         return hlayout
 
-    def createListSetting(self, name):
+    def create_list_setting(self, name):
         hlayout = QtGui.QHBoxLayout()
 
-        setting = self.getSetting(name)
+        setting = self.get_setting(name)
 
         button = None
         if setting.button:
             button = QtGui.QPushButton(setting.button)
-            button.clicked.connect(lambda: setting.button_callback(self, button))
+            button.clicked.connect(lambda: setting.button_callback(button))
         combo = QtGui.QComboBox()
 
         combo.setObjectName(setting.name)
 
-        combo.currentIndexChanged.connect(self.callWithObject('settingChanged', combo, setting))
-        combo.editTextChanged.connect(self.callWithObject('settingChanged', combo, setting))
+        combo.currentIndexChanged.connect(self.call_with_object('setting_changed',
+                                                                  combo, setting))
+        combo.editTextChanged.connect(self.call_with_object('setting_changed',
+                                                              combo, setting))
 
         for val in setting.values:
             combo.addItem(val)
@@ -1133,207 +758,27 @@ class MainWindow(QtGui.QWidget):
 
         return hlayout
 
-    def generate_json(self):
-        if 'webkit' not in self.original_packagejson:
-            self.original_packagejson['webkit'] = {}
-        if 'window' not in self.original_packagejson:
-            self.original_packagejson['window'] = {}
-        if 'webexe_settings' not in self.original_packagejson:
-            self.original_packagejson['webexe_settings'] = {}
-
-        dic = self.original_packagejson
-
-        for setting_name, setting in self.app_settings.items():
-            if setting.value is not None:
-                dic[setting_name] = setting.value
-                if setting_name == 'keywords':
-                    dic[setting_name] = re.findall("\w+", setting.value)
-
-
-        for setting_name, setting in self.window_settings.items():
-            if setting.value is not None:
-                if 'height' in setting.name or 'width' in setting.name:
-                    try:
-                        dic['window'][setting_name] = int(setting.value)
-                    except ValueError:
-                        pass
-                else:
-                    dic['window'][setting_name] = setting.value
-
-        for setting_name, setting in self.webkit_settings.items():
-            if setting.value is not None:
-                dic['webkit'][setting_name] = setting.value
-
-        for setting_name, setting in self.download_settings.items()+self.export_settings.items():
-            if setting.value is not None:
-                dic['webexe_settings'][setting_name] = setting.value
-
-        s = json.dumps(dic, indent=4)
-
-        return s
-
-    def loadPackageJson(self):
-        p_json = glob.glob(os.path.join(self.projectDir(), 'package.json'))
-        if p_json:
-            json_str = ''
-            with open(p_json[0], 'r') as f:
-                json_str = f.read()
-            try:
-                self.load_from_json(json_str)
-            except ValueError as e: #Json file is invalid
-                log( 'Warning: Json file invalid.')
-                print e
-            self.ex_button.setEnabled(self.requiredSettingsFilled())
-
-
-    def load_from_json(self, json_str):
-        dic = json.loads(json_str)
-        self.original_packagejson = dic
-        stack = [('root',dic)]
-        while stack:
-            parent, new_dic = stack.pop()
-            for item in new_dic:
-                setting_field = self.findChildByName(item)
-                setting = self.getSetting(item)
-                if setting_field:
-                    if setting.type == 'file' or setting.type == 'string' or setting.type == 'folder':
-                        val_str = self.convert_val_to_str(new_dic[item])
-                        setting_field.setText(val_str)
-                        setting.value = val_str
-                    if setting.type == 'check':
-                        setting_field.setChecked(new_dic[item])
-                        setting.value = new_dic[item]
-                    if setting.type == 'list':
-                        val_str = self.convert_val_to_str(new_dic[item])
-                        index = setting_field.findText(val_str)
-                        if index != -1:
-                            setting_field.setCurrentIndex(index)
-                        setting.value = val_str
-                if isinstance(new_dic[item], dict):
-                    stack.append((item,new_dic[item]))
-
-    def convert_val_to_str(self, val):
-        if isinstance(val, (list,tuple)):
-            return ', '.join(val)
-        return str(val).replace(self.projectDir()+os.path.sep,'')
-
-    def copyFilesToProjectFolder(self):
-        old_dir = CWD
-        os.chdir(self.projectDir())
-        for sgroup in self._setting_groups:
-            for setting in sgroup.values():
-                if setting.type == 'file' and setting.value:
-                    f_path = setting.value.replace(self.projectDir(),'')
-                    if not os.path.exists(f_path):
-                        try:
-                            shutil.copy(setting.value, self.projectDir())
-                            setting.value = os.path.basename(setting.value)
-                        except shutil.Error as e:#same file warning
-                            log( 'Warning: {}'.format(e))
-
-        os.chdir(old_dir)
-
-    def makeOutputDirs(self):
-        self.output_err = ''
-        try:
-            self.progress_text = 'Removing old output directory...'
-
-            outputDir = os.path.join(self.outputDir(), self.projectName())
-            tempDir = os.path.join(TEMP_DIR, 'webexectemp')
-            if os.path.exists(tempDir):
-                shutil.rmtree(tempDir)
-
-            self.progress_text = 'Making new directories...'
-
-            if not os.path.exists(outputDir):
-                os.makedirs(outputDir)
-
-            os.makedirs(tempDir)
-
-            self.copyFilesToProjectFolder()
-
-            json_file = os.path.join(self.projectDir(), 'package.json')
-
-            with open(json_file, 'w+') as f:
-                f.write(self.generate_json())
-
-            zip_file = os.path.join(tempDir, self.projectName()+'.nw')
-
-            zip_files(zip_file, self.projectDir(), exclude_paths=[outputDir])
-            for ex_setting in self.export_settings.values():
-                if ex_setting.value:
-                    self.progress_text = 'Making files for {}'.format(ex_setting.display_name)
-                    export_dest = os.path.join(outputDir, ex_setting.name)
-
-                    if os.path.exists(export_dest):
-                        shutil.rmtree(export_dest)
-
-                    #shutil will make the directory for us
-                    shutil.copytree(os.path.join('files', ex_setting.name), export_dest)
-                    self.progress_text += '.'
-
-                    if ex_setting.name == 'mac':
-                        app_path = os.path.join(export_dest, self.projectName()+'.app')
-                        shutil.move(os.path.join(export_dest, 'node-webkit.app'), app_path)
-
-                        self.progress_text += '.'
-
-                        shutil.copy(zip_file, os.path.join(app_path, 'Contents', 'Resources', 'app.nw'))
-                        self.create_icns_for_app(os.path.join(app_path, 'Contents', 'Resources', 'nw.icns'))
-
-                        self.progress_text += '.'
-                    else:
-                        ext = ''
-                        windows = False
-                        if ex_setting.name == 'windows':
-                            ext = '.exe'
-                            windows=True
-
-                        nw_path = os.path.join(export_dest, ex_setting.dest_files[0])
-                        dest_binary_path = os.path.join(export_dest, self.projectName()+ext)
-
-                        join_files(dest_binary_path, nw_path, zip_file)
-
-                        sevenfivefive = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-                        os.chmod(dest_binary_path, sevenfivefive)
-
-                        if windows:
-                            self.replace_icon_in_exe(dest_binary_path)
-
-                        self.progress_text += '.'
-
-                        if os.path.exists(nw_path):
-                            os.remove(nw_path)
-
-        except Exception as e:
-            self.output_err += ''.join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-        finally:
-            shutil.rmtree(tempDir)
-
-    def create_icns_for_app(self, icns_path):
-        icon_setting, mac_app_icon_setting = self.getSetting('icon'), self.getSetting('mac_app_icon')
-        icon_path = mac_app_icon_setting.value if mac_app_icon_setting.value else icon_setting.value
-
-        if icon_path:
-            icon_path = os.path.join(self.projectDir(), icon_path)
-            if not icon_path.endswith('.icns'):
-                save_icns(icon_path, icns_path)
-            else:
-                shutil.copy(icon_path, icns_path)
-
-
-    def replace_icon_in_exe(self, exe_path):
-        icon_setting, exe_icon_setting = self.getSetting('icon'), self.getSetting('exe_icon')
-        icon_path = exe_icon_setting.value if exe_icon_setting.value else icon_setting.value
-        if icon_path:
-            p = PEFile(exe_path)
-            p.replace_icon(os.path.join(self.projectDir(), icon_path))
-            p.write(exe_path)
-            p = None
+    def load_package_json(self):
+        setting_list = super(MainWindow, self).load_package_json()
+        for setting in setting_list:
+            setting_field = self.find_child_by_name(setting.name)
+            if setting_field:
+                if setting.type == 'file' or setting.type == 'string' or setting.type == 'folder':
+                    val_str = self.convert_val_to_str(setting.value)
+                    setting_field.setText(val_str)
+                if setting.type == 'check':
+                    setting_field.setChecked(setting.value)
+                if setting.type == 'list':
+                    val_str = self.convert_val_to_str(setting.value)
+                    index = setting_field.findText(val_str)
+                    if index != -1:
+                        setting_field.setCurrentIndex(index)
+        self.ex_button.setEnabled(self.required_settings_filled())
 
     def show_and_raise(self):
         self.show()
         self.raise_()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
