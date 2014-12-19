@@ -174,8 +174,26 @@ class CommandBase(object):
         self._extract_error = ''
         self.original_packagejson = {}
 
-    def update_nw_versions(self):
+        self.update_nw_versions(None)
+        self.setup_nw_versions()
+
+    def update_nw_versions(self, button):
+        self.progress_text = 'Updating nw versions...'
         self.get_versions()
+        self.progress_text = '\nDone.\n'
+
+    def setup_nw_versions(self):
+        nw_version = self.get_setting('nw_version')
+        try:
+            f = open(os.path.join(CWD, 'files', 'nw-versions.txt'))
+            for line in f:
+                nw_version.values.append(line.strip())
+        except IOError:
+            nw_version.values.append(nw_version.default_value)
+
+    def get_nw_versions(self):
+        nw_version = self.get_setting('nw_version')
+        return nw_version.values[:]
 
     def get_settings(self):
         config_file = os.path.join(CWD, 'files', 'settings.cfg')
@@ -692,8 +710,12 @@ if __name__ == '__main__':
                 if setting.default_value is True:
                     option_name = 'disable-{}'.format(option_name)
             else:
-                kwargs.update({'choices': setting.values or None,
-                               'metavar': '<{}>'.format(setting.display_name)})
+                if setting.values:
+                    kwargs.update({'choices': setting.values})
+                    setting.description += ' Possible values: {{{}}}'.format(', '.join([str(x) for x in setting.values]))
+                    kwargs.update({'metavar':''})
+                else:
+                    kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
 
             parser.add_argument('--{}'.format(option_name),
                                 dest=setting_name,
