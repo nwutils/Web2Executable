@@ -21,6 +21,8 @@ Also, there was an issue for Mac with versions older that 0.1.8b where it wouldn
 Getting Started
 ---------------
 
+###GUI 
+
 Install dependencies **PIL or Pillow** for icon and icns exporting.
 
 Initiate submodules:
@@ -36,6 +38,12 @@ python main.py
 ```
 
 It's a pretty simple app. Just point it the the directory that your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
+
+###Command line interface
+
+Dependencies: configobj (install with pip)
+
+Run the command_line.py with the --help option to see a list of export options. Optionally, if you don't want to install python, there are builds for Mac and Windows in the command_line_builds folder of this repository.
 
 Features
 --------
