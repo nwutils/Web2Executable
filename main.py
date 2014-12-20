@@ -674,7 +674,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     if setting.default_value is not None:
                         old_val = setting.default_value
 
-                    setting.value = old_val
+                    setting.value = old_val.replace('\\', '\\\\')
                     widget.setText(str(old_val))
 
                 elif setting.type == 'check':
@@ -690,6 +690,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         if (setting.type == 'string' or
             setting.type == 'file' or
                 setting.type == 'folder'):
+            setting.value = obj.text().replace('\\', '\\\\')
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
