@@ -468,7 +468,6 @@ class MainWindow(QtGui.QWidget, CommandBase):
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Find Project Directory",
                 self.project_dir() or QtCore.QDir.currentPath())
         if directory:
-            directory = directory.replace('\\', '\\\\')
             self.reset_settings()
             self.input_line.setText(directory)
             self.output_line.setText(os.path.join(directory, 'output'))
@@ -501,7 +500,6 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                               self.project_dir() or
                                                               QtCore.QDir.currentPath()))
         if directory:
-            directory = directory.replace('\\', '\\\\')
             self.output_line.setText(directory)
             self.update_json = True
 
@@ -513,7 +511,6 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                          setting.file_types)
         if file_path:
             file_path = file_path.replace(self.project_dir()+os.path.sep, '')
-            file_path = file_path.replace('\\', '\\\\')
             text_obj.setText(file_path)
             setting.last_value = file_path
 
@@ -523,7 +520,6 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                          QtCore.QDir.currentPath()))
         if folder:
             folder = folder.replace(self.project_dir()+os.path.sep, '')
-            folder = folder.replace('\\', '\\\\')
             text_obj.setText(folder)
             setting.last_value = folder
 
