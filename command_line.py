@@ -75,7 +75,7 @@ class Setting(object):
         self.description = kwargs.pop('description', '')
         self.values = kwargs.pop('values', [])
 
-        self.set_extra_attributes_from_keyword_args(kwargs)
+        self.set_extra_attributes_from_keyword_args(**kwargs)
 
         if self.value is None:
             self.value = self.default_value
@@ -112,7 +112,7 @@ class Setting(object):
             return self.extract_file.format(version)
         return ''
 
-    def set_extra_attributes_from_keyword_args(self, kwargs):
+    def set_extra_attributes_from_keyword_args(self, **kwargs):
         for undefined_key, undefined_value in kwargs.items():
             setattr(self, undefined_key, undefined_value)
 
@@ -205,18 +205,16 @@ class CommandBase(object):
         contents = contents.replace('{DEFAULT_DOWNLOAD_PATH}',
                                     DEFAULT_DOWNLOAD_PATH)
         config_io = StringIO(contents)
-        config = ConfigObj(config_io, unrepr=True)
+        config = ConfigObj(config_io, unrepr=True).dict()
         settings = {'setting_groups': []}
         setting_items = (config['setting_groups'].items() +
                          [('export_settings', config['export_settings'])])
         for setting_group, setting_group_dict in setting_items:
             settings[setting_group] = {}
             for setting_name, setting_dict in setting_group_dict.items():
-                for key in setting_dict.keys():
+                for key, val in setting_dict.items():
                     if '_callback' in key:
                         setting_dict[key] = getattr(self, setting_dict[key])
-                for key, val in setting_dict.items():
-                    setting_dict[key] = val
                 setting_obj = Setting(name=setting_name, **setting_dict)
                 settings[setting_group][setting_name] = setting_obj
 
@@ -590,8 +588,6 @@ class CommandBase(object):
     def convert_val_to_str(self, val):
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
-        elif isinstance(val, basestring):
-            val = str(val).replace('\\', '\\\\')
         return str(val).replace(self.project_dir()+os.path.sep, '')
 
     def export(self):
