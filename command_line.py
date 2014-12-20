@@ -174,6 +174,7 @@ class CommandBase(object):
         self._extract_error = ''
         self.original_packagejson = {}
 
+    def init(self):
         self.update_nw_versions(None)
         self.setup_nw_versions()
 
@@ -677,6 +678,7 @@ if __name__ == '__main__':
                                                   'to web2exe'),
                                      prog='web2execmd')
     command_base = CommandBase()
+    command_base.init()
     parser.add_argument('project_dir', metavar='project_dir',
                         help='The project directory.')
     parser.add_argument('--output-dir', dest='output_dir',
