@@ -145,7 +145,7 @@ Prebuilt Binaries
 
 ###CMD
 
-[Windows 7+ Download](http://www.mediafire.com/download/uiq12b1eosem1o6/Web2ExeWin-CMD.zip)
+[Windows 7+ Download](http://www.mediafire.com/download/6at471iac0yt0s0/Web2ExeWin-CMD.zip)
 
 [Mac OS X 10.6+ download](http://www.mediafire.com/download/esyz3z3ij0qrt64/Web2ExeMac-CMD.zip)
 
