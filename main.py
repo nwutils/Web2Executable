@@ -468,6 +468,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Find Project Directory",
                 self.project_dir() or QtCore.QDir.currentPath())
         if directory:
+            directory = directory.replace('\\', '\\\\')
             self.reset_settings()
             self.input_line.setText(directory)
             self.output_line.setText(os.path.join(directory, 'output'))
@@ -500,6 +501,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                               self.project_dir() or
                                                               QtCore.QDir.currentPath()))
         if directory:
+            directory = directory.replace('\\', '\\\\')
             self.output_line.setText(directory)
             self.update_json = True
 
@@ -511,6 +513,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                          setting.file_types)
         if file_path:
             file_path = file_path.replace(self.project_dir()+os.path.sep, '')
+            file_path = file_path.replace('\\', '\\\\')
             text_obj.setText(file_path)
             setting.last_value = file_path
 
@@ -520,6 +523,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                          QtCore.QDir.currentPath()))
         if folder:
             folder = folder.replace(self.project_dir()+os.path.sep, '')
+            folder = folder.replace('\\', '\\\\')
             text_obj.setText(folder)
             setting.last_value = folder
 
@@ -763,7 +767,9 @@ class MainWindow(QtGui.QWidget, CommandBase):
         for setting in setting_list:
             setting_field = self.find_child_by_name(setting.name)
             if setting_field:
-                if setting.type == 'file' or setting.type == 'string' or setting.type == 'folder':
+                if (setting.type == 'file' or
+                    setting.type == 'string' or
+                        setting.type == 'folder'):
                     val_str = self.convert_val_to_str(setting.value)
                     setting_field.setText(val_str)
                 if setting.type == 'check':
