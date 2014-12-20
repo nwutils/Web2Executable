@@ -7,7 +7,7 @@ Requires the pyside library and python 2.X to run. If you want to replace the ic
 
 If you have an idea for a feature, please list it [here](https://github.com/jyapayne/Web2Executable/wiki/Feature-Requests).
 
-If you liked this project that I've committed many hours to, donate a dollar to the app: 
+If you got some value out of using my app, consider donating a dollar to keep me caffeinated :) 
 
 <a href='https://pledgie.com/campaigns/26899'><img alt='Click here to lend your support to: Web2Executable Donations and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/26899.png?skin_name=chrome' border='0' ></a>
 
@@ -41,9 +41,15 @@ It's a pretty simple app. Just point it the the directory that your web applicat
 
 ###Command line interface
 
-Dependencies: configobj (install with pip)
+Dependencies: configobj (install with pip) and Pillow if you want icon replacement (not necessary)
 
 Run the command_line.py with the --help option to see a list of export options. Optionally, if you don't want to install python, there are builds for Mac and Windows in the command_line_builds folder of this repository.
+
+Example usage (if using the prebuilt binary, replace `python command_line.py` with the exe name):
+
+```
+python command_line.py /var/www/html/CargoBlaster/ --main html/index.html --export-to linux-x64 windows mac --width 900 --height 700 --nw-version 0.10.5
+```
 
 Features
 --------
