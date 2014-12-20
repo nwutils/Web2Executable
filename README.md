@@ -57,13 +57,14 @@ Features
 - Export web applications to all platforms from your current OS
 - Ability to specify a node-webkit version to download
 - Automatic insertion of icon files into Windows exe's or Mac Apps by filling out the icon fields as necessary
+- A command line utility with functionality equivalent to the GUI. Useful for automated builds.
 
 Planned Features
 ----------------
 
 - Compression options using UPX to minimize the exe size
 - Minification of javascript, html, css before zipping
-- A command line utility with functionality equivalent to the GUI. Useful for automated builds.
+
 
 FAQ
 ---
@@ -136,7 +137,15 @@ v0.1.2b
 Prebuilt Binaries
 -----------------
 
-###Mac OS X
+###CMD
+
+[Windows 7+ Download](http://www.mediafire.com/download/uiq12b1eosem1o6/Web2ExeWin-CMD.zip)
+
+[Mac OS X 10.6+ download](http://www.mediafire.com/download/esyz3z3ij0qrt64/Web2ExeMac-CMD.zip)
+
+###GUI
+
+####Mac OS X
 
 [Mac OS X 10.7+ download - v0.1.11b](http://www.mediafire.com/download/c2gp7y74ejd764g/Web2ExeMac-v0.1.11b.zip)
 
@@ -151,7 +160,7 @@ Previous Versions:
 
 You can just put the app where ever you want and double click to run it.
 
-###Windows
+####Windows
 
 [Windows 7+ download - v0.1.11b](http://www.mediafire.com/download/xh7sha57scqe2mb/Web2ExeWin-v0.1.11b.zip)
 
@@ -164,11 +173,9 @@ Previous Version:
 [Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
 
 
-
-
 Double click the Win2Exe.exe file inside the extracted folder.
 
-###Linux
+####Linux
 
 Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
 
