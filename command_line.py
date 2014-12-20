@@ -37,7 +37,10 @@ else:
     CWD = os.getcwd()
 
 TEMP_DIR = get_temp_dir()
-DEFAULT_DOWNLOAD_PATH = os.path.join(CWD, 'files', 'downloads')
+DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
+                                     'files',
+                                     'downloads').replace('\\',
+                                                          '\\\\')
 try:
     os.makedirs(DEFAULT_DOWNLOAD_PATH)
 except:
@@ -587,6 +590,8 @@ class CommandBase(object):
     def convert_val_to_str(self, val):
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
+        elif isinstance(val, basestring):
+            val = str(val).replace('\\', '\\\\')
         return str(val).replace(self.project_dir()+os.path.sep, '')
 
     def export(self):
