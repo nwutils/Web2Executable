@@ -175,6 +175,7 @@ class CommandBase(object):
         self._progress_text = ''
         self._output_err = ''
         self._extract_error = ''
+        self._project_name = None
         self.original_packagejson = {}
 
     def init(self):
@@ -236,7 +237,8 @@ class CommandBase(object):
         return self._output_dir
 
     def project_name(self):
-        return os.path.basename(os.path.dirname(self.project_dir()))
+        return (self._project_name or
+                os.path.basename(os.path.dirname(self.project_dir())))
 
     def get_setting(self, name):
         for setting_group in (self.settings['setting_groups'] +
@@ -428,8 +430,8 @@ class CommandBase(object):
                     if os.path.exists(save_file_path):
                         setting_fbytes = setting.get_file_bytes(version)
                         for dest_file, fbytes in setting_fbytes:
-                            with open(os.path.join(extract_path,
-                                                   dest_file), 'wb+') as d:
+                            path = os.path.join(extract_path, dest_file)
+                            with open(path, 'wb+') as d:
                                 d.write(fbytes)
                             self.progress_text += '.'
 
@@ -691,7 +693,7 @@ if __name__ == '__main__':
                         dest='load_json',
                         nargs='?',
                         default='',
-                        const=False,
+                        const=True,
                         help=('Loads the package.json '
                               'file in the project directory. '
                               'Ignores other command line arguments.'))
@@ -741,6 +743,8 @@ if __name__ == '__main__':
     command_base._project_dir = args.project_dir
     command_base._output_dir = (args.output_dir or
                                 os.path.join(args.project_dir, 'output'))
+
+    command_base._project_name = args.name if not callable(args.name) else args.name()
 
     if not args.title:
         args.title = command_base.project_name()
