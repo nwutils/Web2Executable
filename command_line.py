@@ -168,7 +168,7 @@ class Setting(object):
 class CommandBase(object):
     def __init__(self):
         self.quiet = False
-        self.output_package_json = False
+        self.output_package_json = True
         self.settings = self.get_settings()
         self._project_dir = ''
         self._output_dir = ''
@@ -691,7 +691,7 @@ if __name__ == '__main__':
                         dest='load_json',
                         nargs='?',
                         default='',
-                        const=True,
+                        const=False,
                         help=('Loads the package.json '
                               'file in the project directory. '
                               'Ignores other command line arguments.'))
