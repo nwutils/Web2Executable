@@ -75,6 +75,10 @@ Planned Features
 FAQ
 ---
 
+### How do I use option X?
+
+All of the options for node-webkit are documented in node-webkit's manifest file specification. It is located [here](https://github.com/rogerwang/node-webkit/wiki/Manifest-format).
+
 ### What is the downloads folder for and where should I keep it?
 
 The downloads folder is where Web2Exe stores the node-webkit versions in zip or tar format. This location should be chosen as a central location, because Web2Exe will reuse the files to create executables every time the export button is pressed. It will also save time by not having to redownload the node-webkit files over and over.
