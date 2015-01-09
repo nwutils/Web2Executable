@@ -525,7 +525,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
     def create_application_settings(self):
         group_box = QtGui.QGroupBox("Application Settings")
-        vlayout = self.create_layout(self.settings['order']['application_setting_order'])
+        vlayout = self.create_layout(self.settings['order']['application_setting_order'], cols=4)
 
         group_box.setLayout(vlayout)
         return group_box
@@ -545,7 +545,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
     def create_window_settings(self):
         group_box = QtGui.QGroupBox("Window Settings")
-        vlayout = self.create_layout(self.settings['order']['window_setting_order'])
+        vlayout = self.create_layout(self.settings['order']['window_setting_order'], cols=4)
 
         group_box.setLayout(vlayout)
         return group_box
@@ -786,7 +786,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    frame = MainWindow(800, 500)
+    frame = MainWindow(1000, 500)
     frame.show_and_raise()
 
     sys.exit(app.exec_())
