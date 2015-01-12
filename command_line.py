@@ -28,9 +28,9 @@ except ImportError:
 
 from configobj import ConfigObj
 
-inside_mac_app = getattr(sys, 'frozen', '')
+inside_packed_exe = getattr(sys, 'frozen', '')
 
-if inside_mac_app:
+if inside_packed_exe:
     CWD = os.path.dirname(sys.executable)
     os.chdir(CWD)
 else:
@@ -361,7 +361,7 @@ class CommandBase(object):
 
     @extract_error.setter
     def extract_error(self, value):
-        if value is not None and not self.quiet:
+        if value is not None and not self.quiet and not inside_mac_app:
             self._extract_error = str(value)
             sys.stderr.write('\r{}'.format(self._extract_error))
             sys.stderr.flush()
@@ -372,7 +372,7 @@ class CommandBase(object):
 
     @output_err.setter
     def output_err(self, value):
-        if value is not None and not self.quiet:
+        if value is not None and not self.quiet and not inside_packed_exe:
             self._output_err = str(value)
             sys.stderr.write('\r{}'.format(self._output_err))
             sys.stderr.flush()
@@ -383,7 +383,7 @@ class CommandBase(object):
 
     @progress_text.setter
     def progress_text(self, value):
-        if value is not None and not self.quiet:
+        if value is not None and not self.quiet and not inside_packed_exe:
             self._progress_text = str(value)
             sys.stdout.write('\r{}'.format(self._progress_text))
             sys.stdout.flush()
