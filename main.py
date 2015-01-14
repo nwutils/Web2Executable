@@ -1,5 +1,7 @@
 from utils import log, open_folder_in_explorer
 
+__gui_version__ = "v0.1.13b"
+
 import os
 import glob
 import sys
@@ -7,7 +9,7 @@ import sys
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication
 from PySide.QtNetwork import QHttp
-from PySide.QtCore import QUrl, QFile, QIODevice
+from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
 
 from command_line import CWD, CommandBase
@@ -50,7 +52,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         self.option_settings_enabled(False)
 
-        self.setWindowTitle("Web2Executable")
+        self.setWindowTitle("Web2Executable {}".format(__gui_version__))
         self.update_nw_versions(None)
 
     def setup_nw_versions(self):
@@ -265,8 +267,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
             self.out_file.remove()
             self.show_error('Download failed: {}.'.format(self.http.errorString()))
             self.enable_ui_after_error()
-
-        self.continue_downloading_or_extract()
+        else:
+            self.continue_downloading_or_extract()
 
     def continue_downloading_or_extract(self):
         if self.files_to_download:
@@ -443,10 +445,11 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
     def call_with_object(self, name, obj, *args, **kwargs):
         """Allows arguments to be passed to click events"""
-        def call():
+        def call(*cargs, **ckwargs):
             if hasattr(self, name):
                 func = getattr(self, name)
-                func(obj, *args, **kwargs)
+                kwargs.update(ckwargs)
+                func(obj, *(args+cargs), **kwargs)
         return call
 
     def find_child_by_name(self, name):
@@ -542,6 +545,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
             return self.create_check_setting(name)
         elif setting.type == 'list':
             return self.create_list_setting(name)
+        elif setting.type == 'range':
+            return self.create_range_setting(name)
 
     def create_window_settings(self):
         group_box = QtGui.QGroupBox("Window Settings")
@@ -551,7 +556,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         return group_box
 
     def create_export_settings(self):
-        group_box = QtGui.QGroupBox("Export to")
+        group_box = QtGui.QGroupBox("Export Settings")
         vlayout = self.create_layout(self.settings['order']['export_setting_order'], cols=4)
 
         group_box.setLayout(vlayout)
@@ -583,7 +588,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
             setting_label.setToolTip(setting.description)
             glayout.addWidget(setting_label, row, col)
             glayout.addLayout(self.create_setting(setting_name),
-                               row, col+1)
+                              row, col+1)
             col += 2
 
         return glayout
@@ -597,7 +602,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         text.setObjectName(setting.name)
 
         text.textChanged.connect(self.call_with_object('setting_changed',
-                                                        text, setting))
+                                                       text, setting))
         if setting.value:
             text.setText(str(setting.value))
 
@@ -682,16 +687,24 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     setting.value = old_val
                     widget.setChecked(old_val)
 
+                elif setting.type == 'range':
+                    old_val = 0
+                    if setting.default_value is not None:
+                        old_val = setting.default_value
+                    setting.value = old_val
+                    widget.setValue(old_val)
+
     def setting_changed(self, obj, setting, *args, **kwargs):
         if (setting.type == 'string' or
             setting.type == 'file' or
                 setting.type == 'folder'):
-            setting.value = obj.text().replace('\\', '\\\\')
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
         elif setting.type == 'list':
             setting.value = obj.currentText()
+        elif setting.type == 'range':
+            setting.value = obj.value()
 
         if self.update_json:
             json_file = os.path.join(self.project_dir(), 'package.json')
@@ -759,6 +772,43 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         return hlayout
 
+    def create_range_setting(self, name):
+        hlayout = QtGui.QHBoxLayout()
+
+        setting = self.get_setting(name)
+
+        button = None
+        if setting.button:
+            button = QtGui.QPushButton(setting.button)
+            button.clicked.connect(lambda: setting.button_callback(button))
+
+        slider = QtGui.QSlider(QtCore.Qt.Orientation.Horizontal)
+        slider.setRange(0, 9)
+        slider.valueChanged.connect(self.call_with_object('setting_changed',
+                                                          slider, setting))
+
+        slider.setObjectName(setting.name)
+        slider.setValue(setting.default_value)
+
+        range_label = QtGui.QLabel(str(setting.default_value))
+        range_label.setMaximumWidth(30)
+
+        slider.valueChanged.connect(self.call_with_object('_update_range_label',
+                                                          range_label))
+
+        w = QtGui.QWidget()
+        whlayout = QtGui.QHBoxLayout()
+        whlayout.addWidget(slider)
+        whlayout.addWidget(range_label)
+        w.setLayout(whlayout)
+
+        hlayout.addWidget(w)
+
+        return hlayout
+
+    def _update_range_label(self, label, value):
+        label.setText(str(value))
+
     def load_package_json(self):
         setting_list = super(MainWindow, self).load_package_json()
         for setting in setting_list:
@@ -776,6 +826,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     index = setting_field.findText(val_str)
                     if index != -1:
                         setting_field.setCurrentIndex(index)
+                if setting.type == 'range':
+                    setting_field.setValue(setting.value)
         self.ex_button.setEnabled(self.required_settings_filled())
 
     def show_and_raise(self):
@@ -785,6 +837,11 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
+    QCoreApplication.setApplicationName("Web2Executable")
+    QCoreApplication.setApplicationVersion(__gui_version__)
+    QCoreApplication.setOrganizationName("SimplyPixelated")
+    QCoreApplication.setOrganizationDomain("simplypixelated.com")
 
     frame = MainWindow(1000, 500)
     frame.show_and_raise()
