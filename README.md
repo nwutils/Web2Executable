@@ -14,9 +14,35 @@ If you got some value out of using my app, consider donating a dollar to keep me
 Note!!
 ------
 
-When building linux applications using this application, there is an issue on the newer versions of Ubuntu (13.XX) and similar distros that causes the error: Shared library libudev.so.0 does not exist. If you are distributing an application by exporting to these platforms, you'll need to instruct your users to either manually symlink the file or make an install script following the directions [here](https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0). This is an issue with node-webkit and not this application itself.
+There is an issue with the recent renaming of node-webkit to nwjs that is causing the app to not be able to download file properly. I am updating the app and will update the prebuilt binaries ASAP. **This means you cannot use this project at the moment.**
 
-Also, there was an issue for Mac with versions older that 0.1.8b where it wouldn't start up. Hopefully that is fixed now and you can enjoy the app!
+Downloads
+---------
+
+###CMD
+
+[Windows 7+ Download](http://www.mediafire.com/download/r9rawa9qorlfa79/Web2ExeWin-CMD.zip)
+
+[Mac OS X 10.6+ download](http://www.mediafire.com/download/esyz3z3ij0qrt64/Web2ExeMac-CMD.zip)
+
+###GUI
+
+####Mac OS X
+
+[Mac OS X 10.7+ download - v0.1.12b](http://www.mediafire.com/download/jkf3yy4cb3bp4n5/Web2ExeMac-v0.1.12b.zip)
+
+You can just put the app where ever you want and double click to run it.
+
+####Windows
+
+[Windows 7+ download - v0.1.12b](http://www.mediafire.com/download/vbpn8auennmit7a/Web2ExeWin-v0.1.12b.zip)
+
+Double click the main.exe file inside the extracted folder.
+
+####Linux
+
+Maybe this will be supported again, but for now, it's better to install the requirements and run the python script as instructed below.
+
 
 Getting Started
 ---------------
@@ -146,72 +172,6 @@ v0.1.2b
 
 - Fixed an issue with icon copying
 - Fixed a bug that overwrote existing package.json files.
-
-Prebuilt Binaries
------------------
-
-###CMD
-
-[Windows 7+ Download](http://www.mediafire.com/download/r9rawa9qorlfa79/Web2ExeWin-CMD.zip)
-
-[Mac OS X 10.6+ download](http://www.mediafire.com/download/esyz3z3ij0qrt64/Web2ExeMac-CMD.zip)
-
-###GUI
-
-####Mac OS X
-
-[Mac OS X 10.7+ download - v0.1.12b](http://www.mediafire.com/download/jkf3yy4cb3bp4n5/Web2ExeMac-v0.1.12b.zip)
-
-Previous Versions:
-
-[Mac OS X 10.7+ download - v0.1.11b](http://www.mediafire.com/download/c2gp7y74ejd764g/Web2ExeMac-v0.1.11b.zip)
-
-[Mac OS X 10.7+ download - v0.1.10b](http://www.mediafire.com/download/619jpc1ftjxc2sh/Web2ExeMac-v0.1.10b.zip)
-
-[Mac OS X 10.7+ download - v0.1.9b](http://www.mediafire.com/download/saazkyniauznlgh/Web2ExeMac-v0.1.9b.zip)
-
-[Mac OS X 10.7+ download - v0.1.8b](http://www.mediafire.com/download/jpkygqrlpj4rnu9/Web2Executable-v0.1.8b.zip)
-
-
-You can just put the app where ever you want and double click to run it.
-
-####Windows
-
-[Windows 7+ download - v0.1.12b](http://www.mediafire.com/download/vbpn8auennmit7a/Web2ExeWin-v0.1.12b.zip)
-
-Previous Version:
-
-[Windows 7+ download - v0.1.11b](http://www.mediafire.com/download/xh7sha57scqe2mb/Web2ExeWin-v0.1.11b.zip)
-
-[Windows 7+ download - v0.1.10b](http://www.mediafire.com/download/s8492uwf5l4t99b/Web2ExeWin-v0.1.10b.zip)
-
-[Windows 7+ download - v0.1.8b](http://www.mediafire.com/download/cgpqdh8e5w9p31m/Web2ExeWin-v0.1.8b.zip)
-
-[Windows 7+ download - v0.1.7b](http://www.mediafire.com/download/2rw62cr92n313ai/Web2ExeWin-v0.1.7b.zip)
-
-
-Double click the Win2Exe.exe file inside the extracted folder.
-
-####Linux
-
-Only on Ubuntu 12.04. If someone knows how to make them on all linux distros, let me know. I'm using cx_Freeze to compile them to standalone apps. You must copy all .so.X.X files to either /usr/local/lib/ or /usr/lib/ for it to work.
-
-
-[Linux 64bit download - v0.1.7b](http://www.mediafire.com/download/4cujo6qdjzr337f/Web2ExeLinux64-v0.1.7b.zip)
-
-Previous Version:
-
-[Linux 64bit download - v0.1.6b](http://www.mediafire.com/download/7iozo8tfbn6rea8/Web2ExeLinux64-v0.1.6b.zip)
-
-
-chmod 755 the main binary inside the extracted folder and then run by double clicking or ./main from the command line. Also, if you get shared library errors, you need to copy all the .so files into /usr/lib/ or /usr/local/lib/. Make sure you check to see if any libraries in /usr/lib/ conflict with the files first.
-
-```
-chmod 755 main
-sudo cp *.so.* /usr/lib/
-```
-
-Note: For some reason, these linux binaries are not working correctly on vanilla systems. I'm looking into the issue and will update them when I figure out what is going on.
 
 
 
