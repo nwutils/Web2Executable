@@ -32,11 +32,7 @@ from configobj import ConfigObj
 
 inside_packed_exe = getattr(sys, 'frozen', '')
 
-if inside_packed_exe:
-    CWD = os.path.dirname(sys.executable)
-    os.chdir(CWD)
-else:
-    CWD = os.getcwd()
+CWD = os.getcwd()
 
 TEMP_DIR = get_temp_dir()
 DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
