@@ -11,10 +11,6 @@ If you got some value out of using my app, consider donating a dollar to keep me
 
 <a href='https://pledgie.com/campaigns/26899'><img alt='Click here to lend your support to: Web2Executable Donations and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/26899.png?skin_name=chrome' border='0' ></a>
 
-Note!!
-------
-
-There is an issue with the recent renaming of node-webkit to nwjs that is causing the app to not be able to download file properly. I am updating the app and will update the prebuilt binaries ASAP. **This means you cannot use this project at the moment.**
 
 Downloads
 ---------
@@ -29,19 +25,28 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.12b](http://www.mediafire.com/download/jkf3yy4cb3bp4n5/Web2ExeMac-v0.1.12b.zip)
+[Mac OS X 10.7+ download - v0.1.13b](http://www.mediafire.com/download/nrl0470ucttfpab/Web2ExeMac-v0.1.13b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
-[Windows 7+ download - v0.1.12b](http://www.mediafire.com/download/vbpn8auennmit7a/Web2ExeWin-v0.1.12b.zip)
+[Windows 7+ download - v0.1.13b](http://www.mediafire.com/download/vaygnnxbvxbby4v/Web2ExeWin-v0.1.13b.zip)
 
 Double click the main.exe file inside the extracted folder.
 
 ####Linux
 
-Maybe this will be supported again, but for now, it's better to install the requirements and run the python script as instructed below.
+[Ubuntu 14.04 - v0.1.13b](http://www.mediafire.com/download/hkhialmlziyrm4x/Web2ExeLinux64-v0.1.13b.zip)
+
+Give the executable permissions to execute and then run it:
+
+```
+chmod +x main
+./main
+```
+
+It's probably better to install the requirements and run the python script as instructed below.
 
 
 Getting Started
@@ -178,20 +183,13 @@ v0.1.2b
 Screenshots
 -----------
 
+v0.1.13b Mac OS X
+
+![ScreenshotMac2](http://i.imgur.com/JgKfYIm.png)
+
 v0.1.9b Mac OS X
 
 ![ScreenshotMac](http://i.imgur.com/Kdd6DcC.png)
 
-v0.1.8b
-
-![Screenshot3](http://i.imgur.com/It3px3K.png)
-
-v0.1.3b
-
-![Screenshot2](http://i.imgur.com/jZ7TE63.png)
-
-v0.1.2b
-
-![Screenshot](http://i.imgur.com/V1609ea.png) 
 
 
