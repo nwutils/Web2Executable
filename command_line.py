@@ -15,6 +15,8 @@ import stat
 import tarfile
 import zipfile
 import traceback
+import platform
+import subprocess
 
 from distutils.version import LooseVersion
 
@@ -209,7 +211,8 @@ class CommandBase(object):
         config = ConfigObj(config_io, unrepr=True).dict()
         settings = {'setting_groups': []}
         setting_items = (config['setting_groups'].items() +
-                         [('export_settings', config['export_settings'])])
+                         [('export_settings', config['export_settings'])] +
+                         [('compression', config['compression'])])
         for setting_group, setting_group_dict in setting_items:
             settings[setting_group] = {}
             for setting_name, setting_dict in setting_group_dict.items():
@@ -225,6 +228,7 @@ class CommandBase(object):
 
         config.pop('setting_groups')
         config.pop('export_settings')
+        config.pop('compression')
         for key, val in config.items():
             settings[key] = val
 
@@ -242,7 +246,8 @@ class CommandBase(object):
 
     def get_setting(self, name):
         for setting_group in (self.settings['setting_groups'] +
-                              [self.settings['export_settings']]):
+                              [self.settings['export_settings']] +
+                              [self.settings['compression']]):
             if name in setting_group:
                 setting = setting_group[name]
                 return setting
@@ -346,7 +351,8 @@ class CommandBase(object):
                 dic['webkit'][setting_name] = setting.value
 
         dl_export_items = (self.settings['download_settings'].items() +
-                           self.settings['export_settings'].items())
+                           self.settings['export_settings'].items() +
+                           self.settings['compression'].items())
         for setting_name, setting in dl_export_items:
             if setting.value is not None:
                 dic['webexe_settings'][setting_name] = setting.value
@@ -361,7 +367,7 @@ class CommandBase(object):
 
     @extract_error.setter
     def extract_error(self, value):
-        if value is not None and not self.quiet and not inside_mac_app:
+        if value is not None and not self.quiet and not inside_packed_exe:
             self._extract_error = str(value)
             sys.stderr.write('\r{}'.format(self._extract_error))
             sys.stderr.flush()
@@ -514,7 +520,7 @@ class CommandBase(object):
                                     export_dest)
                     self.progress_text += '.'
 
-                    if ex_setting.name == 'mac':
+                    if 'mac' in ex_setting.name:
                         app_path = os.path.join(export_dest,
                                                 self.project_name()+'.app')
                         shutil.move(os.path.join(export_dest,
@@ -536,12 +542,18 @@ class CommandBase(object):
                     else:
                         ext = ''
                         windows = False
-                        if ex_setting.name == 'windows':
+                        if 'windows' in ex_setting.name:
                             ext = '.exe'
                             windows = True
 
                         nw_path = os.path.join(export_dest,
                                                ex_setting.dest_files[0])
+
+                        if windows and 'x32' in ex_setting.name:
+                            self.replace_icon_in_exe(nw_path)
+
+                        #self.compress_nw(nw_path)
+
                         dest_binary_path = os.path.join(export_dest,
                                                         self.project_name() +
                                                         ext)
@@ -555,9 +567,6 @@ class CommandBase(object):
                                          stat.S_IXOTH)
                         os.chmod(dest_binary_path, sevenfivefive)
 
-                        if windows:
-                            self.replace_icon_in_exe(dest_binary_path)
-
                         self.progress_text += '.'
 
                         if os.path.exists(nw_path):
@@ -570,6 +579,18 @@ class CommandBase(object):
             self.output_err += ''.join(exc)
         finally:
             shutil.rmtree(temp_dir)
+
+    def compress_nw(self, nw_path):
+        compression = self.get_setting('nw_compression_level')
+        upx_bin = os.path.join('files', 'compressors', 'upx-linux-x64')
+        cmd = '{upx_bin} --lzma -{comp_level} -o test {path}'.format(upx_bin=upx_bin,
+                                                              comp_level=compression.value,
+                                                              path=nw_path)
+        print cmd
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, shell=True)
+        output, err = proc.communicate()
+        print err, output
 
     def copy_files_to_project_folder(self):
         old_dir = CWD
@@ -718,7 +739,7 @@ if __name__ == '__main__':
                 if setting.values:
                     kwargs.update({'choices': setting.values})
                     setting.description += ' Possible values: {{{}}}'.format(', '.join([str(x) for x in setting.values]))
-                    kwargs.update({'metavar':''})
+                    kwargs.update({'metavar': ''})
                 else:
                     kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
 
