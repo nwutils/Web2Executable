@@ -36,7 +36,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
         super(MainWindow, self).__init__(parent)
         CommandBase.__init__(self)
         self.output_package_json = True
-        self.setWindowIcon(QtGui.QIcon('icon.png'))
+        self.setWindowIcon(QtGui.QIcon(os.path.join(CWD, 'files',
+                                                    'images', 'icon.png')))
         self.update_json = False
 
         self.setup_nw_versions()
@@ -262,6 +263,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
             return
 
         self.out_file.close()
+        self.http.abort()
 
         if error:
             self.out_file.remove()
@@ -349,9 +351,13 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.http_request_aborted = True
         self.http.abort()
         self.enable_ui()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(False)
 
     def update_progress_bar(self, bytes_read, total_bytes):
         if self.http_request_aborted:
+            self.progress_bar.setValue(0)
+            self.progress_bar.setVisible(False)
             return
         self.progress_bar.setMaximum(total_bytes)
         self.progress_bar.setValue(bytes_read)
@@ -367,7 +373,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         archive_exists = QFile.exists(file_name)
 
-        dest_files_exist = False
+        #dest_files_exist = False
 
         # for dest_file in setting.dest_files:
         #    dest_file_path = os.path.join('files', setting.name, dest_file)
@@ -375,7 +381,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         forced = self.get_setting('force_download').value
 
-        if (archive_exists or dest_files_exist) and not forced:
+        if archive_exists and not forced:
             self.continue_downloading_or_extract()
             return
 
