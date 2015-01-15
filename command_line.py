@@ -513,7 +513,8 @@ class CommandBase(object):
 
                     # shutil will make the directory for us
                     shutil.copytree(os.path.join('files', ex_setting.name),
-                                    export_dest)
+                                    export_dest,
+                                    ignore=shutil.ignore_patterns('place_holder.txt'))
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
@@ -545,7 +546,7 @@ class CommandBase(object):
                         nw_path = os.path.join(export_dest,
                                                ex_setting.dest_files[0])
 
-                        if windows and 'x32' in ex_setting.name:
+                        if windows:
                             self.replace_icon_in_exe(nw_path)
 
                         #self.compress_nw(nw_path)
