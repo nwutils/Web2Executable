@@ -1,6 +1,6 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.1.13b"
+__gui_version__ = "v0.1.14b"
 
 import os
 import glob
