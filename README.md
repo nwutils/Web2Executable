@@ -21,6 +21,8 @@ Downloads
 
 [Mac OS X 10.6+ download](http://www.mediafire.com/download/esyz3z3ij0qrt64/Web2ExeMac-CMD.zip)
 
+[Ubuntu 14.04 download](http://www.mediafire.com/download/vet95whim6g8x55/Web2ExeLinux-CMD.zip)
+
 ###GUI
 
 ####Mac OS X
@@ -37,7 +39,7 @@ Double click the main.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.1.13b](http://www.mediafire.com/download/hkhialmlziyrm4x/Web2ExeLinux64-v0.1.13b.zip)
+[Ubuntu 14.04 - v0.1.14b](http://www.mediafire.com/download/cvmbg91nbq78c6n/Web2ExeLinux-v0.1.14b.zip)
 
 Give the executable permissions to execute and then run it:
 
