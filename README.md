@@ -108,6 +108,10 @@ Planned Features
 FAQ
 ---
 
+### When exporting to Linux, I get an error about libudev.so.0
+
+This is an known issue with nw.js/node-webkit. See [here](https://github.com/nwjs/nw.js/wiki/The-solution-of-lacking-libudev.so.0) for information on how to work around this issue.
+
 ### How do I use option X?
 
 All of the options for node-webkit are documented in node-webkit's manifest file specification. It is located [here](https://github.com/rogerwang/node-webkit/wiki/Manifest-format).
