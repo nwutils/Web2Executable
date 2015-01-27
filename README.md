@@ -27,15 +27,15 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.14b](http://www.mediafire.com/download/xmqu7vkab2b03wb/Web2ExeMac-v0.1.14b.zip)
+[Mac OS X 10.7+ download - v0.1.15b](http://www.mediafire.com/download/a6vhmu36b252jkt/Web2ExeMac-v0.1.15b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
-[Windows 7+ download - v0.1.14b](http://www.mediafire.com/download/iq6evq8j88taic3/Web2ExeWin-v0.1.14b.zip)
+[Windows 7+ download - v0.1.15b](http://www.mediafire.com/download/5l2zlfi67721d88/Web2ExeWin-v0.1.15b.zip)
 
-Double click the main.exe file inside the extracted folder.
+Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
@@ -48,7 +48,7 @@ chmod +x main
 ./main
 ```
 
-It's probably better to install the requirements and run the python script as instructed below.
+It's probably better for linux users to install the requirements and run the python script as instructed below.
 
 
 Getting Started
