@@ -143,6 +143,9 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 What's New?
 ----------------------
 
+v0.1.15b
+- Fixed some issues with copying external files
+
 v0.1.12b
 - Added new options that were requested and made the window wider to accommodate.
 
