@@ -39,7 +39,7 @@ Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.1.14b](http://www.mediafire.com/download/cvmbg91nbq78c6n/Web2ExeLinux-v0.1.14b.zip)
+[Ubuntu 14.04 - v0.1.15b](http://www.mediafire.com/download/kckax7xljmzf2hk/Web2ExeLinux-v0.1.15b.zip)
 
 Give the executable permissions to execute and then run it:
 
