@@ -596,7 +596,7 @@ class CommandBase(object):
             for setting in sgroup.values():
                 if setting.type == 'file' and setting.value:
                     f_path = setting.value.replace(self.project_dir(), '')
-                    if not os.path.exists(f_path):
+                    if os.path.isabs(f_path):
                         try:
                             shutil.copy(setting.value, self.project_dir())
                             setting.value = os.path.basename(setting.value)
