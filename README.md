@@ -27,13 +27,13 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.15b](http://www.mediafire.com/download/a6vhmu36b252jkt/Web2ExeMac-v0.1.15b.zip)
+[Mac OS X 10.7+ download - v0.1.16b](http://www.mediafire.com/download/92yx388kld2d3vc/Web2ExeMac-v0.1.16b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
-[Windows 7+ download - v0.1.15b](http://www.mediafire.com/download/5l2zlfi67721d88/Web2ExeWin-v0.1.15b.zip)
+[Windows 7+ download - v0.1.16b](http://www.mediafire.com/download/1rzq4h6ncstdws8/Web2ExeWin-v0.1.16b.zip)
 
 Double click the Web2Exe.exe file inside the extracted folder.
 
