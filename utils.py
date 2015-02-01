@@ -20,6 +20,9 @@ def get_temp_dir():
 def log(*args):
     if DEBUG:
         print(*args)
+    with open('error.log', 'a+') as f:
+        f.write(', '.join(args))
+        f.write('\n')
 
 def open_folder_in_explorer(path):
     if platform.system() == "Windows":
