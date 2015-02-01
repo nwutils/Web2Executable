@@ -1,6 +1,6 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.1.14b"
+__gui_version__ = "v0.1.16b"
 
 import os
 import glob
@@ -519,6 +519,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                           QtCore.QDir.currentPath()),
                                                          setting.file_types)
         if file_path:
+            file_path = os.path.abspath(file_path) # fixes an issue with windows paths
             file_path = file_path.replace(self.project_dir()+os.path.sep, '')
             text_obj.setText(file_path)
             setting.last_value = file_path

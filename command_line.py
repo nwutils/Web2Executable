@@ -140,8 +140,6 @@ class Setting(object):
                             new_bytes = file.read(extract_path)
                     except KeyError as e:
                         log(e)
-                        print e
-                print e
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -599,9 +597,10 @@ class CommandBase(object):
                     if os.path.isabs(f_path):
                         try:
                             shutil.copy(setting.value, self.project_dir())
-                            setting.value = os.path.basename(setting.value)
                         except shutil.Error as e:  # same file warning
                             log('Warning: {}'.format(e))
+                        finally:
+                            setting.value = os.path.basename(setting.value)
 
         os.chdir(old_dir)
 
