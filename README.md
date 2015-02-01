@@ -39,13 +39,13 @@ Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.1.15b](http://www.mediafire.com/download/kckax7xljmzf2hk/Web2ExeLinux-v0.1.15b.zip)
+[Ubuntu 14.04 - v0.1.16b](http://www.mediafire.com/download/8cvyl0d4avtwv49/Web2ExeLinux-v0.1.16b.zip)
 
 Give the executable permissions to execute and then run it:
 
 ```
-chmod +x main
-./main
+chmod +x web2exe
+./web2exe
 ```
 
 It's probably better for linux users to install the requirements and run the python script as instructed below.
@@ -142,6 +142,9 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.1.16b
+- Fixed an issue with copying files on windows
 
 v0.1.15b
 - Fixed some issues with copying external files
