@@ -108,6 +108,10 @@ Planned Features
 FAQ
 ---
 
+### How do I include external files?
+
+You must provide support for this yourself using javascript and nodejs. You can get the path of the current executable with `path.dirname( process.execPath );` and then load files relative to that path. 
+
 ### When exporting to Linux, I get an error about libudev.so.0
 
 This is an known issue with nw.js/node-webkit. See [here](https://github.com/nwjs/nw.js/wiki/The-solution-of-lacking-libudev.so.0) for information on how to work around this issue.
