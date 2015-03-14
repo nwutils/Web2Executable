@@ -1,8 +1,9 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.1.16b"
+__gui_version__ = "v0.1.17b"
 
 import os
+import re
 import glob
 import sys
 
@@ -364,9 +365,17 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
     def download_file(self, path, setting):
         version_file = self.settings['base_url'].format(self.selected_version())
-        self.progress_text = 'Downloading {}'.format(path.replace(version_file, ''))
 
         location = self.get_setting('download_dir').value
+
+        versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
+
+        minor = int(versions[1])
+        if minor >= 12:
+            path = path.replace('node-webkit', 'nwjs')
+        setting.url = path
+
+        self.progress_text = 'Downloading {}'.format(path.replace(version_file, ''))
 
         url = QUrl(path)
         file_name = setting.save_file_path(self.selected_version(), location)
@@ -387,7 +396,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         self.out_file = QFile(file_name)
         if not self.out_file.open(QIODevice.WriteOnly):
-            error = self.out_file.error_string()
+            error = self.out_file.error().name
             self.show_error('Unable to save the file {}: {}.'.format(file_name,
                                                                      error))
             self.out_file = None
