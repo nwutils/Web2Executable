@@ -15,7 +15,6 @@ import stat
 import tarfile
 import zipfile
 import traceback
-import platform
 import subprocess
 
 from distutils.version import LooseVersion
@@ -99,6 +98,13 @@ class Setting(object):
             self.save_path = location
         else:
             self.save_path = self.save_path or DEFAULT_DOWNLOAD_PATH
+
+        versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
+
+        minor = int(versions[1])
+        if minor >= 12:
+            self.save_path = self.save_path.replace('node-webkit', 'nwjs')
+
         self.get_file_information_from_url()
 
         if self.full_file_path:
@@ -117,19 +123,28 @@ class Setting(object):
     def get_file_bytes(self, version):
         fbytes = []
 
-        file = self.extract_class(self.save_file_path(version),
+        path = self.save_file_path(version)
+
+        file = self.extract_class(path,
                                   *self.extract_args)
         for extract_path, dest_path in zip(self.extract_files,
                                            self.dest_files):
             new_bytes = None
             try:
                 extract_p = extract_path.format(version)
+
+                versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
+
+                minor = int(versions[1])
+                if minor >= 12:
+                    extract_p = extract_p.replace('node-webkit', 'nwjs')
+
                 if self.file_ext == '.gz':
                     new_bytes = file.extractfile(extract_p).read()
                 elif self.file_ext == '.zip':
                     new_bytes = file.read(extract_p)
             except KeyError as e:
-                log(e)
+                log(str(e))
                 # dirty hack to support old versions of nw
                 if 'no item named' in str(e):
                     extract_path = '/'.join(extract_path.split('/')[1:])
@@ -139,7 +154,7 @@ class Setting(object):
                         elif self.file_ext == '.zip':
                             new_bytes = file.read(extract_path)
                     except KeyError as e:
-                        log(e)
+                        log(str(e))
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -638,6 +653,12 @@ class CommandBase(object):
     def download_file(self, path, setting):
 
         location = self.get_setting('download_dir').value
+
+        versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
+
+        minor = int(versions[1])
+        if minor >= 12:
+            path = path.replace('node-webkit', 'nwjs')
 
         url = path
         file_name = setting.save_file_path(self.selected_version(), location)
