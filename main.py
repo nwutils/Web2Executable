@@ -373,7 +373,6 @@ class MainWindow(QtGui.QWidget, CommandBase):
         minor = int(versions[1])
         if minor >= 12:
             path = path.replace('node-webkit', 'nwjs')
-        setting.url = path
 
         self.progress_text = 'Downloading {}'.format(path.replace(version_file, ''))
 
