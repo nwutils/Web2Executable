@@ -27,19 +27,19 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.16b](http://www.mediafire.com/download/92yx388kld2d3vc/Web2ExeMac-v0.1.16b.zip)
+[Mac OS X 10.7+ download - v0.1.17b](http://www.mediafire.com/download/i1h1y3nlabu1217/Web2ExeMac-v0.1.17b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
-[Windows 7+ download - v0.1.16b](http://www.mediafire.com/download/1rzq4h6ncstdws8/Web2ExeWin-v0.1.16b.zip)
+[Windows 7+ download - v0.1.17b](http://www.mediafire.com/download/6ui6ru96pinr7o1/Web2ExeWin-v0.1.17b.zip)
 
 Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.1.16b](http://www.mediafire.com/download/8cvyl0d4avtwv49/Web2ExeLinux-v0.1.16b.zip)
+[Ubuntu 14.04 - v0.1.17b](http://www.mediafire.com/download/fpkyd9v9m3k26hf/Web2ExeLinux-v0.1.17b.zip)
 
 Give the executable permissions to execute and then run it:
 
@@ -160,6 +160,9 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.1.17b
+- Support for nwjs 0.12.0!! 
 
 v0.1.16b
 - Fixed an issue with copying files on windows
