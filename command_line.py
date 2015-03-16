@@ -662,8 +662,13 @@ class CommandBase(object):
 
         url = path
         file_name = setting.save_file_path(self.selected_version(), location)
+        tmp_file = list(os.path.split(file_name))
+        tmp_file[-1] = '.tmp.' + tmp_file[-1]
+        tmp_file = os.sep.join(tmp_file)
+        tmp_size = 0
 
         archive_exists = os.path.exists(file_name)
+        tmp_exists = os.path.exists(tmp_file)
 
         dest_files_exist = False
 
@@ -671,21 +676,30 @@ class CommandBase(object):
 
         if (archive_exists or dest_files_exist) and not forced:
             return self.continue_downloading_or_extract()
+        elif tmp_exists and (os.stat(tmp_file).st_size > 0):
+            tmp_size = os.stat(tmp_file).st_size
+            headers = {'Range': 'bytes={}-'.format(tmp_size)}
+            url = urllib2.Request(url, headers=headers)
 
         web_file = urllib2.urlopen(url)
-        f = open(file_name, 'wb')
+        f = open(tmp_file, 'ab')
         meta = web_file.info()
-        file_size = int(meta.getheaders("Content-Length")[0])
+        file_size = tmp_size + int(meta.getheaders("Content-Length")[0])
 
         version = self.selected_version()
         version_file = self.settings['base_url'].format(version)
         short_name = path.replace(version_file, '')
         MB = file_size/1000000.0
+        downloaded = ''
+        if tmp_size:
+            self.progress_text = 'Resuming previous download...\n'
+            self.progress_text = 'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
         self.progress_text = ('Downloading: {}, '
-                              'Size: {:.2f} MB\n'.format(short_name,
-                                                         MB))
+                              'Size: {:.2f} MB {}\n'.format(short_name,
+                                                         MB,
+                                                         downloaded))
 
-        file_size_dl = 0
+        file_size_dl = (tmp_size or 0)
         block_sz = 8192
         while True:
             buff = web_file.read(block_sz)
@@ -702,6 +716,7 @@ class CommandBase(object):
 
         self.progress_text = '\nDone downloading.\n'
         f.close()
+        os.rename(tmp_file, file_name)
 
         return self.continue_downloading_or_extract()
 
