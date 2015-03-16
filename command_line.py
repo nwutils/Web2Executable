@@ -99,16 +99,21 @@ class Setting(object):
         else:
             self.save_path = self.save_path or DEFAULT_DOWNLOAD_PATH
 
-        versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
-
-        minor = int(versions[1])
-        if minor >= 12:
-            self.save_path = self.save_path.replace('node-webkit', 'nwjs')
 
         self.get_file_information_from_url()
 
         if self.full_file_path:
-            return self.full_file_path.format(version)
+
+            path = self.full_file_path.format(version)
+
+            versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
+
+            minor = int(versions[1])
+            if minor >= 12:
+                path = path.replace('node-webkit', 'nwjs')
+
+            return path
+
         return ''
 
     def extract_file_path(self, version):
@@ -119,6 +124,39 @@ class Setting(object):
     def set_extra_attributes_from_keyword_args(self, **kwargs):
         for undefined_key, undefined_value in kwargs.items():
             setattr(self, undefined_key, undefined_value)
+
+    def extract(self, ex_path, version):
+        if os.path.exists(ex_path):
+            shutil.rmtree(ex_path)
+
+        path = self.save_file_path(version)
+
+        file = self.extract_class(path,
+                                  *self.extract_args)
+        # currently, python's extracting mechanism for zipfile doesn't
+        # copy file permissions, resulting in a binary that
+        # that doesn't work. Copied from a patch here:
+        # http://bugs.python.org/file34873/issue15795_cleaned.patch
+        if path.endswith('.zip'):
+            members = file.namelist()
+            for zipinfo in members:
+                minfo = file.getinfo(zipinfo)
+                target = file.extract(zipinfo, ex_path)
+                mode = minfo.external_attr >> 16 & 0x1FF
+                os.chmod(target, mode)
+        else:
+            file.extractall(ex_path)
+
+        if path.endswith('.tar.gz'):
+            dir_name = os.path.join(ex_path, os.path.basename(path).replace('.tar.gz',''))
+        else:
+            dir_name = os.path.join(ex_path, os.path.basename(path).replace('.zip',''))
+
+        if os.path.exists(dir_name):
+            for p in os.listdir(dir_name):
+                abs_file = os.path.join(dir_name, p)
+                shutil.move(abs_file, ex_path)
+            shutil.rmtree(dir_name)
 
     def get_file_bytes(self, version):
         fbytes = []
@@ -278,6 +316,7 @@ class CommandBase(object):
 
         versions = sorted(list(old_versions.union(new_versions)),
                           key=LooseVersion, reverse=True)
+
         nw_version.values = versions
         f = None
         try:
@@ -298,6 +337,13 @@ class CommandBase(object):
         setting = self.files_to_download.pop()
         location = self.get_setting('download_dir').value
         version = self.selected_version()
+        path = setting.url.format(version, version)
+        versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
+
+        minor = int(versions[1])
+        if minor >= 12:
+            path = path.replace('node-webkit', 'nwjs')
+
         try:
             return self.download_file(setting.url.format(version, version),
                                       setting)
@@ -441,14 +487,15 @@ class CommandBase(object):
             try:
                 if setting.value:
                     extract_path = os.path.join('files', setting.name)
+                    setting.extract(extract_path, version)
 
-                    if os.path.exists(save_file_path):
-                        setting_fbytes = setting.get_file_bytes(version)
-                        for dest_file, fbytes in setting_fbytes:
-                            path = os.path.join(extract_path, dest_file)
-                            with open(path, 'wb+') as d:
-                                d.write(fbytes)
-                            self.progress_text += '.'
+                    #if os.path.exists(save_file_path):
+                    #    setting_fbytes = setting.get_file_bytes(version)
+                    #    for dest_file, fbytes in setting_fbytes:
+                    #        path = os.path.join(extract_path, dest_file)
+                    #        with open(path, 'wb+') as d:
+                    #            d.write(fbytes)
+                    #        self.progress_text += '.'
 
                     self.progress_text += '.'
 
@@ -520,6 +567,11 @@ class CommandBase(object):
                     name = ex_setting.display_name
                     self.progress_text = 'Making files for {}...'.format(name)
                     export_dest = os.path.join(output_dir, ex_setting.name)
+                    versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+
+                    minor = int(versions[1])
+                    if minor >= 12:
+                        export_dest = export_dest.replace('node-webkit', 'nwjs')
 
                     if os.path.exists(export_dest):
                         shutil.rmtree(export_dest)
@@ -528,14 +580,21 @@ class CommandBase(object):
                     shutil.copytree(os.path.join('files', ex_setting.name),
                                     export_dest,
                                     ignore=shutil.ignore_patterns('place_holder.txt'))
+                    shutil.rmtree(os.path.join('files', ex_setting.name))
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
                         app_path = os.path.join(export_dest,
                                                 self.project_name()+'.app')
-                        shutil.move(os.path.join(export_dest,
-                                                 'node-webkit.app'),
-                                    app_path)
+
+                        try:
+                            shutil.move(os.path.join(export_dest,
+                                                     'nwjs.app'),
+                                        app_path)
+                        except IOError:
+                            shutil.move(os.path.join(export_dest,
+                                                     'node-webkit.app'),
+                                        app_path)
 
                         self.progress_text += '.'
 
