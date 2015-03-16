@@ -12,6 +12,7 @@ DATA_FILES = ['files']
 OPTIONS = {
             'iconfile': 'icon.icns',
             'includes': ['PySide.QtCore', 'PySide.QtGui', 'PySide.QtNetwork', 'configobj'],
+            'packages': ['PIL']
         }
 
 setup(
