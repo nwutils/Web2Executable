@@ -775,7 +775,15 @@ class CommandBase(object):
 
         self.progress_text = '\nDone downloading.\n'
         f.close()
-        os.rename(tmp_file, file_name)
+        try:
+            os.rename(tmp_file, file_name)
+        except OSError:
+            if sys.platform.startswith('win32') and not(os.path.isdir(file_name)):
+                os.remove(file_name)
+                os.rename(tmp_file, file_name)
+            else:
+                os.remove(tmp_file)
+                raise OSError
 
         return self.continue_downloading_or_extract()
 
