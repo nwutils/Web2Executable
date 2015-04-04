@@ -112,11 +112,25 @@ Features
 - Automatic insertion of icon files into Windows exe's or Mac Apps by filling out the icon fields as necessary
 - A command line utility with functionality equivalent to the GUI. Useful for automated builds.
 
-Planned Features
-----------------
 
-- Compression options using UPX to minimize the exe size
-- Minification of javascript, html, css before zipping
+Future Plans
+------------
+
+Since the UI is getting quite cluttered, and the current design has limitations in terms of size, I'm working on recreating Web2Executable in NW.js with an enhanced UI using the opensource bootflat project. This will take a bit of time, but it will greatly simplify the build process, and it will have the added bonus of Web2Executable being able to bootstrap itself.
+
+I will take all the bugs and feature requests from the github repo into consideration and probably add a few new features while I'm at it.
+
+Planned New Features
+--------------------
+
+- The ability to add external files to the project
+- Kiosk mode
+- Project name separate from manifest name
+- Minifying JS and HTML
+- Compression using UPX
+- Info.plist editing support for Mac OS X
+- Ability to edit credits.html
+- A slick new UI and name to go with it
 
 
 FAQ
