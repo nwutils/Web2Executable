@@ -136,6 +136,10 @@ Planned New Features
 FAQ
 ---
 
+### The export button is greyed out, what do I do?
+
+There are a couple things you can do. The first is to make sure all starred fields are filled out. The second is to make sure all of the files in the filled out fields actually exist. The third is to check out the error.log file located in the same directory as the Web2Exe executable for Windows and Linux, and for Mac, in the Web2Exe.app/Contents/Resources/ folder.
+
 ### How do I include external files?
 
 You must provide support for this yourself using javascript and nodejs. You can get the path of the current executable with `path.dirname( process.execPath );` and then load files relative to that path. 
