@@ -130,6 +130,7 @@ Planned New Features
 - Compression using UPX
 - Info.plist editing support for Mac OS X
 - Ability to edit credits.html
+- Better error detection (per field)
 - A slick new UI and name to go with it
 
 
