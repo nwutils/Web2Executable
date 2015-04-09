@@ -16,6 +16,23 @@ from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 from command_line import CWD, CommandBase
 
 
+class Validator(QtGui.QRegExpValidator):
+    def __init__(self, regex, action, parent=None):
+        self.exp = regex
+        self.action = unicode
+        if hasattr(unicode, action):
+            self.action = getattr(unicode, action)
+        reg = QtCore.QRegExp(regex)
+        super(Validator, self).__init__(reg, parent)
+
+    def validate(self, text, pos):
+        result = super(Validator, self).validate(text, pos)
+        return result
+
+    def fixup(self, text):
+        return ''.join(re.findall(self.exp, self.action(unicode(text))))
+
+
 class BackgroundThread(QtCore.QThread):
     def __init__(self, widget, method_name, parent=None):
         QtCore.QThread.__init__(self, parent)
@@ -478,7 +495,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         return children
 
     def project_name(self):
-        return self.find_child_by_name('name').text()
+        return self.find_child_by_name('app_name').text()
 
     def browse_dir(self):
         self.update_json = False
@@ -499,10 +516,17 @@ class MainWindow(QtGui.QWidget, CommandBase):
                 if files:
                     setting_input.setText(files[0].replace(self.project_dir() + os.path.sep, ''))
 
-            app_name_input = self.find_child_by_name('name')
+            app_name_input = self.find_child_by_name('app_name')
+            name_input = self.find_child_by_name('name')
+            name_setting = self.get_setting('name')
             title_input = self.find_child_by_name('title')
+
+            if not name_input.text():
+                name_input.setText(name_setting.filter_name(proj_name))
+
             if not app_name_input.text():
                 app_name_input.setText(proj_name)
+
             if not title_input.text():
                 title_input.setText(proj_name)
 
@@ -614,6 +638,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         setting = self.get_setting(name)
 
         text = QtGui.QLineEdit()
+        text.setValidator(Validator(setting.filter, setting.filter_action))
         text.setObjectName(setting.name)
 
         text.textChanged.connect(self.call_with_object('setting_changed',
@@ -833,7 +858,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     setting.type == 'string' or
                         setting.type == 'folder'):
                     val_str = self.convert_val_to_str(setting.value)
-                    setting_field.setText(val_str)
+                    setting_field.setText(setting.filter_name(val_str))
                 if setting.type == 'check':
                     setting_field.setChecked(setting.value)
                 if setting.type == 'list':
