@@ -71,6 +71,8 @@ class Setting(object):
         self.button_callback = kwargs.pop('button_callback', None)
         self.description = kwargs.pop('description', '')
         self.values = kwargs.pop('values', [])
+        self.filter = kwargs.pop('filter', '(?s).*')
+        self.filter_action = kwargs.pop('filter_action', 'None')
 
         self.set_extra_attributes_from_keyword_args(**kwargs)
 
@@ -80,6 +82,12 @@ class Setting(object):
         self.save_path = kwargs.pop('save_path', '')
 
         self.get_file_information_from_url()
+
+    def filter_name(self, text):
+        action = unicode
+        if hasattr(unicode, self.filter_action):
+            action = getattr(unicode, self.filter_action)
+        return action(unicode(text))
 
     def get_file_information_from_url(self):
         if hasattr(self, 'url'):
@@ -289,7 +297,7 @@ class CommandBase(object):
 
     def project_name(self):
         return (self._project_name or
-                os.path.basename(os.path.dirname(self.project_dir())))
+                os.path.basename(os.path.abspath(self.project_dir())))
 
     def get_setting(self, name):
         for setting_group in (self.settings['setting_groups'] +
@@ -864,7 +872,14 @@ if __name__ == '__main__':
     command_base._output_dir = (args.output_dir or
                                 os.path.join(args.project_dir, 'output'))
 
-    command_base._project_name = args.name if not callable(args.name) else args.name()
+    if args.app_name is None:
+        args.app_name = command_base.project_name()
+
+    if args.name is not None:
+        setting = command_base.get_setting('name')
+        args.name = setting.filter_name(args.name if not callable(args.name) else args.name())
+
+    command_base._project_name = args.app_name if not callable(args.app_name) else args.app_name()
 
     if not args.title:
         args.title = command_base.project_name()
