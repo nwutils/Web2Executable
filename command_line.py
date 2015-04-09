@@ -27,6 +27,8 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+import plistlib
+
 from configobj import ConfigObj
 
 inside_packed_exe = getattr(sys, 'frozen', '')
@@ -603,6 +605,19 @@ class CommandBase(object):
                             shutil.move(os.path.join(export_dest,
                                                      'node-webkit.app'),
                                         app_path)
+
+                        plist_path = os.path.join(app_path, 'Contents', 'Info.plist')
+
+                        plist_dict = plistlib.readPlist(plist_path)
+
+                        plist_dict['CFBundleDisplayName'] = self.project_name()
+                        plist_dict['CFBundleName'] = self.project_name()
+                        version_setting = self.get_setting('version')
+                        plist_dict['CFBundleShortVersionString'] = version_setting.value
+                        plist_dict['CFBundleVersion'] = version_setting.value
+
+                        plistlib.writePlist(plist_dict, plist_path)
+
 
                         self.progress_text += '.'
 
