@@ -137,6 +137,10 @@ Planned New Features
 FAQ
 ---
 
+### Web2Executable says the export is completed, but there's nothing in the output folder.
+
+This is an issue with the app's error reporting. It will sometimes fail silently and I'm currently working to address the issue. However, from issues filed about this problem, it's likely you have some node_modules that were inproperly removed. Be sure to remove node modules installed with npm using `npm uninstall <package-name>`.
+
 ### The export button is greyed out, what do I do?
 
 There are a couple things you can do. The first is to make sure all starred fields are filled out. The second is to make sure all of the files in the filled out fields actually exist. The third is to check out the error.log file located in the same directory as the Web2Exe executable for Windows and Linux, and for Mac, in the Web2Exe.app/Contents/Resources/ folder.
