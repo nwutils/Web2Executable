@@ -98,6 +98,7 @@ class Setting(object):
         self.values = kwargs.pop('values', [])
         self.filter = kwargs.pop('filter', '(?s).*')
         self.filter_action = kwargs.pop('filter_action', 'None')
+        self.check_action = kwargs.pop('check_action', 'None')
 
         self.set_extra_attributes_from_keyword_args(**kwargs)
 

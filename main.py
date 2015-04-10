@@ -1,6 +1,6 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.1.17b"
+__gui_version__ = "v0.2.0b"
 
 import os
 import re
@@ -13,7 +13,7 @@ from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
 
-from command_line import CWD, CommandBase
+from command_line import CWD, CommandBase, logger
 
 
 class Validator(QtGui.QRegExpValidator):
@@ -50,9 +50,16 @@ class MainWindow(QtGui.QWidget, CommandBase):
     def update_nw_versions(self, button):
         self.get_versions_in_background()
 
-    def __init__(self, width, height, parent=None):
+    def __init__(self, width, height, app, parent=None):
         super(MainWindow, self).__init__(parent)
         CommandBase.__init__(self)
+
+        self.logger = logger
+
+        self.gui_app = app
+        self.desktop_width = app.desktop().screenGeometry().width()
+        self.desktop_height = app.desktop().screenGeometry().height()
+
         self.options_enabled = False
         self.output_package_json = True
         self.setWindowIcon(QtGui.QIcon(os.path.join(CWD, 'files',
@@ -773,6 +780,35 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     setting.value = old_val
                     widget.setValue(old_val)
 
+    def set_kiosk_emulation_options(self, is_checked):
+        if is_checked:
+            width_field = self.find_child_by_name('width')
+            width_field.setText(str(self.desktop_width))
+
+            height_field = self.find_child_by_name('height')
+            height_field.setText(str(self.desktop_height))
+
+            toolbar_field = self.find_child_by_name('toolbar')
+            toolbar_field.setChecked(not is_checked)
+
+            frame_field = self.find_child_by_name('frame')
+            frame_field.setChecked(not is_checked)
+
+            show_field = self.find_child_by_name('show')
+            show_field.setChecked(is_checked)
+
+            kiosk_field = self.find_child_by_name('kiosk')
+            kiosk_field.setChecked(not is_checked)
+
+            fullscreen_field = self.find_child_by_name('fullscreen')
+            fullscreen_field.setChecked(not is_checked)
+
+            always_on_top_field = self.find_child_by_name('always-on-top')
+            always_on_top_field.setChecked(is_checked)
+
+            resizable_field = self.find_child_by_name('resizable')
+            resizable_field.setChecked(not is_checked)
+
     def setting_changed(self, obj, setting, *args, **kwargs):
         if (setting.type == 'string' or
             setting.type == 'file' or
@@ -780,6 +816,9 @@ class MainWindow(QtGui.QWidget, CommandBase):
             setting.value = obj.text()
         elif setting.type == 'check':
             setting.value = obj.isChecked()
+            check_action = setting.check_action
+            if hasattr(self, check_action):
+                getattr(self, check_action)(obj.isChecked())
         elif setting.type == 'list':
             setting.value = obj.currentText()
         elif setting.type == 'range':
@@ -922,7 +961,7 @@ if __name__ == '__main__':
     QCoreApplication.setOrganizationName("SimplyPixelated")
     QCoreApplication.setOrganizationDomain("simplypixelated.com")
 
-    frame = MainWindow(1000, 500)
+    frame = MainWindow(1000, 500, app)
     frame.show_and_raise()
 
     sys.exit(app.exec_())
