@@ -19,7 +19,7 @@ import subprocess
 import logging
 import plistlib
 
-from distutils.version import LooseVersion
+from semantic_version import Version
 
 from zipfile import ZipFile
 from tarfile import TarFile
@@ -343,8 +343,10 @@ class CommandBase(object):
         old_versions = set(nw_version.values)
         new_versions = set(re.findall('(\S+) / \S+', html))
 
-        versions = sorted(list(old_versions.union(new_versions)),
-                          key=LooseVersion, reverse=True)
+        union_versions = list(old_versions.union(new_versions))
+
+        versions = sorted(union_versions,
+                          key=Version, reverse=True)
 
         nw_version.values = versions
         f = None
