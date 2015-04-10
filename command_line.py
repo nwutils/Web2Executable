@@ -17,6 +17,7 @@ import zipfile
 import traceback
 import subprocess
 import logging
+import logging.handlers as lh
 import plistlib
 
 from semantic_version import Version
@@ -40,6 +41,8 @@ DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
                                      'files',
                                      'downloads').replace('\\',
                                                           '\\\\')
+logger = logging.getLogger('W2E logger')
+LOG_FILENAME = os.path.join(CWD, 'files', 'error.log')
 if __name__ != '__main__':
     logging.basicConfig(
         filename=os.path.join(CWD, 'files', 'error.log'),
@@ -49,6 +52,8 @@ if __name__ != '__main__':
     )
     logger = logging.getLogger('W2E logger')
 
+handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
+logger.addHandler(handler)
 
 def my_excepthook(type_, value, tback):
     output_err = ''.join(traceback.format_exception(type_, value, tback))
@@ -210,7 +215,7 @@ class Setting(object):
                 elif self.file_ext == '.zip':
                     new_bytes = file.read(extract_p)
             except KeyError as e:
-                log(str(e))
+                logger.error(str(e))
                 # dirty hack to support old versions of nw
                 if 'no item named' in str(e):
                     extract_path = '/'.join(extract_path.split('/')[1:])
@@ -220,7 +225,7 @@ class Setting(object):
                         elif self.file_ext == '.zip':
                             new_bytes = file.read(extract_path)
                     except KeyError as e:
-                        log(str(e))
+                        logger.error(str(e))
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -257,6 +262,7 @@ class CommandBase(object):
         self.original_packagejson = {}
 
     def init(self):
+        self.logger = logging.getLogger('CMD logger')
         self.update_nw_versions(None)
         self.setup_nw_versions()
 
@@ -329,12 +335,15 @@ class CommandBase(object):
                 return setting
 
     def show_error(self, error):
-        print error
+        if self.logger is not None:
+            self.logger.error(error)
 
     def enable_ui_after_error(self):
         pass
 
     def get_versions(self):
+        if self.logger is not None:
+            self.logger.info('Getting versions...')
         response = urllib2.urlopen(self.settings['version_info']['url'])
         html = response.read()
 
@@ -389,6 +398,7 @@ class CommandBase(object):
             self.enable_ui_after_error()
 
     def load_package_json(self, json_path=None):
+        self.logger.info('Loading package.json')
         if json_path is not None:
             p_json = [json_path]
         else:
@@ -402,11 +412,12 @@ class CommandBase(object):
             try:
                 setting_list = self.load_from_json(json_str)
             except ValueError as e:  # Json file is invalid
-                log('Warning: Json file invalid.')
+                self.logger.warning('Warning: Json file invalid.')
                 self.progress_text = '{}\n'.format(e)
         return setting_list
 
     def generate_json(self):
+        self.logger.info('Generating package.json...')
         if 'webkit' not in self.original_packagejson:
             self.original_packagejson['webkit'] = {}
         if 'window' not in self.original_packagejson:
@@ -534,6 +545,7 @@ class CommandBase(object):
                 if os.path.exists(save_file_path):
                     os.remove(save_file_path)
                 self.extract_error = e
+                self.logger.error(str(self.extract_error))
                 # cannot use GUI in thread to notify user. Save it for later
         self.progress_text = '\nDone.\n'
         return True
@@ -690,6 +702,7 @@ class CommandBase(object):
                                              sys.exc_info()[1],
                                              sys.exc_info()[2])
             self.output_err += ''.join(exc)
+            self.logger.error(exc)
         finally:
             shutil.rmtree(temp_dir)
 
@@ -708,6 +721,7 @@ class CommandBase(object):
     def copy_files_to_project_folder(self):
         old_dir = CWD
         os.chdir(self.project_dir())
+        self.logger.info('Copying files to {}'.format(self.project_dir()))
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
                 if setting.type == 'file' and setting.value:
@@ -715,8 +729,9 @@ class CommandBase(object):
                     if os.path.isabs(f_path):
                         try:
                             shutil.copy(setting.value, self.project_dir())
+                            self.logger.info('Copying file {} to {}'.format(setting.value, self.project_dir()))
                         except shutil.Error as e:  # same file warning
-                            log('Warning: {}'.format(e))
+                            self.logger.warning('Warning: {}'.format(e))
                         finally:
                             setting.value = os.path.basename(setting.value)
 
@@ -754,6 +769,7 @@ class CommandBase(object):
             return self.extract_files()
 
     def download_file(self, path, setting):
+        self.logger.info('Downloading file {}.'.format(path))
 
         location = self.get_setting('download_dir').value
 
@@ -778,6 +794,7 @@ class CommandBase(object):
         forced = self.get_setting('force_download').value
 
         if (archive_exists or dest_files_exist) and not forced:
+            self.logger.info('File {} already downloaded. Continuing...'.format(path))
             return self.continue_downloading_or_extract()
         elif tmp_exists and (os.stat(tmp_file).st_size > 0):
             tmp_size = os.stat(tmp_file).st_size
@@ -908,7 +925,7 @@ if __name__ == '__main__':
     if args.verbose:
         logging.basicConfig(
             stream=sys.stdout,
-            format=("%(levelname) -10s %(asctime)s %(module)s.py: "
+            format=("%(levelname) -10s %(module)s.py: "
                     "%(lineno)s %(funcName)s - %(message)s"),
             level=logging.DEBUG
         )
@@ -921,6 +938,16 @@ if __name__ == '__main__':
         )
 
     logger = logging.getLogger('CMD Logger')
+    handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
+    logger.addHandler(handler)
+
+    def my_excepthook(type_, value, tback):
+        output_err = ''.join(traceback.format_exception(type_, value, tback))
+        logger.error('{}'.format(output_err))
+        sys.__excepthook__(type_, value, tback)
+
+    sys.excepthook = my_excepthook
+
     command_base.logger = logger
 
     if args.quiet:
