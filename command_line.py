@@ -16,6 +16,8 @@ import tarfile
 import zipfile
 import traceback
 import subprocess
+import logging
+import plistlib
 
 from distutils.version import LooseVersion
 
@@ -26,8 +28,6 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
-
-import plistlib
 
 from configobj import ConfigObj
 
@@ -40,6 +40,24 @@ DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
                                      'files',
                                      'downloads').replace('\\',
                                                           '\\\\')
+if __name__ != '__main__':
+    logging.basicConfig(
+        filename=os.path.join(CWD, 'files', 'error.log'),
+        format=("%(levelname) -10s %(asctime)s %(module)s.py: "
+                "%(lineno)s %(funcName)s - %(message)s"),
+        level=logging.DEBUG
+    )
+    logger = logging.getLogger('W2E logger')
+
+
+def my_excepthook(type_, value, tback):
+    output_err = ''.join(traceback.format_exception(type_, value, tback))
+    logger.error('{}'.format(output_err))
+    sys.__excepthook__(type_, value, tback)
+
+sys.excepthook = my_excepthook
+
+
 try:
     os.makedirs(DEFAULT_DOWNLOAD_PATH)
 except:
@@ -227,6 +245,7 @@ class Setting(object):
 class CommandBase(object):
     def __init__(self):
         self.quiet = False
+        self.logger = None
         self.output_package_json = True
         self.settings = self.get_settings()
         self._project_dir = ''
@@ -832,6 +851,10 @@ if __name__ == '__main__':
     parser.add_argument('--quiet', dest='quiet', action='store_true',
                         default=False,
                         help='Silences output messages')
+    parser.add_argument('--verbose', dest='verbose', action='store_true',
+                        default=False,
+                        help=('Prints debug errors and messages instead '
+                              'of logging to files/errors.log'))
     parser.add_argument('--package-json',
                         dest='load_json',
                         nargs='?',
@@ -879,6 +902,24 @@ if __name__ == '__main__':
                               'to export to.'))
 
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(
+            stream=sys.stdout,
+            format=("%(levelname) -10s %(asctime)s %(module)s.py: "
+                    "%(lineno)s %(funcName)s - %(message)s"),
+            level=logging.DEBUG
+        )
+    else:
+        logging.basicConfig(
+            filename=os.path.join(CWD, 'files', 'error.log'),
+            format=("%(levelname) -10s %(asctime)s %(module)s.py: "
+                    "%(lineno)s %(funcName)s - %(message)s"),
+            level=logging.DEBUG
+        )
+
+    logger = logging.getLogger('CMD Logger')
+    command_base.logger = logger
 
     if args.quiet:
         command_base.quiet = True

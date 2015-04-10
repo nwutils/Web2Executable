@@ -53,6 +53,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
     def __init__(self, width, height, parent=None):
         super(MainWindow, self).__init__(parent)
         CommandBase.__init__(self)
+        self.options_enabled = False
         self.output_package_json = True
         self.setWindowIcon(QtGui.QIcon(os.path.join(CWD, 'files',
                                                     'images', 'icon.png')))
@@ -115,6 +116,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.win_settings_widget.setEnabled(is_enabled)
         self.ex_settings_widget.setEnabled(is_enabled)
         self.dl_settings_widget.setEnabled(is_enabled)
+        self.options_enabled = is_enabled
 
     def export(self, export_button, cancel_button):
         self.get_files_to_download()
@@ -159,13 +161,23 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.option_settings_enabled(True)
         self.directory_chooser_widget.setEnabled(True)
 
-    def required_settings_filled(self):
+    def required_settings_filled(self, ignore_options=False):
+        if not self.options_enabled and not ignore_options:
+            return False
+
         proj_dir = self.project_dir()
         out_dir = self.output_dir()
+
+        valid_proj_dirs = False
 
         if proj_dir and out_dir:
             if os.path.exists(proj_dir):
                 valid_proj_dirs = True
+                self.input_line.setStyleSheet('')
+                self.input_line.setToolTip('')
+            else:
+                self.input_line.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200);   border-radius:5px;}')
+                self.input_line.setToolTip('The project directory does not exist.')
 
         settings_valid = True
         for sgroup in self.settings['setting_groups']:
@@ -174,23 +186,50 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                             str(setting.value))
 
                 if setting.required and not setting.value:
-                    return False
+                    settings_valid = False
+                    widget = self.find_child_by_name(setting.name)
+                    if widget is not None:
+                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setToolTip('This setting is required.')
 
                 if (setting.type == 'file' and
                     setting.value and
                         not os.path.exists(setting_path)):
                     log(setting.value, "does not exist")
                     settings_valid = False
+                    widget = self.find_child_by_name(setting.name)
+                    if widget is not None:
+                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setToolTip('The file "{}" does not exist.'.format(os.path.join(self.project_dir(),setting.value)))
 
                 if (setting.type == 'folder' and
                     setting.value and
                         not os.path.exists(setting_path)):
                     settings_valid = False
+                    widget = self.find_child_by_name(setting.name)
+                    if widget is not None:
+                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setToolTip('The folder "{}" does not exist'.format(os.path.join(self.project_dir(), setting.value)))
+                if settings_valid:
+                    widget = self.find_child_by_name(setting.name)
+                    widget.setStyleSheet('')
+                    widget.setToolTip('')
 
         export_chosen = False
         for setting_name, setting in self.settings['export_settings'].items():
             if setting.value:
                 export_chosen = True
+
+        for setting_name, setting in self.settings['export_settings'].items():
+            if not export_chosen:
+                widget = self.find_child_by_name(setting.name)
+                if widget is not None:
+                    widget.setStyleSheet('QCheckBox{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                    widget.setToolTip('At least one of these options should be selected.')
+            else:
+                widget = self.find_child_by_name(setting.name)
+                widget.setStyleSheet('')
+                widget.setToolTip('')
 
         return export_chosen and valid_proj_dirs and settings_valid
 
@@ -754,8 +793,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         self.ex_button.setEnabled(self.required_settings_filled())
 
-    def project_path_changed(self):
-        self.ex_button.setEnabled(self.required_settings_filled())
+    def project_path_changed(self, text):
+        self.ex_button.setEnabled(self.required_settings_filled(True))
 
         dirs_filled_out = False
         if self.project_dir() and self.output_dir():
