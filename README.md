@@ -27,19 +27,19 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.1.17b](http://www.mediafire.com/download/i1h1y3nlabu1217/Web2ExeMac-v0.1.17b.zip)
+[Mac OS X 10.7+ download - v0.2.0b](http://www.mediafire.com/download/fbhkt0f6rxqsk1w/Web2ExeMac-v0.2.0b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
-[Windows 7+ download - v0.1.17b](http://www.mediafire.com/download/6ui6ru96pinr7o1/Web2ExeWin-v0.1.17b.zip)
+[Windows 7+ download - v0.2.0b](http://www.mediafire.com/download/9gk2px6xitsdk91/Web2ExeWin-v0.2.0b.zip)
 
 Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.1.17b](http://www.mediafire.com/download/fpkyd9v9m3k26hf/Web2ExeLinux-v0.1.17b.zip)
+[Ubuntu 14.04 - v0.2.0b](http://www.mediafire.com/download/il69ltzgomj7ohx/Web2ExeLinux-v0.2.0b.zip)
 
 Give the executable permissions to execute and then run it:
 
@@ -124,13 +124,10 @@ Planned New Features
 --------------------
 
 - The ability to add external files to the project
-- Kiosk mode
-- Project name separate from manifest name
 - Minifying JS and HTML
 - Compression using UPX
 - Info.plist editing support for Mac OS X
 - Ability to edit credits.html
-- Better error detection (per field)
 - A slick new UI and name to go with it
 
 
@@ -183,6 +180,13 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.2.0b
+- Kiosk mode + emulation
+- Project name separate from manifest name
+- Better error detection (per field)
+- Info.plist is updated to reflect app name and version
+- Bug fixes!
 
 v0.1.17b
 - Support for nwjs 0.12.0!! 
