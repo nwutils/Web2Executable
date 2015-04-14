@@ -96,7 +96,7 @@ class Setting(object):
         self.button_callback = kwargs.pop('button_callback', None)
         self.description = kwargs.pop('description', '')
         self.values = kwargs.pop('values', [])
-        self.filter = kwargs.pop('filter', '(?s).*')
+        self.filter = kwargs.pop('filter', '.*')
         self.filter_action = kwargs.pop('filter_action', 'None')
         self.check_action = kwargs.pop('check_action', 'None')
 
