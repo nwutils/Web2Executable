@@ -27,7 +27,7 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.2.0b](http://www.mediafire.com/download/fbhkt0f6rxqsk1w/Web2ExeMac-v0.2.0b.zip)
+[Mac OS X 10.7+ download - v0.2.0b](http://www.mediafire.com/download/i8zl5g573rcg528/Web2ExeMac-v0.2.0b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
