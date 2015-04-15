@@ -11,6 +11,7 @@ If you got some value out of using my app, consider donating a dollar to keep me
 
 <a href='https://pledgie.com/campaigns/26899'><img alt='Click here to lend your support to: Web2Executable Donations and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/26899.png?skin_name=chrome' border='0' ></a>
 
+On the other hand, if you have any annoyances with the application and want to contribute to making it better for everyone, please file an issue with "Annoyance:" as the first part of the title. Sometimes it's hard to know what is annoying for people and input is much appreciated :)
 
 Downloads
 ---------
