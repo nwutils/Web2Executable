@@ -741,11 +741,11 @@ class CommandBase(object):
             cmd = [upx_bin, '--lzma', '-{}'.format(compression.value), str(nw_path)]
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
-
-            self.progress_text = '\nCompressing files'
+            self.progress_text = '\n\n'
+            self.progress_text = 'Compressing files'
             while proc.poll() is None:
                 self.progress_text += '.'
-                time.sleep(5)
+                time.sleep(2)
             output, err = proc.communicate()
 
     def copy_files_to_project_folder(self):
@@ -778,6 +778,8 @@ class CommandBase(object):
         if res:
             self.make_output_dirs()
             self.progress_text = '\nDone!\n'
+            self.progress_text = 'Output directory is {}/{}.\n'.format(self.output_dir(),
+                                                                       self.project_name())
             self.delete_files()
 
     def get_files_to_download(self):
