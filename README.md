@@ -187,6 +187,13 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 What's New?
 ----------------------
 
+v0.2.1b
+- UPX Compression to executables
+- UI rework for future additions
+- Open project moved to file menu
+- Output folder moved to export options
+- Recent files can be viewed in the file menu
+
 v0.2.0b
 - Kiosk mode + emulation
 - Project name separate from manifest name
@@ -248,6 +255,9 @@ v0.1.2b
 
 Screenshots
 -----------
+
+v0.2.1b Linux
+![ScreenshotLinux](http://i.imgur.com/ImFtEMi.png)
 
 v0.1.13b Mac OS X
 
