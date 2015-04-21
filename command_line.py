@@ -739,8 +739,18 @@ class CommandBase(object):
             upx_bin = os.path.join('files', 'compressors', upx_version)
             os.chmod(upx_bin, 0755)
             cmd = [upx_bin, '--lzma', '-{}'.format(compression.value), str(nw_path)]
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            if platform.system() == 'Windows':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        stdin=subprocess.PIPE,
+                                        startupinfo=startupinfo)
+            else:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    stdin=subprocess.PIPE)
             self.progress_text = '\n\n'
             self.progress_text = 'Compressing files'
             while proc.poll() is None:

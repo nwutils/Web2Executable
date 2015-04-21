@@ -10,6 +10,8 @@ sudo chown -R joey dist/main.app
 sudo chown -R joey dist/ build/
 mv dist/main.app Web2Executable.app
 
+rm -rf Web2Executable.app/Contents/Frameworks/Qt*
+
 rm -rf build dist
 
 zip -r -9 Web2ExeMac-CMD.zip Web2ExeMac-CMD
