@@ -1,6 +1,6 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.2.0b"
+__gui_version__ = "v0.2.1b"
 
 import os
 import re
@@ -8,12 +8,14 @@ import glob
 import sys
 
 from PySide import QtGui, QtCore
-from PySide.QtGui import QApplication
+from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
 from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
 
-from command_line import CWD, CommandBase, logger
+from command_line import CommandBase, logger, get_file
+
+MAX_RECENT = 10
 
 
 class Validator(QtGui.QRegExpValidator):
@@ -45,14 +47,103 @@ class BackgroundThread(QtCore.QThread):
             func()
 
 
-class MainWindow(QtGui.QWidget, CommandBase):
+class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def update_nw_versions(self, button):
         self.get_versions_in_background()
 
+    def load_recent_projects(self):
+        files = []
+        history_file = get_file('files/recent_files.txt')
+
+        with open(history_file, 'a+') as f:
+            for line in f:
+                line = line.strip()
+                if line and os.path.exists(line):
+                    files.append(line)
+        files.reverse()
+        return files
+
+    def load_last_project_path(self):
+        proj_path = ''
+        proj_file = get_file('files/last_project_path.txt')
+        with open(proj_file, 'a+') as f:
+            proj_path = f.read().strip()
+
+        if not proj_path:
+            proj_path = QtCore.QDir.currentPath()
+
+        return proj_path
+
+    def save_project_path(self, path):
+        proj_file = get_file('files/last_project_path.txt')
+        with open(proj_file, 'w+') as f:
+            f.write(path)
+
+    def save_recent_project(self, proj):
+        recent_file_path = get_file('files/recent_files.txt')
+        max_length = MAX_RECENT
+        recent_files = open(recent_file_path, 'a+').read().split('\n')
+        try:
+            recent_files.remove(proj)
+        except ValueError:
+            pass
+        recent_files.append(proj)
+        with open(recent_file_path, 'w+') as f:
+            for recent_file in recent_files[-max_length:]:
+                if recent_file and os.path.exists(recent_file):
+                    f.write(recent_file+'\n')
+
+    def update_recent_files(self):
+        previous_files = self.load_recent_projects()
+        self.recent_separator.setVisible(len(previous_files) > 0)
+        for i in xrange(len(previous_files)):
+            text = '{} - {}'.format(i+1, os.path.basename(previous_files[i]))
+            action = self.recent_file_actions[i]
+            action.setText(text)
+            action.setData(previous_files[i])
+            action.setVisible(True)
+
     def __init__(self, width, height, app, parent=None):
         super(MainWindow, self).__init__(parent)
         CommandBase.__init__(self)
+
+        self.icon_style = 'width:48px;height:48px;background-color:white;border-radius:5px;border:1px solid rgb(50,50,50);'
+
+        self.last_project_dir = self.load_last_project_path()
+
+        status_bar = QtGui.QStatusBar()
+        self.setStatusBar(status_bar)
+
+        self.project_path = ''
+
+        self.project_menu = self.menuBar().addMenu('File')
+        browse_action = QtGui.QAction('Open Project', self.project_menu,
+                                      shortcut=QtGui.QKeySequence.Open,
+                                      statusTip='Open an existing or new project.',
+                                      triggered=self.browse_dir)
+        self.project_menu.addAction(browse_action)
+        self.project_menu.addSeparator()
+
+        self.recent_file_actions = []
+
+        for i in xrange(MAX_RECENT):
+            if i == 9:
+                key = 0
+            else:
+                key = i+1
+            action = QtGui.QAction(self, visible=False, triggered=self.open_recent_file,
+                                   shortcut=QtGui.QKeySequence('Ctrl+{}'.format(key)))
+            self.recent_file_actions.append(action)
+            self.project_menu.addAction(action)
+
+        self.recent_separator = self.project_menu.addSeparator()
+
+        self.update_recent_files()
+
+        exit_action = QtGui.QAction('Exit', self.project_menu)
+        exit_action.triggered.connect(QtGui.qApp.closeAllWindows)
+        self.project_menu.addAction(exit_action)
 
         self.logger = logger
 
@@ -62,8 +153,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         self.options_enabled = False
         self.output_package_json = True
-        self.setWindowIcon(QtGui.QIcon(os.path.join(CWD, 'files',
-                                                    'images', 'icon.png')))
+        self.setWindowIcon(QtGui.QIcon(get_file('files/images/icon.png')))
         self.update_json = False
 
         self.setup_nw_versions()
@@ -82,10 +172,15 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.setWindowTitle("Web2Executable {}".format(__gui_version__))
         self.update_nw_versions(None)
 
+    def open_recent_file(self):
+        action = self.sender()
+        if action:
+            self.load_project(action.data())
+
     def setup_nw_versions(self):
         nw_version = self.get_setting('nw_version')
         try:
-            f = open(os.path.join(CWD, 'files', 'nw-versions.txt'))
+            f = open(get_file('files/nw-versions.txt'))
             for line in f:
                 nw_version.values.append(line.strip())
         except IOError:
@@ -93,28 +188,48 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
     def create_application_layout(self):
         self.main_layout = QtGui.QVBoxLayout()
+        self.tab_widget = QtGui.QTabWidget()
         self.main_layout.setContentsMargins(10, 5, 10, 5)
 
         self.create_layout_widgets()
 
         self.addWidgets_to_main_layout()
 
-        self.setLayout(self.main_layout)
+        w = QtGui.QWidget()
+        w.setLayout(self.main_layout)
+
+        self.setCentralWidget(w)
 
     def create_layout_widgets(self):
         self.download_bar_widget = self.create_download_bar()
         self.app_settings_widget = self.create_application_settings()
+        self.comp_settings_widget = self.create_compression_settings()
         self.win_settings_widget = self.create_window_settings()
         self.ex_settings_widget = self.create_export_settings()
         self.dl_settings_widget = self.create_download_settings()
         self.directory_chooser_widget = self.create_directory_choose()
 
     def addWidgets_to_main_layout(self):
+        self.warning_settings_icon = QtGui.QIcon(get_file('files/images/warning.png'))
+        self.app_settings_icon = QtGui.QIcon(get_file('files/images/app_settings.png'))
+        self.win_settings_icon = QtGui.QIcon(get_file('files/images/window_settings.png'))
+        self.ex_settings_icon = QtGui.QIcon(get_file('files/images/export_settings.png'))
+        self.comp_settings_icon = QtGui.QIcon(get_file('files/images/compress_settings.png'))
+        self.download_settings_icon = QtGui.QIcon(get_file('files/images/download_settings.png'))
+
+        self.tab_icons = [self.app_settings_icon,
+                          self.win_settings_icon,
+                          self.ex_settings_icon,
+                          self.comp_settings_icon,
+                          self.download_settings_icon]
+
         self.main_layout.addWidget(self.directory_chooser_widget)
-        self.main_layout.addWidget(self.app_settings_widget)
-        self.main_layout.addWidget(self.win_settings_widget)
-        self.main_layout.addWidget(self.ex_settings_widget)
-        self.main_layout.addWidget(self.dl_settings_widget)
+        self.tab_widget.addTab(self.app_settings_widget, self.app_settings_icon, 'App Settings')
+        self.tab_widget.addTab(self.win_settings_widget, self.win_settings_icon, 'Window Settings')
+        self.tab_widget.addTab(self.ex_settings_widget, self.ex_settings_icon, 'Export Settings')
+        self.tab_widget.addTab(self.comp_settings_widget, self.comp_settings_icon, 'Compression Settings')
+        self.tab_widget.addTab(self.dl_settings_widget, self.download_settings_icon, 'Download Settings')
+        self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.download_bar_widget)
 
     def option_settings_enabled(self, is_enabled):
@@ -122,6 +237,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.app_settings_widget.setEnabled(is_enabled)
         self.win_settings_widget.setEnabled(is_enabled)
         self.ex_settings_widget.setEnabled(is_enabled)
+        self.comp_settings_widget.setEnabled(is_enabled)
         self.dl_settings_widget.setEnabled(is_enabled)
         self.options_enabled = is_enabled
 
@@ -168,23 +284,22 @@ class MainWindow(QtGui.QWidget, CommandBase):
         self.option_settings_enabled(True)
         self.directory_chooser_widget.setEnabled(True)
 
+    def get_tab_index_for_setting_name(self, name):
+        options_dict = {'app_settings': 0,
+                        'webkit_settings': 0,
+                        'window_settings': 1,
+                        'export_settings': 2,
+                        'compression': 3,
+                        'download_settings': 4}
+        for setting_group_name, setting_group in self._setting_items:
+            if name in setting_group:
+                return options_dict.get(setting_group_name, None)
+
     def required_settings_filled(self, ignore_options=False):
         if not self.options_enabled and not ignore_options:
             return False
 
-        proj_dir = self.project_dir()
-        out_dir = self.output_dir()
-
-        valid_proj_dirs = False
-
-        if proj_dir and out_dir:
-            if os.path.exists(proj_dir):
-                valid_proj_dirs = True
-                self.input_line.setStyleSheet('')
-                self.input_line.setToolTip('')
-            else:
-                self.input_line.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200);   border-radius:5px;}')
-                self.input_line.setToolTip('The project directory does not exist.')
+        red_border = 'QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}'
 
         settings_valid = True
         for sgroup in self.settings['setting_groups']:
@@ -196,8 +311,10 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
-                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setStyleSheet(red_border)
                         widget.setToolTip('This setting is required.')
+                        tab = self.get_tab_index_for_setting_name(setting.name)
+                        self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
                 if (setting.type == 'file' and
                     setting.value and
@@ -206,8 +323,10 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
-                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setStyleSheet(red_border)
                         widget.setToolTip('The file "{}" does not exist.'.format(os.path.join(self.project_dir(),setting.value)))
+                        tab = self.get_tab_index_for_setting_name(setting.name)
+                        self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
                 if (setting.type == 'folder' and
                     setting.value and
@@ -215,12 +334,17 @@ class MainWindow(QtGui.QWidget, CommandBase):
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
-                        widget.setStyleSheet('QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
+                        widget.setStyleSheet(red_border)
                         widget.setToolTip('The folder "{}" does not exist'.format(os.path.join(self.project_dir(), setting.value)))
+                        tab = self.get_tab_index_for_setting_name(setting.name)
+                        self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
                 if settings_valid:
                     widget = self.find_child_by_name(setting.name)
-                    widget.setStyleSheet('')
-                    widget.setToolTip('')
+                    if widget is not None:
+                        widget.setStyleSheet('')
+                        widget.setToolTip('')
+                        tab = self.get_tab_index_for_setting_name(setting.name)
+                        self.tab_widget.setTabIcon(tab, self.tab_icons[tab])
 
         export_chosen = False
         for setting_name, setting in self.settings['export_settings'].items():
@@ -233,21 +357,30 @@ class MainWindow(QtGui.QWidget, CommandBase):
                 if widget is not None:
                     widget.setStyleSheet('QCheckBox{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}')
                     widget.setToolTip('At least one of these options should be selected.')
+                    tab = self.get_tab_index_for_setting_name(setting.name)
+                    self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
             else:
                 widget = self.find_child_by_name(setting.name)
-                widget.setStyleSheet('')
-                widget.setToolTip('')
+                if widget is not None:
+                    widget.setStyleSheet('')
+                    widget.setToolTip('')
+                    tab = self.get_tab_index_for_setting_name(setting.name)
+                    self.tab_widget.setTabIcon(tab, self.tab_icons[tab])
 
-        return export_chosen and valid_proj_dirs and settings_valid
+        return export_chosen and settings_valid
 
     def project_dir(self):
+        return self.project_path
         if hasattr(self, 'input_line'):
             return self.input_line.text()
         return ''
 
     def output_dir(self):
         if hasattr(self, 'output_line'):
-            return self.output_line.text()
+            if os.path.isabs(self.output_line.text()):
+                return self.output_line.text()
+            else:
+                return os.path.join(self.project_dir(), self.output_line.text())
         return ''
 
     def create_download_bar(self):
@@ -278,6 +411,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         open_export_button.setEnabled(False)
         open_export_button.setIcon(QtGui.QIcon(os.path.join('files', 'images', 'folder_open.png')))
         open_export_button.setToolTip('Open Export Folder')
+        open_export_button.setStatusTip('Open Export Folder')
         open_export_button.setMaximumWidth(30)
         open_export_button.setMaximumHeight(30)
 
@@ -481,44 +615,102 @@ class MainWindow(QtGui.QWidget, CommandBase):
         # Download the file.
         self.http_get_id = self.http.get(path, self.out_file)
 
+    def create_icon_box(self, name, text):
+        style = 'width:48px;height:48px;background-color:white;border-radius:5px;border:1px solid rgb(50,50,50);'
+        icon_label = QtGui.QLabel()
+        icon_label.setStyleSheet(style)
+        icon_label.setMaximumWidth(48)
+        icon_label.setMinimumWidth(48)
+        icon_label.setMaximumHeight(48)
+        icon_label.setMinimumHeight(48)
+
+        setattr(self, name, icon_label)
+
+        icon_text = QtGui.QLabel(text)
+        icon_text.setStyleSheet('font-size:10px;')
+        icon_text.setAlignment(QtCore.Qt.AlignCenter)
+        vbox = QVBoxLayout()
+        vbox.setAlignment(QtCore.Qt.AlignCenter)
+        vbox.addWidget(icon_label)
+        vbox.addWidget(icon_text)
+        vbox.setContentsMargins(0, 0, 0, 0)
+
+        w = QtGui.QWidget()
+        w.setLayout(vbox)
+        w.setMaximumWidth(70)
+        return w
+
     def create_directory_choose(self):
-        group_box = QtGui.QGroupBox("Choose Your Web Project")
+        group_box = QtGui.QGroupBox('An awesome web project called:')
 
-        input_layout = QtGui.QHBoxLayout()
+        title_hbox = QHBoxLayout()
+        title_hbox.setContentsMargins(10, 10, 10, 10)
 
-        input_label = QtGui.QLabel('Project Directory:')
-        self.input_line = QtGui.QLineEdit()
-        self.input_line.textChanged.connect(self.project_path_changed)
-        input_button = QtGui.QPushButton('...')
-        input_button.clicked.connect(self.browse_dir)
+        win_icon = self.create_icon_box('window_icon', 'Window Icon')
+        exe_icon = self.create_icon_box('exe_icon', 'Exe Icon')
+        mac_icon = self.create_icon_box('mac_icon', 'Mac Icon')
 
-        input_layout.addWidget(input_label)
-        input_layout.addWidget(self.input_line)
-        input_layout.addWidget(input_button)
-
-        output_layout = QtGui.QHBoxLayout()
-
-        output_label = QtGui.QLabel('Output Directory:')
-        self.output_line = QtGui.QLineEdit()
-        self.output_line.textChanged.connect(self.project_path_changed)
-        output_button = QtGui.QPushButton('...')
-        output_button.clicked.connect(self.browse_out_dir)
-
-        output_layout.addWidget(output_label)
-        output_layout.addWidget(self.output_line)
-        output_layout.addWidget(output_button)
+        self.title_label = QtGui.QLabel('TBD')
+        self.title_label.setStyleSheet('font-size:20px; font-weight:bold;')
+        title_hbox.addWidget(self.title_label)
+        title_hbox.addWidget(QtGui.QLabel())
+        title_hbox.addWidget(win_icon)
+        title_hbox.addWidget(exe_icon)
+        title_hbox.addWidget(mac_icon)
 
         vlayout = QtGui.QVBoxLayout()
 
         vlayout.setSpacing(5)
         vlayout.setContentsMargins(10, 5, 10, 5)
 
-        vlayout.addLayout(input_layout)
-        vlayout.addLayout(output_layout)
+        vlayout.addLayout(title_hbox)
+        #vlayout.addLayout(input_layout)
+        #vlayout.addLayout(output_layout)
 
         group_box.setLayout(vlayout)
 
         return group_box
+
+    def set_window_icon(self):
+        icon_setting = self.get_setting('icon')
+        mac_icon_setting = self.get_setting('mac_icon')
+        exe_icon_setting = self.get_setting('exe_icon')
+        self.set_icon(icon_setting.value, self.window_icon)
+        if not mac_icon_setting.value:
+            self.set_icon(icon_setting.value, self.mac_icon)
+        if not exe_icon_setting.value:
+            self.set_icon(icon_setting.value, self.exe_icon)
+
+    def set_exe_icon(self):
+        icon_setting = self.get_setting('exe_icon')
+        self.set_icon(icon_setting.value, self.exe_icon)
+
+    def set_mac_icon(self):
+        icon_setting = self.get_setting('mac_icon')
+        self.set_icon(icon_setting.value, self.mac_icon)
+
+    def set_icon(self, icon_path, icon):
+        if icon_path:
+            icon_path = os.path.join(self.project_dir(), icon_path)
+            if os.path.exists(icon_path):
+                if icon_path.endswith('.icns'):
+                    #image = QtGui.QImage.fromData(make_thumbnail(icon_path,48), 'png')
+                    return
+                image = QtGui.QImage(icon_path)
+                if image.width() >= image.height():
+                    image = image.scaledToWidth(48,
+                                        QtCore.Qt.SmoothTransformation)
+                else:
+                    image = image.scaledToHeight(48,
+                                        QtCore.Qt.SmoothTransformation)
+                icon.setPixmap(QtGui.QPixmap.fromImage(image))
+                icon.setStyleSheet('')
+            else:
+                icon.setPixmap(None)
+                icon.setStyleSheet(self.icon_style)
+        else:
+            icon.setStyleSheet(self.icon_style)
+
 
     def call_with_object(self, name, obj, *args, **kwargs):
         """Allows arguments to be passed to click events"""
@@ -544,51 +736,67 @@ class MainWindow(QtGui.QWidget, CommandBase):
         return self.find_child_by_name('app_name').text()
 
     def browse_dir(self):
-        self.update_json = False
-        directory = QtGui.QFileDialog.getExistingDirectory(self, "Find Project Directory",
-                self.project_dir() or QtCore.QDir.currentPath())
+        directory = QtGui.QFileDialog.getExistingDirectory(self, 'Find Project Directory',
+                self.project_dir() or self.last_project_dir)
+
         if directory:
-            self.reset_settings()
-            self.input_line.setText(directory)
-            self.output_line.setText(os.path.join(directory, 'output'))
+            self.load_project(directory)
 
-            proj_name = os.path.basename(directory)
+    def load_project(self, directory):
+        self.update_json = False
+        self.project_path = directory
+        self.save_recent_project(directory)
+        self.save_project_path(directory)
+        self.update_recent_files()
+        self.reset_settings()
+        #self.input_line.setText(directory)
 
-            setting_input = self.find_child_by_name('main')
-            files = (glob.glob(os.path.join(directory, 'index.html')) +
-                     glob.glob(os.path.join(directory, 'index.php')) +
-                     glob.glob(os.path.join(directory, 'index.htm')))
-            if not setting_input.text():
-                if files:
-                    setting_input.setText(files[0].replace(self.project_dir() + os.path.sep, ''))
 
-            app_name_input = self.find_child_by_name('app_name')
-            name_input = self.find_child_by_name('name')
-            name_setting = self.get_setting('name')
-            title_input = self.find_child_by_name('title')
+        proj_name = os.path.basename(directory)
+        self.title_label.setText(proj_name)
 
-            if not name_input.text():
-                name_input.setText(name_setting.filter_name(proj_name))
+        setting_input = self.find_child_by_name('main')
+        files = (glob.glob(os.path.join(directory, 'index.html')) +
+                 glob.glob(os.path.join(directory, 'index.php')) +
+                 glob.glob(os.path.join(directory, 'index.htm')))
+        if not setting_input.text():
+            if files:
+                setting_input.setText(files[0].replace(self.project_dir() + os.path.sep, ''))
 
-            if not app_name_input.text():
-                app_name_input.setText(proj_name)
+        app_name_input = self.find_child_by_name('app_name')
+        name_input = self.find_child_by_name('name')
+        name_setting = self.get_setting('name')
+        title_input = self.find_child_by_name('title')
 
-            if not title_input.text():
-                title_input.setText(proj_name)
+        if not name_input.text():
+            name_input.setText(name_setting.filter_name(proj_name))
 
-            self.load_package_json()
-            self.open_export_button.setEnabled(True)
-            self.update_json = True
+        if not app_name_input.text():
+            app_name_input.setText(proj_name)
+
+        if not title_input.text():
+            title_input.setText(proj_name)
+
+        self.load_package_json()
+
+        default_dir = 'output'
+        export_dir_setting = self.get_setting('export_dir')
+        default_dir = export_dir_setting.value or default_dir
+        self.output_line.setText(default_dir)
+
+        self.set_window_icon()
+        self.open_export_button.setEnabled(True)
+        self.update_json = True
 
     def browse_out_dir(self):
         self.update_json = False
         directory = QtGui.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
                                                              (self.output_line.text() or
                                                               self.project_dir() or
-                                                              QtCore.QDir.currentPath()))
+                                                              self.last_project_dir))
         if directory:
-            self.output_line.setText(directory)
             self.update_json = True
+            self.output_line.setText(directory)
 
     def get_file(self, obj, text_obj, setting, *args, **kwargs):
         file_path, _ = QtGui.QFileDialog.getOpenFileName(self, 'Choose File',
@@ -612,10 +820,20 @@ class MainWindow(QtGui.QWidget, CommandBase):
             setting.last_value = folder
 
     def create_application_settings(self):
-        group_box = QtGui.QGroupBox("Application Settings")
-        vlayout = self.create_layout(self.settings['order']['application_setting_order'], cols=4)
+        group_box = QtGui.QWidget()
+        vlayout = self.create_layout(self.settings['order']['application_setting_order'], cols=3)
 
         group_box.setLayout(vlayout)
+        return group_box
+
+    def create_compression_settings(self):
+        group_box = QtGui.QWidget()
+        vlayout = self.create_layout(self.settings['order']['compression_setting_order'], cols=3)
+        warning_label = QtGui.QLabel('Note: When using compression (greater than 0) it will decrease the executable size,\nbut will increase the startup time when running it.')
+        vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(vlayout)
+        vbox.addWidget(warning_label)
+        group_box.setLayout(vbox)
         return group_box
 
     def create_setting(self, name):
@@ -634,30 +852,50 @@ class MainWindow(QtGui.QWidget, CommandBase):
             return self.create_range_setting(name)
 
     def create_window_settings(self):
-        group_box = QtGui.QGroupBox("Window Settings")
-        vlayout = self.create_layout(self.settings['order']['window_setting_order'], cols=4)
+        group_box = QtGui.QWidget()
+        vlayout = self.create_layout(self.settings['order']['window_setting_order'], cols=3)
 
         group_box.setLayout(vlayout)
         return group_box
 
     def create_export_settings(self):
-        group_box = QtGui.QGroupBox("Export Settings")
+        group_box = QtGui.QWidget()
         vlayout = self.create_layout(self.settings['order']['export_setting_order'], cols=4)
 
-        group_box.setLayout(vlayout)
+        output_layout = QtGui.QHBoxLayout()
+
+        output_label = QtGui.QLabel('Output Directory:')
+        self.output_line = QtGui.QLineEdit()
+        self.output_line.textChanged.connect(self.call_with_object('setting_changed',
+                                                                  self.output_line, self.get_setting('export_dir')))
+        self.output_line.textChanged.connect(self.project_path_changed)
+        self.output_line.setStatusTip('The output directory relative to the project directory.')
+        output_button = QtGui.QPushButton('...')
+        output_button.clicked.connect(self.browse_out_dir)
+
+        output_layout.addWidget(output_label)
+        output_layout.addWidget(self.output_line)
+        output_layout.addWidget(output_button)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(vlayout)
+        vbox.addLayout(output_layout)
+
+        group_box.setLayout(vbox)
         return group_box
 
     def create_download_settings(self):
-        group_box = QtGui.QGroupBox("Download Settings")
-        vlayout = self.create_layout(self.settings['order']['download_setting_order'], 2)
+        group_box = QtGui.QWidget()
+        vlayout = self.create_layout(self.settings['order']['download_setting_order'], cols=1)
 
         group_box.setLayout(vlayout)
         return group_box
 
     def create_layout(self, settings, cols=3):
         glayout = QtGui.QGridLayout()
-        glayout.setContentsMargins(10, 5, 10, 5)
+        glayout.setContentsMargins(10, 15, 10, 5)
+        glayout.setAlignment(QtCore.Qt.AlignTop)
         glayout.setSpacing(10)
+        glayout.setHorizontalSpacing(20)
         col = 0
         row = 0
 
@@ -671,6 +909,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
                 display_name += '*'
             setting_label = QtGui.QLabel(display_name)
             setting_label.setToolTip(setting.description)
+            setting_label.setStatusTip(setting.description)
             glayout.addWidget(setting_label, row, col)
             glayout.addLayout(self.create_setting(setting_name),
                               row, col+1)
@@ -691,6 +930,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
                                                        text, setting))
         if setting.value:
             text.setText(str(setting.value))
+        text.setStatusTip(setting.description)
+        text.setToolTip(setting.description)
 
         hlayout.addWidget(text)
 
@@ -713,6 +954,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         if setting.value:
             text.setText(str(setting.value))
+        text.setStatusTip(setting.description)
+        text.setToolTip(setting.description)
 
         text.textChanged.connect(self.call_with_object('setting_changed',
                                                         text, setting))
@@ -739,6 +982,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
 
         if setting.value:
             text.setText(str(setting.value))
+        text.setStatusTip(setting.description)
+        text.setToolTip(setting.description)
 
         text.textChanged.connect(self.call_with_object('setting_changed',
                                                      text, setting))
@@ -752,6 +997,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
                 widget = self.find_child_by_name(setting.name)
+                if widget is None:
+                    continue
 
                 if (setting.type == 'string' or
                     setting.type == 'file' or
@@ -813,7 +1060,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         if (setting.type == 'string' or
             setting.type == 'file' or
                 setting.type == 'folder'):
-            setting.value = obj.text()
+            setting.value = args[0]
         elif setting.type == 'check':
             setting.value = obj.isChecked()
             check_action = setting.check_action
@@ -823,6 +1070,11 @@ class MainWindow(QtGui.QWidget, CommandBase):
             setting.value = obj.currentText()
         elif setting.type == 'range':
             setting.value = obj.value()
+
+        if setting.action is not None:
+            action = getattr(self, setting.action, None)
+            if callable(action):
+                action()
 
         if self.update_json:
             json_file = os.path.join(self.project_dir(), 'package.json')
@@ -854,6 +1106,8 @@ class MainWindow(QtGui.QWidget, CommandBase):
         check.clicked.connect(self.call_with_object('setting_changed',
                                                     check, setting))
         check.setChecked(setting.value)
+        check.setStatusTip(setting.description)
+        check.setToolTip(setting.description)
 
         hlayout.addWidget(check)
 
@@ -877,6 +1131,9 @@ class MainWindow(QtGui.QWidget, CommandBase):
         combo.editTextChanged.connect(self.call_with_object('setting_changed',
                                                               combo, setting))
 
+        combo.setStatusTip(setting.description)
+        combo.setToolTip(setting.description)
+
         for val in setting.values:
             combo.addItem(val)
 
@@ -884,6 +1141,7 @@ class MainWindow(QtGui.QWidget, CommandBase):
         if default_index != -1:
             combo.setCurrentIndex(default_index)
 
+        hlayout.addWidget(QtGui.QLabel())
         hlayout.addWidget(combo)
         if button:
             hlayout.addWidget(button)
@@ -901,12 +1159,14 @@ class MainWindow(QtGui.QWidget, CommandBase):
             button.clicked.connect(lambda: setting.button_callback(button))
 
         slider = QtGui.QSlider(QtCore.Qt.Orientation.Horizontal)
-        slider.setRange(0, 9)
+        slider.setRange(setting.min, setting.max)
         slider.valueChanged.connect(self.call_with_object('setting_changed',
                                                           slider, setting))
 
         slider.setObjectName(setting.name)
         slider.setValue(setting.default_value)
+        slider.setStatusTip(setting.description)
+        slider.setToolTip(setting.description)
 
         range_label = QtGui.QLabel(str(setting.default_value))
         range_label.setMaximumWidth(30)
@@ -961,7 +1221,7 @@ if __name__ == '__main__':
     QCoreApplication.setOrganizationName("SimplyPixelated")
     QCoreApplication.setOrganizationDomain("simplypixelated.com")
 
-    frame = MainWindow(1000, 500, app)
+    frame = MainWindow(800, 500, app)
     frame.show_and_raise()
 
     sys.exit(app.exec_())

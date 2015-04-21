@@ -5,7 +5,9 @@ from pycns import save_icns
 from pepy.pe import PEFile
 
 import urllib2
+import platform
 import re
+import time
 import sys
 import os
 import glob
@@ -35,6 +37,11 @@ from configobj import ConfigObj
 inside_packed_exe = getattr(sys, 'frozen', '')
 
 CWD = os.getcwd()
+
+def get_file(path):
+    parts = path.split('/')
+    independent_path = os.path.join(CWD, *parts)
+    return independent_path
 
 TEMP_DIR = get_temp_dir()
 DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
@@ -99,6 +106,7 @@ class Setting(object):
         self.filter = kwargs.pop('filter', '.*')
         self.filter_action = kwargs.pop('filter_action', 'None')
         self.check_action = kwargs.pop('check_action', 'None')
+        self.action = kwargs.pop('action', None)
 
         self.set_extra_attributes_from_keyword_args(**kwargs)
 
@@ -309,9 +317,13 @@ class CommandBase(object):
         for setting_group, setting_group_dict in sgroup_items:
             settings['setting_groups'].append(settings[setting_group])
 
+        self._setting_items = (config['setting_groups'].items() +
+                         [('export_settings', config['export_settings'])] +
+                         [('compression', config['compression'])])
         config.pop('setting_groups')
         config.pop('export_settings')
         config.pop('compression')
+        self._setting_items += config.items()
         for key, val in config.items():
             settings[key] = val
 
@@ -450,7 +462,8 @@ class CommandBase(object):
 
         dl_export_items = (self.settings['download_settings'].items() +
                            self.settings['export_settings'].items() +
-                           self.settings['compression'].items())
+                           self.settings['compression'].items() +
+                           self.settings['web2exe_settings'].items())
         for setting_name, setting in dl_export_items:
             if setting.value is not None:
                 dic['webexe_settings'][setting_name] = setting.value
@@ -513,6 +526,8 @@ class CommandBase(object):
                     if setting.type == 'list':
                         val_str = self.convert_val_to_str(new_dic[item])
                         setting.value = val_str
+                    if setting.type == 'range':
+                        setting.value = new_dic[item]
                 if isinstance(new_dic[item], dict):
                     stack.append((item, new_dic[item]))
         return setting_list
@@ -678,7 +693,7 @@ class CommandBase(object):
                         if windows:
                             self.replace_icon_in_exe(nw_path)
 
-                        #self.compress_nw(nw_path)
+                        self.compress_nw(nw_path)
 
                         dest_binary_path = os.path.join(export_dest,
                                                         self.project_name() +
@@ -709,15 +724,29 @@ class CommandBase(object):
 
     def compress_nw(self, nw_path):
         compression = self.get_setting('nw_compression_level')
-        upx_bin = os.path.join('files', 'compressors', 'upx-linux-x64')
-        cmd = '{upx_bin} --lzma -{comp_level} -o test {path}'.format(upx_bin=upx_bin,
-                                                              comp_level=compression.value,
-                                                              path=nw_path)
-        print cmd
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, shell=True)
-        output, err = proc.communicate()
-        print err, output
+        comp_dict = {'Darwin64bit': get_file('files/compressors/upx-mac'),
+                     'Darwin32bit': get_file('files/compressors/upx-mac'),
+                     'Linux64bit':  get_file('files/compressors/upx-linux-x64'),
+                     'Linux32bit':  get_file('files/compressors/upx-linux-x32'),
+                     'Windows64bit':  get_file('files/compressors/upx-win.exe'),
+                     'Windows32bit':  get_file('files/compressors/upx-win.exe')
+                     }
+
+        plat = platform.system()+platform.architecture()[0]
+        upx_version = comp_dict.get(plat, None)
+
+        if upx_version is not None:
+            upx_bin = os.path.join('files', 'compressors', upx_version)
+            os.chmod(upx_bin, 0755)
+            cmd = [upx_bin, '--lzma', '-{}'.format(compression.value), str(nw_path)]
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+
+            self.progress_text = '\nCompressing files'
+            while proc.poll() is None:
+                self.progress_text += '.'
+                time.sleep(5)
+            output, err = proc.communicate()
 
     def copy_files_to_project_folder(self):
         old_dir = CWD
