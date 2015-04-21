@@ -28,18 +28,21 @@ Downloads
 
 ####Mac OS X
 
+[Mac OS X 10.7+ download - v0.2.1b](http://www.mediafire.com/download/9d64i218x3un9oe/Web2ExeMac-v0.2.1b.zip)
 [Mac OS X 10.7+ download - v0.2.0b](http://www.mediafire.com/download/i8zl5g573rcg528/Web2ExeMac-v0.2.0b.zip)
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
+[Windows 7+ download - v0.2.1b](http://www.mediafire.com/download/rc5jut6oi53t42x/Web2ExeWin-v0.2.1b.zip)
 [Windows 7+ download - v0.2.0b](http://www.mediafire.com/download/9gk2px6xitsdk91/Web2ExeWin-v0.2.0b.zip)
 
 Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
+[Ubuntu 14.04 - v0.2.1b](http://www.mediafire.com/download/q2dy2enns99cb2b/Web2ExeLinux-v0.2.1b.zip)
 [Ubuntu 14.04 - v0.2.0b](http://www.mediafire.com/download/sbyuz3cewomweks/Web2ExeLinux-v0.2.0b.zip)
 
 Give the executable permissions to execute and then run it:
@@ -112,6 +115,7 @@ Features
 - Ability to specify a node-webkit version to download
 - Automatic insertion of icon files into Windows exe's or Mac Apps by filling out the icon fields as necessary
 - A command line utility with functionality equivalent to the GUI. Useful for automated builds.
+- Compression of executables with upx
 
 
 Future Plans
@@ -126,10 +130,8 @@ Planned New Features
 
 - The ability to add external files to the project
 - Minifying JS and HTML
-- Compression using UPX
-- Info.plist editing support for Mac OS X
 - Ability to edit credits.html
-- A slick new UI and name to go with it
+- A slick new UI
 
 
 FAQ
