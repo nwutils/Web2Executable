@@ -224,11 +224,21 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                           self.download_settings_icon]
 
         self.main_layout.addWidget(self.directory_chooser_widget)
-        self.tab_widget.addTab(self.app_settings_widget, self.app_settings_icon, 'App Settings')
-        self.tab_widget.addTab(self.win_settings_widget, self.win_settings_icon, 'Window Settings')
-        self.tab_widget.addTab(self.ex_settings_widget, self.ex_settings_icon, 'Export Settings')
-        self.tab_widget.addTab(self.comp_settings_widget, self.comp_settings_icon, 'Compression Settings')
-        self.tab_widget.addTab(self.dl_settings_widget, self.download_settings_icon, 'Download Settings')
+        self.tab_widget.addTab(self.app_settings_widget,
+                               self.app_settings_icon,
+                               'App Settings')
+        self.tab_widget.addTab(self.win_settings_widget,
+                               self.win_settings_icon,
+                               'Window Settings')
+        self.tab_widget.addTab(self.ex_settings_widget,
+                               self.ex_settings_icon, 'Export Settings')
+        self.tab_widget.addTab(self.comp_settings_widget,
+                               self.comp_settings_icon,
+                               'Compression Settings')
+        self.tab_widget.addTab(self.dl_settings_widget,
+                               self.download_settings_icon,
+                               'Download Settings')
+
         self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.download_bar_widget)
 
@@ -1221,7 +1231,7 @@ if __name__ == '__main__':
     QCoreApplication.setOrganizationName("SimplyPixelated")
     QCoreApplication.setOrganizationDomain("simplypixelated.com")
 
-    frame = MainWindow(800, 500, app)
+    frame = MainWindow(900, 500, app)
     frame.show_and_raise()
 
     sys.exit(app.exec_())
