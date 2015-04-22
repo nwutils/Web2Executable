@@ -1,9 +1,12 @@
 Web2Executable
 ==============
 
-Uses node-webkit to generate "native" apps for already existing web apps.
+What is it?
+-----------
 
-Requires the pyside library and python 2.X to run. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed. I've only tested the code on python 2.7.3-2.7.5, so I can't speak about any lower version, but it should work as long as PySide is supported.
+Web2Executable is a friendly command line and GUI application that can transform your Nodejs (or any other JS/HTML) app into an standalone executable. It can export to Mac OS X, Windows and Linux all from one platform, so no need to go out and buy expensive hardware.
+
+It's powered by the very awesome project [NWJS](https://github.com/nwjs) and PySide, is open source, and is just dang awesome and easy to use.
 
 If you have an idea for a feature, please create a new issue with a format like this: "Feature - My Awesome New Feature", along with a good description of what you'd like the feature to do.
 
@@ -66,6 +69,8 @@ Getting Started
 When using the prebuilt binaries for Windows, Mac, or Ubuntu, there are NO dependencies or extra applications needed. Simply download Web2Exe for the platform of your choice, extract, and double click the app/exe/binary to start. This applies to both the command-line version and the GUI version.
 
 ### Run from Python Source
+
+Requires the pyside library and python 2.X. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed. I've only tested the code on python 2.7.3-2.7.9, so I can't speak about any lower version, but it should work as long as PySide is supported.
 
 ####GUI
 
