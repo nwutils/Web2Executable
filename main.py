@@ -12,7 +12,7 @@ from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
 from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
-
+from pycns import pngs_from_icns
 from command_line import CommandBase, logger, get_file
 
 MAX_RECENT = 10
@@ -704,9 +704,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             icon_path = os.path.join(self.project_dir(), icon_path)
             if os.path.exists(icon_path):
                 if icon_path.endswith('.icns'):
-                    #image = QtGui.QImage.fromData(make_thumbnail(icon_path,48), 'png')
-                    return
-                image = QtGui.QImage(icon_path)
+                    pngs = pngs_from_icns(icon_path)
+                    if pngs:
+                        image = QtGui.QImage.fromData(QtCore.QByteArray(pngs[-1].data), 'PNG')
+                    else:
+                        return
+                else:
+                    image = QtGui.QImage(icon_path)
                 if image.width() >= image.height():
                     image = image.scaledToWidth(48,
                                         QtCore.Qt.SmoothTransformation)
