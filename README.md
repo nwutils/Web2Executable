@@ -31,6 +31,8 @@ Downloads
 
 ####Mac OS X
 
+[Mac OS X 10.7+ download - v0.2.2b](http://www.mediafire.com/download/skxz77undtxvp5o/Web2ExeMac-v0.2.2b.zip)
+
 [Mac OS X 10.7+ download - v0.2.1b](http://www.mediafire.com/download/9d64i218x3un9oe/Web2ExeMac-v0.2.1b.zip)
 
 [Mac OS X 10.7+ download - v0.2.0b](http://www.mediafire.com/download/i8zl5g573rcg528/Web2ExeMac-v0.2.0b.zip)
@@ -39,6 +41,8 @@ You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
+[Windows 7+ download - v0.2.2b](http://www.mediafire.com/download/u883jitztp3zkga/Web2ExeWin-v0.2.2b.zip)
+
 [Windows 7+ download - v0.2.1b](http://www.mediafire.com/download/rc5jut6oi53t42x/Web2ExeWin-v0.2.1b.zip)
 
 [Windows 7+ download - v0.2.0b](http://www.mediafire.com/download/9gk2px6xitsdk91/Web2ExeWin-v0.2.0b.zip)
@@ -46,6 +50,8 @@ You can just put the app where ever you want and double click to run it.
 Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
+
+[Ubuntu 14.04 - v0.2.2b](http://www.mediafire.com/download/wmswcmuizxpmg4x/Web2ExeLinux-v0.2.2b.zip)
 
 [Ubuntu 14.04 - v0.2.1b](http://www.mediafire.com/download/q2dy2enns99cb2b/Web2ExeLinux-v0.2.1b.zip)
 
@@ -191,6 +197,10 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.2.2b
+- Fixed a few bugs with image loading
+- Added icns viewing support when adding OS X icons.
 
 v0.2.1b
 - UPX Compression to executables
