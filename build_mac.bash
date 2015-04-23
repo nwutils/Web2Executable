@@ -1,5 +1,5 @@
 rm -rf Web2ExeMac-CMD/files
-pyinstaller --hidden-import configobj --distpath Web2ExeMac-CMD --onefile -n web2exe-mac command_line.py
+pyinstaller --hidden-import Jpeg2KImagePlugin --hidden-import configobj --distpath Web2ExeMac-CMD --onefile -n web2exe-mac command_line.py
 cp -rf files Web2ExeMac-CMD/files/
 
 rm -rf build dist Web2Executable.app
