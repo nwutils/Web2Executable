@@ -1,3 +1,6 @@
+rm -rf Web2ExeMac*
+rm  files/error.log files/last_project_path.txt files/recent_files.txt
+rm -rf files/downloads/*
 rm -rf Web2ExeMac-CMD/files
 pyinstaller --hidden-import Jpeg2KImagePlugin --hidden-import configobj --distpath Web2ExeMac-CMD --onefile -n web2exe-mac command_line.py
 cp -rf files Web2ExeMac-CMD/files/
@@ -15,4 +18,4 @@ rm -rf Web2Executable.app/Contents/Frameworks/Qt*
 rm -rf build dist
 
 zip -r -9 Web2ExeMac-CMD.zip Web2ExeMac-CMD
-zip -r -9 Web2ExeMac-v0.2.0b.zip Web2Executable.app
+zip -r -9 Web2ExeMac-v0.2.2b.zip Web2Executable.app
