@@ -698,6 +698,8 @@ class CommandBase(object):
                         dest_binary_path = os.path.join(export_dest,
                                                         self.project_name() +
                                                         ext)
+                        if 'linux' in ex_setting.name:
+                            self.make_desktop_file(dest_binary_path, export_dest)
 
                         join_files(dest_binary_path, nw_path, zip_file)
 
@@ -721,6 +723,40 @@ class CommandBase(object):
             self.logger.error(exc)
         finally:
             shutil.rmtree(temp_dir)
+
+    def make_desktop_file(self, nw_path, export_dest):
+        icon_set = self.get_setting('icon')
+        icon_path = os.path.join(self.project_dir(), icon_set.value)
+        if os.path.exists(icon_path):
+            shutil.copy(icon_path, export_dest)
+            icon_path = os.path.join(export_dest, os.path.basename(icon_path))
+        else:
+            icon_path = ''
+        name = self.project_name()
+        pdir = self.project_dir()
+        version = self.get_setting('version')
+        desc = self.get_setting('description')
+        dfile_path = os.path.join(export_dest, name+'.desktop')
+        file_str = (
+                    '[Desktop Entry]\n'
+                    'Version={}\n'
+                    'Name={}\n'
+                    'Comment={}\n'
+                    'Exec={}\n'
+                    'Icon={}\n'
+                    'Terminal=false\n'
+                    'Type=Application\n'
+                    'Categories=Utility;Application;\n'
+                    )
+        file_str = file_str.format(version.value,
+                                   name,
+                                   desc.value,
+                                   nw_path,
+                                   icon_path)
+        with open(dfile_path, 'w+') as f:
+            f.write(file_str)
+
+        os.chmod(dfile_path, 0755)
 
     def compress_nw(self, nw_path):
         compression = self.get_setting('nw_compression_level')
