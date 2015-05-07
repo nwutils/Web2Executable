@@ -21,6 +21,7 @@ import subprocess
 import logging
 import logging.handlers as lh
 import plistlib
+import codecs
 
 from semantic_version import Version
 
@@ -63,8 +64,8 @@ handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
 logger.addHandler(handler)
 
 def my_excepthook(type_, value, tback):
-    output_err = ''.join(traceback.format_exception(type_, value, tback))
-    logger.error('{}'.format(output_err))
+    output_err = u''.join(traceback.format_exception(type_, value, tback))
+    logger.error(u'{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
 sys.excepthook = my_excepthook
@@ -79,7 +80,7 @@ except:
 def get_base_url():
     url = None
     try:
-        url = open(os.path.join(CWD, 'files', 'base_url.txt')).read().strip()
+        url = codecs.open(os.path.join(CWD, 'files', 'base_url.txt'), encoding='utf-8').read().strip()
     except (OSError, IOError):
         url = 'http://dl.node-webkit.org/v{}/'
     return url
@@ -101,7 +102,7 @@ class Setting(object):
         self.default_value = kwargs.pop('default_value', None)
         self.button = kwargs.pop('button', None)
         self.button_callback = kwargs.pop('button_callback', None)
-        self.description = kwargs.pop('description', '')
+        self.description = kwargs.pop('description', u'')
         self.values = kwargs.pop('values', [])
         self.filter = kwargs.pop('filter', '.*')
         self.filter_action = kwargs.pop('filter_action', 'None')
@@ -113,7 +114,7 @@ class Setting(object):
         if self.value is None:
             self.value = self.default_value
 
-        self.save_path = kwargs.pop('save_path', '')
+        self.save_path = kwargs.pop('save_path', u'')
 
         self.get_file_information_from_url()
 
@@ -125,7 +126,7 @@ class Setting(object):
 
     def get_file_information_from_url(self):
         if hasattr(self, 'url'):
-            self.file_name = self.url.split('/')[-1]
+            self.file_name = self.url.split(u'/')[-1]
             self.full_file_path = os.path.join(self.save_path, self.file_name)
             self.file_ext = os.path.splitext(self.file_name)[1]
             if self.file_ext == '.zip':
@@ -161,7 +162,7 @@ class Setting(object):
     def extract_file_path(self, version):
         if self.extract_file:
             return self.extract_file.format(version)
-        return ''
+        return u''
 
     def set_extra_attributes_from_keyword_args(self, **kwargs):
         for undefined_key, undefined_value in kwargs.items():
@@ -224,9 +225,9 @@ class Setting(object):
                 elif self.file_ext == '.zip':
                     new_bytes = file.read(extract_p)
             except KeyError as e:
-                logger.error(str(e))
+                logger.error(unicode(e))
                 # dirty hack to support old versions of nw
-                if 'no item named' in str(e):
+                if 'no item named' in unicode(e):
                     extract_path = '/'.join(extract_path.split('/')[1:])
                     try:
                         if self.file_ext == '.gz':
@@ -234,7 +235,7 @@ class Setting(object):
                         elif self.file_ext == '.zip':
                             new_bytes = file.read(extract_path)
                     except KeyError as e:
-                        logger.error(str(e))
+                        logger.error(unicode(e))
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -245,10 +246,10 @@ class Setting(object):
         url = ''
         if hasattr(self, 'url'):
             url = self.url
-        return ('Setting: (name={}, '
-                'display_name={}, '
-                'value={}, required={}, '
-                'type={}, url={})').format(self.name,
+        return (u'Setting: (name={}, '
+                u'display_name={}, '
+                u'value={}, required={}, '
+                u'type={}, url={})').format(self.name,
                                            self.display_name,
                                            self.value,
                                            self.required,
@@ -283,9 +284,10 @@ class CommandBase(object):
     def setup_nw_versions(self):
         nw_version = self.get_setting('nw_version')
         try:
-            f = open(os.path.join(CWD, 'files', 'nw-versions.txt'))
+            f = codecs.open(os.path.join(CWD, 'files', 'nw-versions.txt'), encoding='utf-8')
             for line in f:
                 nw_version.values.append(line.strip())
+            f.close()
         except IOError:
             nw_version.values.append(nw_version.default_value)
 
@@ -295,8 +297,8 @@ class CommandBase(object):
 
     def get_settings(self):
         config_file = os.path.join(CWD, 'files', 'settings.cfg')
-        contents = open(config_file).read()
-        contents = contents.replace('{DEFAULT_DOWNLOAD_PATH}',
+        contents = codecs.open(config_file, encoding='utf-8').read()
+        contents = contents.replace(u'{DEFAULT_DOWNLOAD_PATH}',
                                     DEFAULT_DOWNLOAD_PATH)
         config_io = StringIO(contents)
         config = ConfigObj(config_io, unrepr=True).dict()
@@ -373,11 +375,12 @@ class CommandBase(object):
         nw_version.values = versions
         f = None
         try:
-            f = open(os.path.join(CWD, 'files', 'nw-versions.txt'), 'w')
+            f = codecs.open(os.path.join(CWD, 'files', 'nw-versions.txt'), 'w', encoding='utf-8')
             for v in nw_version.values:
                 f.write(v+os.linesep)
+            f.close()
         except IOError:
-            error = ''.join(traceback.format_exception(sys.exc_info()[0],
+            error = u''.join(traceback.format_exception(sys.exc_info()[0],
                                                        sys.exc_info()[1],
                                                        sys.exc_info()[2]))
             self.show_error(error)
@@ -404,7 +407,7 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = ''.join(traceback.format_exception(sys.exc_info()[0],
+            error = u''.join(traceback.format_exception(sys.exc_info()[0],
                                                        sys.exc_info()[1],
                                                        sys.exc_info()[2]))
             self.show_error(error)
@@ -420,13 +423,13 @@ class CommandBase(object):
         setting_list = []
         if p_json:
             json_str = ''
-            with open(p_json[0], 'r') as f:
+            with codecs.open(p_json[0], 'r', encoding='utf-8') as f:
                 json_str = f.read()
             try:
                 setting_list = self.load_from_json(json_str)
             except ValueError as e:  # Json file is invalid
                 self.logger.warning('Warning: Json file invalid.')
-                self.progress_text = '{}\n'.format(e)
+                self.progress_text = u'{}\n'.format(e)
         return setting_list
 
     def generate_json(self):
@@ -479,8 +482,8 @@ class CommandBase(object):
     @extract_error.setter
     def extract_error(self, value):
         if value is not None and not self.quiet and not inside_packed_exe:
-            self._extract_error = str(value)
-            sys.stderr.write('\r{}'.format(self._extract_error))
+            self._extract_error = unicode(value)
+            sys.stderr.write(u'\r{}'.format(self._extract_error))
             sys.stderr.flush()
 
     @property
@@ -490,8 +493,8 @@ class CommandBase(object):
     @output_err.setter
     def output_err(self, value):
         if value is not None and not self.quiet and not inside_packed_exe:
-            self._output_err = str(value)
-            sys.stderr.write('\r{}'.format(self._output_err))
+            self._output_err = unicode(value)
+            sys.stderr.write(u'\r{}'.format(self._output_err))
             sys.stderr.flush()
 
     @property
@@ -501,8 +504,8 @@ class CommandBase(object):
     @progress_text.setter
     def progress_text(self, value):
         if value is not None and not self.quiet and not inside_packed_exe:
-            self._progress_text = str(value)
-            sys.stdout.write('\r{}'.format(self._progress_text))
+            self._progress_text = unicode(value)
+            sys.stdout.write(u'\r{}'.format(self._progress_text))
             sys.stdout.flush()
 
     def load_from_json(self, json_str):
@@ -561,7 +564,7 @@ class CommandBase(object):
                 if os.path.exists(save_file_path):
                     os.remove(save_file_path)
                 self.extract_error = e
-                self.logger.error(str(self.extract_error))
+                self.logger.error(unicode(self.extract_error))
                 # cannot use GUI in thread to notify user. Save it for later
         self.progress_text = '\nDone.\n'
         return True
@@ -614,7 +617,7 @@ class CommandBase(object):
             json_file = os.path.join(self.project_dir(), 'package.json')
 
             if self.output_package_json:
-                with open(json_file, 'w+') as f:
+                with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                     f.write(self.generate_json())
 
             zip_file = os.path.join(temp_dir, self.project_name()+'.nw')
@@ -624,7 +627,7 @@ class CommandBase(object):
                 if ex_setting.value:
                     self.progress_text = '\n'
                     name = ex_setting.display_name
-                    self.progress_text = 'Making files for {}...'.format(name)
+                    self.progress_text = u'Making files for {}...'.format(name)
                     export_dest = os.path.join(output_dir, ex_setting.name)
                     versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
 
@@ -719,7 +722,7 @@ class CommandBase(object):
             exc = traceback.format_exception(sys.exc_info()[0],
                                              sys.exc_info()[1],
                                              sys.exc_info()[2])
-            self.output_err += ''.join(exc)
+            self.output_err += u''.join(exc)
             self.logger.error(exc)
         finally:
             shutil.rmtree(temp_dir)
@@ -736,24 +739,24 @@ class CommandBase(object):
         pdir = self.project_dir()
         version = self.get_setting('version')
         desc = self.get_setting('description')
-        dfile_path = os.path.join(export_dest, name+'.desktop')
+        dfile_path = os.path.join(export_dest, u'{}.desktop'.format(name))
         file_str = (
-                    '[Desktop Entry]\n'
-                    'Version={}\n'
-                    'Name={}\n'
-                    'Comment={}\n'
-                    'Exec={}\n'
-                    'Icon={}\n'
-                    'Terminal=false\n'
-                    'Type=Application\n'
-                    'Categories=Utility;Application;\n'
+                    u'[Desktop Entry]\n'
+                    u'Version={}\n'
+                    u'Name={}\n'
+                    u'Comment={}\n'
+                    u'Exec={}\n'
+                    u'Icon={}\n'
+                    u'Terminal=false\n'
+                    u'Type=Application\n'
+                    u'Categories=Utility;Application;\n'
                     )
         file_str = file_str.format(version.value,
                                    name,
                                    desc.value,
                                    nw_path,
                                    icon_path)
-        with open(dfile_path, 'w+') as f:
+        with codecs.open(dfile_path, 'w+', encoding='utf-8') as f:
             f.write(file_str)
 
         os.chmod(dfile_path, 0755)
@@ -776,7 +779,7 @@ class CommandBase(object):
         if upx_version is not None:
             upx_bin = os.path.join('files', 'compressors', upx_version)
             os.chmod(upx_bin, 0755)
-            cmd = [upx_bin, '--lzma', '-{}'.format(compression.value), str(nw_path)]
+            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), unicode(nw_path)]
             if platform.system() == 'Windows':
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -799,7 +802,7 @@ class CommandBase(object):
     def copy_files_to_project_folder(self):
         old_dir = CWD
         os.chdir(self.project_dir())
-        self.logger.info('Copying files to {}'.format(self.project_dir()))
+        self.logger.info(u'Copying files to {}'.format(self.project_dir()))
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
                 if setting.type == 'file' and setting.value:
@@ -807,9 +810,9 @@ class CommandBase(object):
                     if os.path.isabs(f_path):
                         try:
                             shutil.copy(setting.value, self.project_dir())
-                            self.logger.info('Copying file {} to {}'.format(setting.value, self.project_dir()))
+                            self.logger.info(u'Copying file {} to {}'.format(setting.value, self.project_dir()))
                         except shutil.Error as e:  # same file warning
-                            self.logger.warning('Warning: {}'.format(e))
+                            self.logger.warning(u'Warning: {}'.format(e))
                         finally:
                             setting.value = os.path.basename(setting.value)
 
@@ -818,7 +821,7 @@ class CommandBase(object):
     def convert_val_to_str(self, val):
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
-        return str(val).replace(self.project_dir()+os.path.sep, '')
+        return unicode(val).replace(self.project_dir()+os.path.sep, '')
 
     def export(self):
         self.get_files_to_download()
@@ -826,7 +829,7 @@ class CommandBase(object):
         if res:
             self.make_output_dirs()
             self.progress_text = '\nDone!\n'
-            self.progress_text = 'Output directory is {}/{}.\n'.format(self.output_dir(),
+            self.progress_text = u'Output directory is {}/{}.\n'.format(self.output_dir(),
                                                                        self.project_name())
             self.delete_files()
 
@@ -849,7 +852,7 @@ class CommandBase(object):
             return self.extract_files()
 
     def download_file(self, path, setting):
-        self.logger.info('Downloading file {}.'.format(path))
+        self.logger.info(u'Downloading file {}.'.format(path))
 
         location = self.get_setting('download_dir').value
 
@@ -874,7 +877,7 @@ class CommandBase(object):
         forced = self.get_setting('force_download').value
 
         if (archive_exists or dest_files_exist) and not forced:
-            self.logger.info('File {} already downloaded. Continuing...'.format(path))
+            self.logger.info(u'File {} already downloaded. Continuing...'.format(path))
             return self.continue_downloading_or_extract()
         elif tmp_exists and (os.stat(tmp_file).st_size > 0):
             tmp_size = os.stat(tmp_file).st_size
@@ -893,9 +896,9 @@ class CommandBase(object):
         downloaded = ''
         if tmp_size:
             self.progress_text = 'Resuming previous download...\n'
-            self.progress_text = 'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
-        self.progress_text = ('Downloading: {}, '
-                              'Size: {:.2f} MB {}\n'.format(short_name,
+            self.progress_text = u'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
+        self.progress_text = (u'Downloading: {}, '
+                              u'Size: {:.2f} MB {}\n'.format(short_name,
                                                          MB,
                                                          downloaded))
 
@@ -978,16 +981,16 @@ if __name__ == '__main__':
                           else 'store_false')
                 kwargs.update({'action': action})
                 if setting.default_value is True:
-                    option_name = 'disable-{}'.format(option_name)
+                    option_name = u'disable-{}'.format(option_name)
             else:
                 if setting.values:
                     kwargs.update({'choices': setting.values})
-                    setting.description += ' Possible values: {{{}}}'.format(', '.join([str(x) for x in setting.values]))
+                    setting.description += u' Possible values: {{{}}}'.format(', '.join([unicode(x) for x in setting.values]))
                     kwargs.update({'metavar': ''})
                 else:
                     kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
 
-            parser.add_argument('--{}'.format(option_name),
+            parser.add_argument(u'--{}'.format(option_name),
                                 dest=setting_name,
                                 help=setting.description,
                                 **kwargs
@@ -1022,8 +1025,8 @@ if __name__ == '__main__':
     logger.addHandler(handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = ''.join(traceback.format_exception(type_, value, tback))
-        logger.error('{}'.format(output_err))
+        output_err = u''.join(traceback.format_exception(type_, value, tback))
+        logger.error(u'{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
     sys.excepthook = my_excepthook

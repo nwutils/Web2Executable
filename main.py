@@ -6,6 +6,7 @@ import os
 import re
 import glob
 import sys
+import codecs
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
@@ -56,7 +57,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         files = []
         history_file = get_file('files/recent_files.txt')
 
-        with open(history_file, 'a+') as f:
+        with codecs.open(history_file, 'a+', 'utf-8') as f:
             for line in f:
                 line = line.strip()
                 if line and os.path.exists(line):
@@ -67,7 +68,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def load_last_project_path(self):
         proj_path = ''
         proj_file = get_file('files/last_project_path.txt')
-        with open(proj_file, 'a+') as f:
+        with codecs.open(proj_file, 'a+', encoding='utf-8') as f:
             proj_path = f.read().strip()
 
         if not proj_path:
@@ -77,28 +78,28 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def save_project_path(self, path):
         proj_file = get_file('files/last_project_path.txt')
-        with open(proj_file, 'w+') as f:
+        with codecs.open(proj_file, 'w+', encoding='utf-8') as f:
             f.write(path)
 
     def save_recent_project(self, proj):
         recent_file_path = get_file('files/recent_files.txt')
         max_length = MAX_RECENT
-        recent_files = open(recent_file_path, 'a+').read().split('\n')
+        recent_files = codecs.open(recent_file_path, 'a+', encoding='utf-8').read().split(u'\n')
         try:
             recent_files.remove(proj)
         except ValueError:
             pass
         recent_files.append(proj)
-        with open(recent_file_path, 'w+') as f:
+        with codecs.open(recent_file_path, 'w+', encoding='utf-8') as f:
             for recent_file in recent_files[-max_length:]:
                 if recent_file and os.path.exists(recent_file):
-                    f.write(recent_file+'\n')
+                    f.write(u'{}\n'.format(recent_file))
 
     def update_recent_files(self):
         previous_files = self.load_recent_projects()
         self.recent_separator.setVisible(len(previous_files) > 0)
         for i in xrange(len(previous_files)):
-            text = '{} - {}'.format(i+1, os.path.basename(previous_files[i]))
+            text = u'{} - {}'.format(i+1, os.path.basename(previous_files[i]))
             action = self.recent_file_actions[i]
             action.setText(text)
             action.setData(previous_files[i])
@@ -169,7 +170,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.option_settings_enabled(False)
 
-        self.setWindowTitle("Web2Executable {}".format(__gui_version__))
+        self.setWindowTitle(u"Web2Executable {}".format(__gui_version__))
         self.update_nw_versions(None)
 
     def open_recent_file(self):
@@ -180,9 +181,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def setup_nw_versions(self):
         nw_version = self.get_setting('nw_version')
         try:
-            f = open(get_file('files/nw-versions.txt'))
+            f = codecs.open(get_file('files/nw-versions.txt'), encoding='utf-8')
             for line in f:
                 nw_version.values.append(line.strip())
+            f.close()
         except IOError:
             nw_version.values.append(nw_version.default_value)
 
@@ -284,7 +286,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.cancel_button.setEnabled(False)
 
     def show_error(self, exception):
-        QtGui.QMessageBox.information(self, 'Error!', str(exception))
+        QtGui.QMessageBox.information(self, 'Error!', unicode(exception))
 
     def disable_ui_while_working(self):
         self.option_settings_enabled(False)
@@ -315,7 +317,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         for sgroup in self.settings['setting_groups']:
             for sname, setting in sgroup.items():
                 setting_path = os.path.join(self.project_dir(),
-                                            str(setting.value))
+                                            unicode(setting.value))
 
                 if setting.required and not setting.value:
                     settings_valid = False
@@ -334,7 +336,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip('The file "{}" does not exist.'.format(os.path.join(self.project_dir(),setting.value)))
+                        widget.setToolTip(u'The file "{}" does not exist.'.format(os.path.join(self.project_dir(),setting.value)))
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
@@ -345,7 +347,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip('The folder "{}" does not exist'.format(os.path.join(self.project_dir(), setting.value)))
+                        widget.setToolTip(u'The folder "{}" does not exist'.format(os.path.join(self.project_dir(), setting.value)))
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
                 if settings_valid:
@@ -454,7 +456,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def read_response_header(self, response_header):
         # Check for genuine error conditions.
         if response_header.statusCode() not in (200, 300, 301, 302, 303, 307):
-            self.show_error('Download failed: {}.'.format(response_header.reasonPhrase()))
+            self.show_error(u'Download failed: {}.'.format(response_header.reasonPhrase()))
             self.http_request_aborted = True
             self.http.abort()
             self.enable_ui_after_error()
@@ -475,7 +477,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         if error:
             self.out_file.remove()
-            self.show_error('Download failed: {}.'.format(self.http.errorString()))
+            self.show_error(u'Download failed: {}.'.format(self.http.errorString()))
             self.enable_ui_after_error()
         else:
             self.continue_downloading_or_extract()
@@ -499,7 +501,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     @progress_text.setter
     def progress_text(self, value):
-        self.progress_label.setText(str(value))
+        self.progress_label.setText(unicode(value))
 
     def run_in_background(self, method_name, callback):
         self.thread = BackgroundThread(self, method_name)
@@ -581,7 +583,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if minor >= 12:
             path = path.replace('node-webkit', 'nwjs')
 
-        self.progress_text = 'Downloading {}'.format(path.replace(version_file, ''))
+        self.progress_text = u'Downloading {}'.format(path.replace(version_file, ''))
 
         url = QUrl(path)
         file_name = setting.save_file_path(self.selected_version(), location)
@@ -603,7 +605,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.out_file = QFile(file_name)
         if not self.out_file.open(QIODevice.WriteOnly):
             error = self.out_file.error().name
-            self.show_error('Unable to save the file {}: {}.'.format(file_name,
+            self.show_error(u'Unable to save the file {}: {}.'.format(file_name,
                                                                      error))
             self.out_file = None
             self.enable_ui()
@@ -618,9 +620,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         path = QUrl.toPercentEncoding(url.path(), "!$&'()*+,;=:@/")
         if path:
-            path = str(path)
+            path = unicode(path)
         else:
-            path = '/'
+            path = u'/'
 
         # Download the file.
         self.http_get_id = self.http.get(path, self.out_file)
@@ -944,7 +946,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         text.textChanged.connect(self.call_with_object('setting_changed',
                                                        text, setting))
         if setting.value:
-            text.setText(str(setting.value))
+            text.setText(unicode(setting.value))
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -968,7 +970,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                      text, setting))
 
         if setting.value:
-            text.setText(str(setting.value))
+            text.setText(unicode(setting.value))
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -996,7 +998,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                    text, setting))
 
         if setting.value:
-            text.setText(str(setting.value))
+            text.setText(unicode(setting.value))
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -1024,7 +1026,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         old_val = setting.default_value
 
                     setting.value = old_val.replace('\\', '\\\\')
-                    widget.setText(str(old_val))
+                    widget.setText(unicode(old_val))
 
                 elif setting.type == 'check':
                     old_val = False
@@ -1045,10 +1047,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def set_kiosk_emulation_options(self, is_checked):
         if is_checked:
             width_field = self.find_child_by_name('width')
-            width_field.setText(str(self.desktop_width))
+            width_field.setText(unicode(self.desktop_width))
 
             height_field = self.find_child_by_name('height')
-            height_field.setText(str(self.desktop_height))
+            height_field.setText(unicode(self.desktop_height))
 
             toolbar_field = self.find_child_by_name('toolbar')
             toolbar_field.setChecked(not is_checked)
@@ -1094,7 +1096,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if self.update_json:
             json_file = os.path.join(self.project_dir(), 'package.json')
 
-            with open(json_file, 'w+') as f:
+            with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                 f.write(self.generate_json())
 
         self.ex_button.setEnabled(self.required_settings_filled())
@@ -1183,7 +1185,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         slider.setStatusTip(setting.description)
         slider.setToolTip(setting.description)
 
-        range_label = QtGui.QLabel(str(setting.default_value))
+        range_label = QtGui.QLabel(unicode(setting.default_value))
         range_label.setMaximumWidth(30)
 
         slider.valueChanged.connect(self.call_with_object('_update_range_label',
@@ -1200,7 +1202,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return hlayout
 
     def _update_range_label(self, label, value):
-        label.setText(str(value))
+        label.setText(unicode(value))
 
     def load_package_json(self):
         setting_list = super(MainWindow, self).load_package_json()
