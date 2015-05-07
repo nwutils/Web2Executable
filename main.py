@@ -7,6 +7,7 @@ import re
 import glob
 import sys
 import codecs
+import platform
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
@@ -56,8 +57,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def load_recent_projects(self):
         files = []
         history_file = get_file('files/recent_files.txt')
-
-        with codecs.open(history_file, 'a+', 'utf-8') as f:
+        if not os.path.exists(history_file):
+            return files
+        with codecs.open(history_file, encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if line and os.path.exists(line):
@@ -68,8 +70,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def load_last_project_path(self):
         proj_path = ''
         proj_file = get_file('files/last_project_path.txt')
-        with codecs.open(proj_file, 'a+', encoding='utf-8') as f:
-            proj_path = f.read().strip()
+        if os.path.exists(proj_file):
+            with codecs.open(proj_file, encoding='utf-8') as f:
+                proj_path = f.read().strip()
 
         if not proj_path:
             proj_path = QtCore.QDir.currentPath()
@@ -84,7 +87,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def save_recent_project(self, proj):
         recent_file_path = get_file('files/recent_files.txt')
         max_length = MAX_RECENT
-        recent_files = codecs.open(recent_file_path, 'a+', encoding='utf-8').read().split(u'\n')
+        recent_files = []
+        if os.path.exists(recent_file_path):
+            recent_files = codecs.open(recent_file_path, encoding='utf-8').read().split(u'\n')
         try:
             recent_files.remove(proj)
         except ValueError:
@@ -117,7 +122,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.setStatusBar(status_bar)
 
         self.project_path = ''
-
+        if platform.system() == 'Darwin':
+            self.menuBar().setNativeMenuBar(False)
         self.project_menu = self.menuBar().addMenu('File')
         browse_action = QtGui.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
