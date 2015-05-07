@@ -724,6 +724,8 @@ class CommandBase(object):
 
     def compress_nw(self, nw_path):
         compression = self.get_setting('nw_compression_level')
+        if compression.value == 0:
+            return
         comp_dict = {'Darwin64bit': get_file('files/compressors/upx-mac'),
                      'Darwin32bit': get_file('files/compressors/upx-mac'),
                      'Linux64bit':  get_file('files/compressors/upx-linux-x64'),

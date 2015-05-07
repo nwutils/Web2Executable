@@ -723,6 +723,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 icon.setPixmap(None)
                 icon.setStyleSheet(self.icon_style)
         else:
+            icon.setPixmap(None)
             icon.setStyleSheet(self.icon_style)
 
 

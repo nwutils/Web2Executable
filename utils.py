@@ -3,11 +3,11 @@ import os, zipfile, io, platform
 import sys, tempfile
 import subprocess
 
-try:
-    import zlib
-    ZIP_MODE = zipfile.ZIP_DEFLATED
-except:
-    ZIP_MODE = zipfile.ZIP_STORED
+#try:
+#    import zlib
+#    ZIP_MODE = zipfile.ZIP_DEFLATED
+#except:
+ZIP_MODE = zipfile.ZIP_STORED
 
 DEBUG = False
 
