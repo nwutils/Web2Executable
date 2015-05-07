@@ -204,6 +204,7 @@ v0.2.3b
 - Unicode Support!
 - Fixed a bug that was causing certian builds to bring up the nwjs default window
 - Fixed a bug with OS X menus not updating previous projects
+- .desktop file generation for linux builds
 
 v0.2.2b
 - Fixed a few bugs with image loading
