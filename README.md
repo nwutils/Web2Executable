@@ -31,33 +31,35 @@ Downloads
 
 ####Mac OS X
 
+[Mac OS X 10.7+ download - v0.2.1b](http://www.mediafire.com/download/vv1g29x5l324sge/Web2ExeMac-v0.2.4b.zip)
+
 [Mac OS X 10.7+ download - v0.2.3b](http://www.mediafire.com/download/xq55xg0xnxrl0a9/Web2ExeMac-v0.2.3b.zip)
 
 [Mac OS X 10.7+ download - v0.2.2b](http://www.mediafire.com/download/skxz77undtxvp5o/Web2ExeMac-v0.2.2b.zip)
-
-[Mac OS X 10.7+ download - v0.2.1b](http://www.mediafire.com/download/9d64i218x3un9oe/Web2ExeMac-v0.2.1b.zip)
 
 
 You can just put the app where ever you want and double click to run it.
 
 ####Windows
 
+[Windows 7+ installer download - v0.2.4b](http://www.mediafire.com/download/7en3z4dcv3ssrdz/Web2Exe-Setup.zip)
+
+[Windows 7+ download - v0.2.4b](http://www.mediafire.com/download/oe2fdtaadw13ar8/Web2ExeWin-v0.2.4b.zip)
+
 [Windows 7+ download - v0.2.3b](http://www.mediafire.com/download/g9is1398e973aao/Web2ExeWin-v0.2.3b.zip)
 
 [Windows 7+ download - v0.2.2b](http://www.mediafire.com/download/u883jitztp3zkga/Web2ExeWin-v0.2.2b.zip)
-
-[Windows 7+ download - v0.2.1b](http://www.mediafire.com/download/rc5jut6oi53t42x/Web2ExeWin-v0.2.1b.zip)
 
 
 Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
+[Ubuntu 14.04 - v0.2.4b](http://www.mediafire.com/download/w55se4kix11vfts/Web2ExeLinux-v0.2.4b.zip)
+
 [Ubuntu 14.04 - v0.2.3b](http://www.mediafire.com/download/74t8hhsf3mo00je/Web2ExeLinux-v0.2.3b.zip)
 
 [Ubuntu 14.04 - v0.2.2b](http://www.mediafire.com/download/wmswcmuizxpmg4x/Web2ExeLinux-v0.2.2b.zip)
-
-[Ubuntu 14.04 - v0.2.1b](http://www.mediafire.com/download/q2dy2enns99cb2b/Web2ExeLinux-v0.2.1b.zip)
 
 Give the executable permissions to execute and then run it:
 
@@ -199,6 +201,9 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.2.4b
+- Added persistent user data so that the installer works properly for Windows
 
 v0.2.3b
 - Unicode Support!
