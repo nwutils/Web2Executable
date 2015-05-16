@@ -123,8 +123,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.setStatusBar(status_bar)
 
         self.project_path = ''
-        if platform.system() == 'Darwin':
-            self.menuBar().setNativeMenuBar(False)
+        #if platform.system() == 'Darwin':
+        #    self.menuBar().setNativeMenuBar(False)
         self.project_menu = self.menuBar().addMenu('File')
         browse_action = QtGui.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
