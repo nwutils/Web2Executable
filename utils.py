@@ -2,6 +2,7 @@ from __future__ import print_function
 import os, zipfile, io, platform
 import sys, tempfile
 import subprocess
+from appdirs import AppDirs
 
 #try:
 #    import zlib
@@ -16,6 +17,19 @@ def is_windows():
 
 def get_temp_dir():
     return tempfile.gettempdir()
+
+def get_data_path(dir_path):
+    parts = dir_path.split('/')
+    dirs = AppDirs('Web2Executable', 'Web2Executable')
+    data_path = os.path.join(dirs.user_data_dir, *parts)
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+    return data_path
+
+def get_data_file_path(file_path):
+    parts = file_path.split('/')
+    data_path = get_data_path('/'.join(parts[:-1]))
+    return os.path.join(data_path, parts[-1])
 
 def log(*args):
     if DEBUG:

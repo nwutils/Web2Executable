@@ -1,7 +1,5 @@
 from utils import log, open_folder_in_explorer
 
-__gui_version__ = "v0.2.3b"
-
 import os
 import re
 import glob
@@ -16,6 +14,9 @@ from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
 from pycns import pngs_from_icns
 from command_line import CommandBase, logger, get_file
+from command_line import __version__ as __gui_version__
+
+from utils import get_data_path, get_data_file_path
 
 MAX_RECENT = 10
 
@@ -56,7 +57,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def load_recent_projects(self):
         files = []
-        history_file = get_file('files/recent_files.txt')
+        history_file = get_data_file_path('files/recent_files.txt')
         if not os.path.exists(history_file):
             return files
         with codecs.open(history_file, encoding='utf-8') as f:
@@ -69,7 +70,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def load_last_project_path(self):
         proj_path = ''
-        proj_file = get_file('files/last_project_path.txt')
+        proj_file = get_data_file_path('files/last_project_path.txt')
         if os.path.exists(proj_file):
             with codecs.open(proj_file, encoding='utf-8') as f:
                 proj_path = f.read().strip()
@@ -80,12 +81,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return proj_path
 
     def save_project_path(self, path):
-        proj_file = get_file('files/last_project_path.txt')
+        proj_file = get_data_file_path('files/last_project_path.txt')
         with codecs.open(proj_file, 'w+', encoding='utf-8') as f:
             f.write(path)
 
     def save_recent_project(self, proj):
-        recent_file_path = get_file('files/recent_files.txt')
+        recent_file_path = get_data_file_path('files/recent_files.txt')
         max_length = MAX_RECENT
         recent_files = []
         if os.path.exists(recent_file_path):
@@ -427,7 +428,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         open_export_button = QtGui.QPushButton()
         open_export_button.setEnabled(False)
-        open_export_button.setIcon(QtGui.QIcon(os.path.join('files', 'images', 'folder_open.png')))
+        open_export_button.setIcon(QtGui.QIcon(get_file('files/images/folder_open.png')))
         open_export_button.setToolTip('Open Export Folder')
         open_export_button.setStatusTip('Open Export Folder')
         open_export_button.setMaximumWidth(30)

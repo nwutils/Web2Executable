@@ -1,9 +1,12 @@
 '''Command line module for web2exe.'''
 
+__version__ = "v0.2.4b"
+
 from utils import zip_files, join_files, log, get_temp_dir
 from pycns import save_icns
 from pepy.pe import PEFile
 
+import argparse
 import urllib2
 import platform
 import re
@@ -22,6 +25,8 @@ import logging
 import logging.handlers as lh
 import plistlib
 import codecs
+
+from utils import get_data_path, get_data_file_path
 
 from semantic_version import Version
 
@@ -45,15 +50,13 @@ def get_file(path):
     return independent_path
 
 TEMP_DIR = get_temp_dir()
-DEFAULT_DOWNLOAD_PATH = os.path.join(CWD,
-                                     'files',
-                                     'downloads').replace('\\',
-                                                          '\\\\')
+DEFAULT_DOWNLOAD_PATH = get_data_path('files/downloads')
+
 logger = logging.getLogger('W2E logger')
-LOG_FILENAME = os.path.join(CWD, 'files', 'error.log')
+LOG_FILENAME = get_data_file_path('files/error.log')
 if __name__ != '__main__':
     logging.basicConfig(
-        filename=os.path.join(CWD, 'files', 'error.log'),
+        filename=LOG_FILENAME,
         format=("%(levelname) -10s %(asctime)s %(module)s.py: "
                 "%(lineno)s %(funcName)s - %(message)s"),
         level=logging.DEBUG
@@ -80,7 +83,7 @@ except:
 def get_base_url():
     url = None
     try:
-        url = codecs.open(os.path.join(CWD, 'files', 'base_url.txt'), encoding='utf-8').read().strip()
+        url = codecs.open(get_file('files', 'base_url.txt'), encoding='utf-8').read().strip()
     except (OSError, IOError):
         url = 'http://dl.node-webkit.org/v{}/'
     return url
@@ -283,8 +286,9 @@ class CommandBase(object):
 
     def setup_nw_versions(self):
         nw_version = self.get_setting('nw_version')
+        nw_version.values = []
         try:
-            f = codecs.open(os.path.join(CWD, 'files', 'nw-versions.txt'), encoding='utf-8')
+            f = codecs.open(get_data_file_path('files/nw-versions.txt'), encoding='utf-8')
             for line in f:
                 nw_version.values.append(line.strip())
             f.close()
@@ -296,7 +300,7 @@ class CommandBase(object):
         return nw_version.values[:]
 
     def get_settings(self):
-        config_file = os.path.join(CWD, 'files', 'settings.cfg')
+        config_file = get_file('files/settings.cfg')
         contents = codecs.open(config_file, encoding='utf-8').read()
         contents = contents.replace(u'{DEFAULT_DOWNLOAD_PATH}',
                                     DEFAULT_DOWNLOAD_PATH)
@@ -375,7 +379,7 @@ class CommandBase(object):
         nw_version.values = versions
         f = None
         try:
-            f = codecs.open(os.path.join(CWD, 'files', 'nw-versions.txt'), 'w', encoding='utf-8')
+            f = codecs.open(get_data_file_path('files/nw-versions.txt'), 'w', encoding='utf-8')
             for v in nw_version.values:
                 f.write(v+os.linesep)
             f.close()
@@ -939,10 +943,16 @@ class CommandBase(object):
                     os.remove(f_path)
 
 
+class ArgParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: {}\n'.format(message))
+        self.print_help()
+        sys.exit(2)
+
+
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description=('Command line interface '
-                                                  'to web2exe'),
+    parser = ArgParser(description=('Command line interface '
+                                    'to web2exe. {}'.format(__version__)),
                                      prog='web2execmd')
     command_base = CommandBase()
     command_base.init()
@@ -965,6 +975,7 @@ if __name__ == '__main__':
                         help=('Loads the package.json '
                               'file in the project directory. '
                               'Ignores other command line arguments.'))
+    parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(__version__))
 
     for setting_group_dict in command_base.settings['setting_groups']:
         for setting_name, setting in setting_group_dict.items():
@@ -1014,7 +1025,7 @@ if __name__ == '__main__':
         )
     else:
         logging.basicConfig(
-            filename=os.path.join(CWD, 'files', 'error.log'),
+            filename=LOG_FILENAME,
             format=("%(levelname) -10s %(asctime)s %(module)s.py: "
                     "%(lineno)s %(funcName)s - %(message)s"),
             level=logging.DEBUG
