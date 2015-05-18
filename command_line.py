@@ -551,7 +551,7 @@ class CommandBase(object):
                                                     location)
             try:
                 if setting.value:
-                    extract_path = os.path.join('files', setting.name)
+                    extract_path = get_data_path('files/'+setting.name)
                     setting.extract(extract_path, version)
 
                     #if os.path.exists(save_file_path):
@@ -643,10 +643,10 @@ class CommandBase(object):
                         shutil.rmtree(export_dest)
 
                     # shutil will make the directory for us
-                    shutil.copytree(os.path.join('files', ex_setting.name),
+                    shutil.copytree(get_data_path('files/'+ex_setting.name),
                                     export_dest,
                                     ignore=shutil.ignore_patterns('place_holder.txt'))
-                    shutil.rmtree(os.path.join('files', ex_setting.name))
+                    shutil.rmtree(get_data_path('files/'+ex_setting.name))
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
@@ -938,7 +938,7 @@ class CommandBase(object):
     def delete_files(self):
         for ex_setting in self.settings['export_settings'].values():
             for dest_file in ex_setting.dest_files:
-                f_path = os.path.join('files', ex_setting.name, dest_file)
+                f_path = get_data_file_path('files/{}/{}'.format(ex_setting.name, dest_file))
                 if os.path.exists(f_path):
                     os.remove(f_path)
 
