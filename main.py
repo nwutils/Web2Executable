@@ -188,7 +188,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def setup_nw_versions(self):
         nw_version = self.get_setting('nw_version')
         try:
-            f = codecs.open(get_file('files/nw-versions.txt'), encoding='utf-8')
+            f = codecs.open(get_data_file_path('files/nw-versions.txt'), encoding='utf-8')
             for line in f:
                 nw_version.values.append(line.strip())
             f.close()
