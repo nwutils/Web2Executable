@@ -148,8 +148,6 @@ Planned New Features
 
 - The ability to add external files to the project
 - Minifying JS and HTML
-- Ability to edit credits.html
-- A slick new UI
 
 
 FAQ
