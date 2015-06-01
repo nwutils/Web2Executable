@@ -31,7 +31,7 @@ Downloads
 
 ####Mac OS X
 
-[Mac OS X 10.7+ download - v0.2.1b](http://www.mediafire.com/download/vv1g29x5l324sge/Web2ExeMac-v0.2.4b.zip)
+[Mac OS X 10.7+ download - v0.2.4b](http://www.mediafire.com/download/vv1g29x5l324sge/Web2ExeMac-v0.2.4b.zip)
 
 [Mac OS X 10.7+ download - v0.2.3b](http://www.mediafire.com/download/xq55xg0xnxrl0a9/Web2ExeMac-v0.2.3b.zip)
 
