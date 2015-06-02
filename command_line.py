@@ -25,6 +25,7 @@ import logging
 import logging.handlers as lh
 import plistlib
 import codecs
+import ssl
 
 from utils import get_data_path, get_data_file_path
 
@@ -41,6 +42,8 @@ except ImportError:
 from configobj import ConfigObj
 
 inside_packed_exe = getattr(sys, 'frozen', '')
+
+URL_CONTEXT = ssl._create_unverified_context()
 
 CWD = os.getcwd()
 
@@ -363,7 +366,7 @@ class CommandBase(object):
     def get_versions(self):
         if self.logger is not None:
             self.logger.info('Getting versions...')
-        response = urllib2.urlopen(self.settings['version_info']['url'])
+        response = urllib2.urlopen(self.settings['version_info']['url'], context=URL_CONTEXT)
         html = response.read()
 
         nw_version = self.get_setting('nw_version')
@@ -888,7 +891,7 @@ class CommandBase(object):
             headers = {'Range': 'bytes={}-'.format(tmp_size)}
             url = urllib2.Request(url, headers=headers)
 
-        web_file = urllib2.urlopen(url)
+        web_file = urllib2.urlopen(url, URL_CONTEXT)
         f = open(tmp_file, 'ab')
         meta = web_file.info()
         file_size = tmp_size + int(meta.getheaders("Content-Length")[0])
