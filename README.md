@@ -135,14 +135,6 @@ Features
 - A command line utility with functionality equivalent to the GUI. Useful for automated builds.
 - Compression of executables with upx
 
-
-Future Plans
-------------
-
-Since the UI is getting quite cluttered, and the current design has limitations in terms of size, I'm working on recreating Web2Executable in NW.js with an enhanced UI using the opensource bootflat project. This will take a bit of time, but it will greatly simplify the build process, and it will have the added bonus of Web2Executable being able to bootstrap itself.
-
-I will take all the bugs and feature requests from the github repo into consideration and probably add a few new features while I'm at it.
-
 Planned New Features
 --------------------
 
