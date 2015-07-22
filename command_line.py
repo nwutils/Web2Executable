@@ -734,7 +734,7 @@ class CommandBase(object):
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
         icon_path = os.path.join(self.project_dir(), icon_set.value)
-        if os.path.exists(icon_path):
+        if os.path.exists(icon_path) and icon_set.value:
             shutil.copy(icon_path, export_dest)
             icon_path = os.path.join(export_dest, os.path.basename(icon_path))
         else:
