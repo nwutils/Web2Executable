@@ -78,6 +78,13 @@ Getting Started
 
 When using the prebuilt binaries for Windows, Mac, or Ubuntu, there are NO dependencies or extra applications needed. Simply download Web2Exe for the platform of your choice, extract, and double click the app/exe/binary to start. This applies to both the command-line version and the GUI version.
 
+**NOTE!**: Some people report needing the Microsoft Visual C++ 2008/2010 SP1 Redistributable package. I don't have a machine to test this, but just know that you might need the package if the application won't open or spits out the following error:
+
+```
+Error: The application has failed to start because the side by side configuration is incorrect please see the application event log or use the command line sxstrace.exe tool for more detail.
+```
+
+
 ### Run from Python Source
 
 Requires the pyside library and python 2.X. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed. I've only tested the code on python 2.7.3-2.7.9, so I can't speak about any lower version, but it should work as long as PySide is supported.
