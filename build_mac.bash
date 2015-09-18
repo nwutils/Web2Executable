@@ -2,7 +2,7 @@ rm -rf Web2ExeMac*
 rm  files/error.log files/last_project_path.txt files/recent_files.txt
 rm -rf files/downloads/*
 rm -rf Web2ExeMac-CMD/files
-pyinstaller --hidden-import PIL.Jpeg2KImagePlugin --hidden-import configobj --distpath Web2ExeMac-CMD --onefile -n web2exe-mac command_line.py
+pyinstaller --hidden-import PIL.Jpeg2KImagePlugin --hidden-import configobj --hidden-import pkg_resources --distpath Web2ExeMac-CMD --onefile -n web2exe-mac command_line.py
 cp -rf files Web2ExeMac-CMD/files/
 
 rm -rf build dist Web2Executable.app

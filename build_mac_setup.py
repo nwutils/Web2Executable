@@ -11,7 +11,7 @@ APP = ['main.py']
 DATA_FILES = ['files']
 OPTIONS = {
             'iconfile': 'icon.icns',
-            'includes': ['PySide.QtCore', 'PySide.QtGui', 'PySide.QtNetwork', 'configobj', 'PIL.Jpeg2KImagePlugin'],
+            'includes': ['PySide.QtCore', 'PySide.QtGui', 'PySide.QtNetwork', 'configobj', 'PIL.Jpeg2KImagePlugin', 'pkg_resources'],
             'packages': ['PIL'],
             'excludes': ['numpy', 'matplotlib', 'PyQt5', 'PySide.QtXmlPatterns', 'PySide.QtWebEngineCore', 'PySide.QtDesigner', 'PySide.QtScript', 'PySide.QtWebkit', 'Cython', 'selenium', 'scapy', 'pytz', 'pygments', 'pip', 'netaddr', 'mercurial', 'cx_Freeze', 'bpython', 'astroid', 'Shiboken', 'PyInstaller', 'sip', 'llvmpy', 'llvm', 'pylint', 'unittest', 'pysideuic', 'email', 'Tkinter', 'multiprocessing', 'yaml', 'logilab', 'urwid', 'test', 'networkx' ],
             'dylib_excludes':['QtXml.framework', 'QtWebkit.framework', 'QtScript.framework', 'QtDesigner.framework', 'QtWebEngineCore.framework', 'QtXmlPatterns.framework', 'QtNetwork.framework', 'QtGui.framework', 'QtCore.framework']
