@@ -6,6 +6,7 @@ import glob
 import sys
 import codecs
 import platform
+import requests
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
@@ -20,6 +21,9 @@ from utils import get_data_path, get_data_file_path
 
 MAX_RECENT = 10
 
+def url_exists(path):
+    r = requests.head(path)
+    return r.status_code == requests.codes.ok
 
 class Validator(QtGui.QRegExpValidator):
     def __init__(self, regex, action, parent=None):
@@ -337,7 +341,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
                 if (setting.type == 'file' and
                     setting.value and
-                        not os.path.exists(setting_path)):
+                        (not os.path.exists(setting_path) and not url_exists(setting.value))):
                     log(setting.value, "does not exist")
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
