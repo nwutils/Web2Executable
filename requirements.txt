@@ -4,3 +4,4 @@ pyside
 configobj
 semantic_version
 appdirs
+validators

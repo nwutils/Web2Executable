@@ -7,6 +7,7 @@ import sys
 import codecs
 import platform
 import requests
+import validators
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
@@ -22,8 +23,9 @@ from utils import get_data_path, get_data_file_path
 MAX_RECENT = 10
 
 def url_exists(path):
-    r = requests.head(path)
-    return r.status_code == requests.codes.ok
+    if validators.url(path):
+        return True
+    return False
 
 class Validator(QtGui.QRegExpValidator):
     def __init__(self, regex, action, parent=None):
@@ -340,16 +342,18 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
                 if (setting.type == 'file' and
-                    setting.value and
-                        (not os.path.exists(setting_path) and not url_exists(setting.value))):
-                    log(setting.value, "does not exist")
-                    settings_valid = False
-                    widget = self.find_child_by_name(setting.name)
-                    if widget is not None:
-                        widget.setStyleSheet(red_border)
-                        widget.setToolTip(u'The file "{}" does not exist.'.format(os.path.join(self.project_dir(),setting.value)))
-                        tab = self.get_tab_index_for_setting_name(setting.name)
-                        self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
+                        setting.value):
+                    setting_path_invalid = not os.path.exists(setting_path)
+                    setting_url_invalid = not url_exists(setting.value)
+                    if setting_path_invalid and setting_url_invalid:
+                        log(setting.value, "does not exist")
+                        settings_valid = False
+                        widget = self.find_child_by_name(setting.name)
+                        if widget is not None:
+                            widget.setStyleSheet(red_border)
+                            widget.setToolTip(u'The file or url "{}" does not exist.'.format(setting.value))
+                            tab = self.get_tab_index_for_setting_name(setting.name)
+                            self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
                 if (setting.type == 'folder' and
                     setting.value and
