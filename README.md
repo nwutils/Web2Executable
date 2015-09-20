@@ -44,11 +44,11 @@ You can just put the app where ever you want and double click to run it.
 
 [Windows 7+ installer download - v0.2.4b](http://www.mediafire.com/download/7en3z4dcv3ssrdz/Web2Exe-Setup.zip)
 
+[Windows 7+ download - v0.2.5b](http://www.mediafire.com/download/6nmp09ruxy62l72/Web2ExeWin-v0.2.5b-url.zip)
+
 [Windows 7+ download - v0.2.4b](http://www.mediafire.com/download/oe2fdtaadw13ar8/Web2ExeWin-v0.2.4b.zip)
 
 [Windows 7+ download - v0.2.3b](http://www.mediafire.com/download/g9is1398e973aao/Web2ExeWin-v0.2.3b.zip)
-
-[Windows 7+ download - v0.2.2b](http://www.mediafire.com/download/u883jitztp3zkga/Web2ExeWin-v0.2.2b.zip)
 
 
 Double click the Web2Exe.exe file inside the extracted folder.
@@ -198,6 +198,10 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 
 What's New?
 ----------------------
+
+v0.2.5b (Windows only)
+- Hopefully fixed windows 10 issues
+- Added ability to specify a url to resources
 
 v0.2.4b
 - Added persistent user data so that the installer works properly for Windows
