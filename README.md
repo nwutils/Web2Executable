@@ -55,7 +55,7 @@ Double click the Web2Exe.exe file inside the extracted folder.
 
 ####Linux
 
-[Ubuntu 14.04 - v0.2.4b](http://www.mediafire.com/download/w55se4kix11vfts/Web2ExeLinux-v0.2.4b.zip)
+[Ubuntu 14.04 - v0.2.5b](http://www.mediafire.com/download/seuu5bnwhc8dbd4/Web2ExeLinux-v0.2.5b.zip)
 
 [Ubuntu 14.04 - v0.2.3b](http://www.mediafire.com/download/74t8hhsf3mo00je/Web2ExeLinux-v0.2.3b.zip)
 
@@ -199,7 +199,7 @@ Linux executables don't use icons, so there's nothing to replace. If you want to
 What's New?
 ----------------------
 
-v0.2.5b (Windows only)
+v0.2.5b (Windows Only)
 - Hopefully fixed windows 10 issues
 - Added ability to specify a url to resources
 
