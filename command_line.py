@@ -1,6 +1,6 @@
 '''Command line module for web2exe.'''
 
-__version__ = "v0.2.5b"
+__version__ = "v0.2.6b"
 
 from utils import zip_files, join_files, log, get_temp_dir
 from pycns import save_icns
