@@ -528,6 +528,9 @@ class CommandBase(object):
                             setting.type == 'folder'):
                         val_str = self.convert_val_to_str(new_dic[item])
                         setting.value = val_str
+                    if setting.type == 'strings':
+                        strs = self.convert_val_to_str(new_dic[item]).split(',')
+                        setting.value = strs
                     if setting.type == 'check':
                         setting.value = new_dic[item]
                     if setting.type == 'list':

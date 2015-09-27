@@ -872,6 +872,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         setting = self.get_setting(name)
         if setting.type == 'string':
             return self.create_text_input_setting(name)
+        elif setting.type == 'strings':
+            return self.create_text_input_setting(name)
         elif setting.type == 'file':
             return self.create_text_input_with_file_setting(name)
         elif setting.type == 'folder':
@@ -1042,6 +1044,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
                     setting.value = old_val.replace('\\', '\\\\')
                     widget.setText(unicode(old_val))
+                elif setting.type == 'strings':
+                    old_val = []
+                    if setting.default_value is not None:
+                        old_val = setting.default_value
+                    setting.value = [unicode(v.replace('\\', '\\\\')) for v in old_val]
+                    widget.setText(','.join(setting.value))
 
                 elif setting.type == 'check':
                     old_val = False
@@ -1093,6 +1101,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             setting.type == 'file' or
                 setting.type == 'folder'):
             setting.value = args[0]
+        elif setting.type == 'strings':
+            setting.value = args[0].split(',')
         elif setting.type == 'check':
             setting.value = obj.isChecked()
             check_action = setting.check_action
@@ -1229,6 +1239,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         setting.type == 'folder'):
                     val_str = self.convert_val_to_str(setting.value)
                     setting_field.setText(setting.filter_name(val_str))
+                if setting.type == 'strings':
+                    vals = [self.convert_val_to_str(v) for v in setting.value]
+                    setting_field.setText(','.join(vals))
                 if setting.type == 'check':
                     setting_field.setChecked(setting.value)
                 if setting.type == 'list':
