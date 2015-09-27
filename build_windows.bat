@@ -21,3 +21,4 @@ makensis /V4 Web2Exe.nsi
 cd command_line_builds
 7z a ..\Web2ExeWin-CMD.zip -tzip -r *
 cd ..
+7z Web2Exe-Setup.zip Web2Exe-Setup.exe
