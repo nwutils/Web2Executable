@@ -42,11 +42,17 @@ from configobj import ConfigObj
 
 inside_packed_exe = getattr(sys, 'frozen', '')
 
-CWD = os.getcwd()
+if inside_packed_exe:
+    # we are running in a |PyInstaller| bundle
+    CWD = os.path.dirname(sys.executable)
+else:
+    # we are running in a normal Python environment
+    CWD = os.getcwd()
 
 def get_file(path):
     parts = path.split('/')
     independent_path = os.path.join(CWD, *parts)
+    print independent_path
     return independent_path
 
 TEMP_DIR = get_temp_dir()
