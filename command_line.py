@@ -2,6 +2,10 @@
 
 __version__ = "v0.2.6b"
 
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from utils import zip_files, join_files, log, get_temp_dir
 from pycns import save_icns
 from pepy.pe import PEFile
@@ -52,7 +56,6 @@ else:
 def get_file(path):
     parts = path.split('/')
     independent_path = os.path.join(CWD, *parts)
-    print independent_path
     return independent_path
 
 TEMP_DIR = get_temp_dir()
