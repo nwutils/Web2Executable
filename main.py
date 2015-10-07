@@ -860,7 +860,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_compression_settings(self):
         group_box = QtGui.QWidget()
-        vlayout = self.create_layout(self.settings['order']['compression_setting_order'], cols=3)
+        vlayout = self.create_layout(self.settings['order']['compression_setting_order'], cols=1)
         warning_label = QtGui.QLabel('Note: When using compression (greater than 0) it will decrease the executable size,\nbut will increase the startup time when running it.')
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(vlayout)

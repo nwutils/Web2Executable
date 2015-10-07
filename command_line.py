@@ -638,6 +638,11 @@ class CommandBase(object):
 
             zip_file = os.path.join(temp_dir, self.project_name()+'.nw')
 
+            app_nw_folder = os.path.join(temp_dir, self.project_name()+'.nwf')
+
+            shutil.copytree(self.project_dir(), app_nw_folder,
+                            ignore=shutil.ignore_patterns(output_dir))
+
             zip_files(zip_file, self.project_dir(), exclude_paths=[output_dir])
             for ex_setting in self.settings['export_settings'].values():
                 if ex_setting.value:
@@ -662,6 +667,8 @@ class CommandBase(object):
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
+                        uncomp_setting = self.get_setting('uncompressed_folder')
+                        uncompressed = uncomp_setting.value
                         app_path = os.path.join(export_dest,
                                                 self.project_name()+'.app')
 
@@ -689,10 +696,15 @@ class CommandBase(object):
 
                         self.progress_text += '.'
 
-                        shutil.copy(zip_file, os.path.join(app_path,
-                                                           'Contents',
-                                                           'Resources',
-                                                           'app.nw'))
+                        app_nw_res = os.path.join(app_path,
+                                                  'Contents',
+                                                  'Resources',
+                                                  'app.nw')
+
+                        if uncompressed:
+                            shutil.copytree(app_nw_folder, app_nw_res)
+                        else:
+                            shutil.copy(zip_file, app_nw_res)
                         self.create_icns_for_app(os.path.join(app_path,
                                                               'Contents',
                                                               'Resources',
