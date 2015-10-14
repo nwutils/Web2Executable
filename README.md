@@ -97,7 +97,14 @@ To use Web2Exe:
   4. Click the export button and once it's done, click the "Open Export Folder" button to go to the folder where your exported project will be.
 
 
+### Issues?
+
+If you have an issue, please check the FAQ before filing an issue to see if it helps.
+
 [FAQ](https://github.com/jyapayne/Web2Executable/wiki/FAQ)
+
+
+### Additional Info
 
 [Changelog](https://github.com/jyapayne/Web2Executable/wiki/Changelog)
 
