@@ -4,7 +4,10 @@ __version__ = "v0.2.7b"
 
 import ssl
 
-ssl._create_default_https_context = ssl._create_unverified_context
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
 
 from utils import zip_files, join_files, log, get_temp_dir
 from pycns import save_icns
