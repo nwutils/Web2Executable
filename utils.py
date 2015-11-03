@@ -34,7 +34,7 @@ def get_data_file_path(file_path):
 def log(*args):
     if DEBUG:
         print(*args)
-    with open('error.log', 'a+') as f:
+    with open(get_data_file_path('files/error.log'), 'a+') as f:
         f.write(', '.join(args))
         f.write('\n')
 
