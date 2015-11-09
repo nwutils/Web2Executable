@@ -18,6 +18,26 @@ If you got some value out of using my app, consider donating a dollar to keep me
 
 On the other hand, if you have any annoyances with the application and want to contribute to making it better for everyone, please file an issue with "Annoyance:" as the first part of the title. Sometimes it's hard to know what is annoying for people and input is much appreciated :)
 
+Who's Using It?
+---------------
+
+Lot's of people! There are currently thousands of downloads and several articles written about using Web2Executable.
+
+Some articles include:
+
+[Getting a Phaser Game on Steam](http://phaser.io/news/2015/10/getting-a-phaser-game-on-steam)
+
+[Packt Publishing NW.js Essentials Tutorial](https://www.packtpub.com/packtlib/book/Web-Development/9781785280863/7/ch07lvl1sec53/Web2Executable) and [Ebook](https://books.google.ca/books?id=wz6qCQAAQBAJ&pg=PA135&lpg=PA135&dq=web2executable&source=bl&ots=sPP-3BOMXX&sig=UolyF31WcTgA-lrel2UTIfzs65U&hl=en&sa=X&redir_esc=y#v=onepage&q=web2executable&f=false)
+
+[A Russian NW.js Tutoral](http://canonium.com/articles/nwjs-web-to-executable)
+
+[Marv's Blog](http://www.marv.ph/tag/web2exe/)
+
+[Shotten.com Node-webkit for Poets](http://www.shotton.com/wp/2014/10/27/node-webkit-for-poets-mac-version/)
+
+If you have a project you'd like to see listed here that was successfully built using Web2Executable or you have written an article that mentions it, feel free to send me an email with a link and I'd be super stoked to paste it here :)
+
+
 Features
 --------
 
