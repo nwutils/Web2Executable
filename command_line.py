@@ -623,6 +623,9 @@ class CommandBase(object):
             self.progress_text = 'Removing old output directory...\n'
 
             output_dir = utils.path_join(self.output_dir(), self.project_name())
+            if os.path.exists(output_dir):
+                shutil.rmtree(output_dir)
+
             temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
