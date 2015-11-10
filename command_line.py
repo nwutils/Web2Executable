@@ -188,7 +188,7 @@ class Setting(object):
 
     def extract(self, ex_path, version):
         if os.path.exists(ex_path):
-            shutil.rmtree(ex_path)
+            shutil.rmtree(ex_path, ignore_errors=True)
 
         path = self.save_file_path(version)
 
@@ -217,7 +217,7 @@ class Setting(object):
             for p in os.listdir(dir_name):
                 abs_file = utils.path_join(dir_name, p)
                 shutil.move(abs_file, ex_path)
-            shutil.rmtree(dir_name)
+            shutil.rmtree(dir_name, ignore_errors=True)
 
     def get_file_bytes(self, version):
         fbytes = []
@@ -624,11 +624,11 @@ class CommandBase(object):
 
             output_dir = utils.path_join(self.output_dir(), self.project_name())
             if os.path.exists(output_dir):
-                shutil.rmtree(output_dir)
+                shutil.rmtree(output_dir, ignore_errors=True)
 
             temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
             if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)
+                shutil.rmtree(temp_dir, ignore_errors=True)
 
             self.progress_text = 'Making new directories...\n'
 
@@ -666,13 +666,13 @@ class CommandBase(object):
                         export_dest = export_dest.replace('node-webkit', 'nwjs')
 
                     if os.path.exists(export_dest):
-                        shutil.rmtree(export_dest)
+                        shutil.rmtree(export_dest, ignore_errors=True)
 
                     # shutil will make the directory for us
                     shutil.copytree(get_data_path('files/'+ex_setting.name),
                                     export_dest,
                                     ignore=shutil.ignore_patterns('place_holder.txt'))
-                    shutil.rmtree(get_data_path('files/'+ex_setting.name))
+                    shutil.rmtree(get_data_path('files/'+ex_setting.name), ignore_errors=True)
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
@@ -762,7 +762,7 @@ class CommandBase(object):
             self.output_err += u''.join(exc)
             self.logger.error(exc)
         finally:
-            shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
