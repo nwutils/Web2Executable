@@ -332,7 +332,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         settings_valid = True
         for sgroup in self.settings['setting_groups']:
             for sname, setting in sgroup.items():
-                if os.path.isabs(setting.value):
+                if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
                     setting_path = unicode(setting.value)
                 else:
                     setting_path = utils.path_join(self.project_dir(),
