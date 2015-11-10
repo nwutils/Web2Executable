@@ -1,6 +1,6 @@
 '''Command line module for web2exe.'''
 
-__version__ = "v0.2.8b"
+__version__ = "v0.2.9b"
 
 import ssl
 

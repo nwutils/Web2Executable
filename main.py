@@ -332,8 +332,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         settings_valid = True
         for sgroup in self.settings['setting_groups']:
             for sname, setting in sgroup.items():
-                setting_path = utils.path_join(self.project_dir(),
-                                            unicode(setting.value))
+                if os.path.isabs(setting.value):
+                    setting_path = unicode(setting.value)
+                else:
+                    setting_path = utils.path_join(self.project_dir(),
+                                                   unicode(setting.value))
 
                 if setting.required and not setting.value:
                     settings_valid = False
@@ -365,7 +368,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip(u'The folder "{}" does not exist'.format(utils.path_join(self.project_dir(), setting.value)))
+                        widget.setToolTip(u'The folder "{}" does not exist'.format(setting_path))
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
                 if settings_valid:
