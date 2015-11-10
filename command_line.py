@@ -48,6 +48,8 @@ except ImportError:
 
 from configobj import ConfigObj
 
+COMMAND_LINE = True
+
 inside_packed_exe = getattr(sys, 'frozen', '')
 
 if inside_packed_exe:
@@ -498,7 +500,7 @@ class CommandBase(object):
 
     @extract_error.setter
     def extract_error(self, value):
-        if value is not None and not self.quiet and not inside_packed_exe:
+        if value is not None and not self.quiet and COMMAND_LINE:
             self._extract_error = unicode(value)
             sys.stderr.write(u'\r{}'.format(self._extract_error))
             sys.stderr.flush()
@@ -509,7 +511,7 @@ class CommandBase(object):
 
     @output_err.setter
     def output_err(self, value):
-        if value is not None and not self.quiet and not inside_packed_exe:
+        if value is not None and not self.quiet and COMMAND_LINE:
             self._output_err = unicode(value)
             sys.stderr.write(u'\r{}'.format(self._output_err))
             sys.stderr.flush()
@@ -520,7 +522,7 @@ class CommandBase(object):
 
     @progress_text.setter
     def progress_text(self, value):
-        if value is not None and not self.quiet and not inside_packed_exe:
+        if value is not None and not self.quiet and COMMAND_LINE:
             self._progress_text = unicode(value)
             sys.stdout.write(u'\r{}'.format(self._progress_text))
             sys.stdout.flush()

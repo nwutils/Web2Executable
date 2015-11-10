@@ -21,6 +21,8 @@ from command_line import __version__ as __gui_version__
 from utils import get_data_path, get_data_file_path
 import utils
 
+COMMAND_LINE = False
+
 MAX_RECENT = 10
 
 def url_exists(path):
