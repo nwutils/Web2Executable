@@ -18,10 +18,13 @@ def is_windows():
 def get_temp_dir():
     return tempfile.gettempdir()
 
+def path_join(base, *rest):
+    return base + u'/' + u'/'.join(rest)
+
 def get_data_path(dir_path):
     parts = dir_path.split('/')
     dirs = AppDirs('Web2Executable', 'Web2Executable')
-    data_path = os.path.join(dirs.user_data_dir, *parts)
+    data_path = path_join(dirs.user_data_dir, *parts)
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     return data_path
@@ -29,7 +32,7 @@ def get_data_path(dir_path):
 def get_data_file_path(file_path):
     parts = file_path.split('/')
     data_path = get_data_path('/'.join(parts[:-1]))
-    return os.path.join(data_path, parts[-1])
+    return path_join(data_path, parts[-1])
 
 def log(*args):
     if DEBUG:
@@ -61,23 +64,23 @@ def zip_files(zip_file_name, *args, **kwargs):
                 for root, dirs, files in os.walk(directory):
                     excluded = False
                     for exclude_path in exclude_paths:
-                        if exclude_path in os.path.join(directory,root):
+                        if exclude_path in path_join(directory,root):
                             excluded = True
                     if not excluded:
                         for file in files:
-                            file_loc = os.path.relpath(os.path.join(root, file), directory)
+                            file_loc = os.path.relpath(path_join(root, file), directory)
                             if verbose:
                                 log(file_loc)
                             zip_file.write(file_loc)
                         for direc in dirs:
-                            dir_loc = os.path.relpath(os.path.join(root, direc), directory)
+                            dir_loc = os.path.relpath(path_join(root, direc), directory)
                             if verbose:
                                 log(dir_loc)
                             zip_file.write(dir_loc)
 
             else:
                 file = os.path.abspath(arg)
-                directory = os.path.abspath(os.path.join(file, '..'))
+                directory = os.path.abspath(path_join(file, '..'))
                 os.chdir(directory)
                 file_loc = os.path.relpath(arg, directory)
                 if verbose:

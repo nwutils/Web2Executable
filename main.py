@@ -19,6 +19,7 @@ from command_line import CommandBase, logger, get_file
 from command_line import __version__ as __gui_version__
 
 from utils import get_data_path, get_data_file_path
+import utils
 
 MAX_RECENT = 10
 
@@ -329,7 +330,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         settings_valid = True
         for sgroup in self.settings['setting_groups']:
             for sname, setting in sgroup.items():
-                setting_path = os.path.join(self.project_dir(),
+                setting_path = utils.path_join(self.project_dir(),
                                             unicode(setting.value))
 
                 if setting.required and not setting.value:
@@ -362,7 +363,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip(u'The folder "{}" does not exist'.format(os.path.join(self.project_dir(), setting.value)))
+                        widget.setToolTip(u'The folder "{}" does not exist'.format(utils.path_join(self.project_dir(), setting.value)))
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
                 if settings_valid:
@@ -407,7 +408,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             if os.path.isabs(self.output_line.text()):
                 return self.output_line.text()
             else:
-                return os.path.join(self.project_dir(), self.output_line.text())
+                return utils.path_join(self.project_dir(), self.output_line.text())
         return ''
 
     def create_download_bar(self):
@@ -608,7 +609,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         #dest_files_exist = False
 
         # for dest_file in setting.dest_files:
-        #    dest_file_path = os.path.join('files', setting.name, dest_file)
+        #    dest_file_path = utils.path_join('files', setting.name, dest_file)
         #    dest_files_exist &= QFile.exists(dest_file_path)
 
         forced = self.get_setting('force_download').value
@@ -718,7 +719,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def set_icon(self, icon_path, icon):
         if icon_path:
-            icon_path = os.path.join(self.project_dir(), icon_path)
+            icon_path = utils.path_join(self.project_dir(), icon_path)
             if os.path.exists(icon_path):
                 if icon_path.endswith('.icns'):
                     pngs = pngs_from_icns(icon_path)
@@ -788,9 +789,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.title_label.setText(proj_name)
 
         setting_input = self.find_child_by_name('main')
-        files = (glob.glob(os.path.join(directory, 'index.html')) +
-                 glob.glob(os.path.join(directory, 'index.php')) +
-                 glob.glob(os.path.join(directory, 'index.htm')))
+        files = (glob.glob(utils.path_join(directory, 'index.html')) +
+                 glob.glob(utils.path_join(directory, 'index.php')) +
+                 glob.glob(utils.path_join(directory, 'index.htm')))
         if not setting_input.text():
             if files:
                 setting_input.setText(files[0].replace(self.project_dir() + os.path.sep, ''))
@@ -1119,7 +1120,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 action()
 
         if self.update_json:
-            json_file = os.path.join(self.project_dir(), 'package.json')
+            json_file = utils.path_join(self.project_dir(), 'package.json')
 
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                 f.write(self.generate_json())

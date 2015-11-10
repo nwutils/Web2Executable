@@ -34,6 +34,7 @@ import plistlib
 import codecs
 
 from utils import get_data_path, get_data_file_path
+import utils
 
 from semantic_version import Version
 
@@ -58,7 +59,7 @@ else:
 
 def get_file(path):
     parts = path.split('/')
-    independent_path = os.path.join(CWD, *parts)
+    independent_path = utils.path_join(CWD, *parts)
     return independent_path
 
 TEMP_DIR = get_temp_dir()
@@ -142,7 +143,7 @@ class Setting(object):
     def get_file_information_from_url(self):
         if hasattr(self, 'url'):
             self.file_name = self.url.split(u'/')[-1]
-            self.full_file_path = os.path.join(self.save_path, self.file_name)
+            self.full_file_path = utils.path_join(self.save_path, self.file_name)
             self.file_ext = os.path.splitext(self.file_name)[1]
             if self.file_ext == '.zip':
                 self.extract_class = ZipFile
@@ -206,13 +207,13 @@ class Setting(object):
             file.extractall(ex_path)
 
         if path.endswith('.tar.gz'):
-            dir_name = os.path.join(ex_path, os.path.basename(path).replace('.tar.gz',''))
+            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.tar.gz',''))
         else:
-            dir_name = os.path.join(ex_path, os.path.basename(path).replace('.zip',''))
+            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.zip',''))
 
         if os.path.exists(dir_name):
             for p in os.listdir(dir_name):
-                abs_file = os.path.join(dir_name, p)
+                abs_file = utils.path_join(dir_name, p)
                 shutil.move(abs_file, ex_path)
             shutil.rmtree(dir_name)
 
@@ -434,7 +435,7 @@ class CommandBase(object):
         if json_path is not None:
             p_json = [json_path]
         else:
-            p_json = glob.glob(os.path.join(self.project_dir(),
+            p_json = glob.glob(utils.path_join(self.project_dir(),
                                             'package.json'))
         setting_list = []
         if p_json:
@@ -572,7 +573,7 @@ class CommandBase(object):
                     #if os.path.exists(save_file_path):
                     #    setting_fbytes = setting.get_file_bytes(version)
                     #    for dest_file, fbytes in setting_fbytes:
-                    #        path = os.path.join(extract_path, dest_file)
+                    #        path = utils.path_join(extract_path, dest_file)
                     #        with open(path, 'wb+') as d:
                     #            d.write(fbytes)
                     #        self.progress_text += '.'
@@ -596,7 +597,7 @@ class CommandBase(object):
                      else icon_setting.value)
 
         if icon_path:
-            icon_path = os.path.join(self.project_dir(), icon_path)
+            icon_path = utils.path_join(self.project_dir(), icon_path)
             if not icon_path.endswith('.icns'):
                 save_icns(icon_path, icns_path)
             else:
@@ -610,7 +611,7 @@ class CommandBase(object):
                      else icon_setting.value)
         if icon_path:
             p = PEFile(exe_path)
-            p.replace_icon(os.path.join(self.project_dir(), icon_path))
+            p.replace_icon(utils.path_join(self.project_dir(), icon_path))
             p.write(exe_path)
             p = None
 
@@ -619,8 +620,8 @@ class CommandBase(object):
         try:
             self.progress_text = 'Removing old output directory...\n'
 
-            output_dir = os.path.join(self.output_dir(), self.project_name())
-            temp_dir = os.path.join(TEMP_DIR, 'webexectemp')
+            output_dir = utils.path_join(self.output_dir(), self.project_name())
+            temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
 
@@ -633,15 +634,15 @@ class CommandBase(object):
 
             self.copy_files_to_project_folder()
 
-            json_file = os.path.join(self.project_dir(), 'package.json')
+            json_file = utils.path_join(self.project_dir(), 'package.json')
 
             if self.output_package_json:
                 with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                     f.write(self.generate_json())
 
-            zip_file = os.path.join(temp_dir, self.project_name()+'.nw')
+            zip_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
-            app_nw_folder = os.path.join(temp_dir, self.project_name()+'.nwf')
+            app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
 
             shutil.copytree(self.project_dir(), app_nw_folder,
                             ignore=shutil.ignore_patterns(output_dir))
@@ -652,7 +653,7 @@ class CommandBase(object):
                     self.progress_text = '\n'
                     name = ex_setting.display_name
                     self.progress_text = u'Making files for {}...'.format(name)
-                    export_dest = os.path.join(output_dir, ex_setting.name)
+                    export_dest = utils.path_join(output_dir, ex_setting.name)
                     versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
 
                     minor = int(versions[1])
@@ -672,19 +673,19 @@ class CommandBase(object):
                     if 'mac' in ex_setting.name:
                         uncomp_setting = self.get_setting('uncompressed_folder')
                         uncompressed = uncomp_setting.value
-                        app_path = os.path.join(export_dest,
+                        app_path = utils.path_join(export_dest,
                                                 self.project_name()+'.app')
 
                         try:
-                            shutil.move(os.path.join(export_dest,
+                            shutil.move(utils.path_join(export_dest,
                                                      'nwjs.app'),
                                         app_path)
                         except IOError:
-                            shutil.move(os.path.join(export_dest,
+                            shutil.move(utils.path_join(export_dest,
                                                      'node-webkit.app'),
                                         app_path)
 
-                        plist_path = os.path.join(app_path, 'Contents', 'Info.plist')
+                        plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
 
                         plist_dict = plistlib.readPlist(plist_path)
 
@@ -699,7 +700,7 @@ class CommandBase(object):
 
                         self.progress_text += '.'
 
-                        app_nw_res = os.path.join(app_path,
+                        app_nw_res = utils.path_join(app_path,
                                                   'Contents',
                                                   'Resources',
                                                   'app.nw')
@@ -708,7 +709,7 @@ class CommandBase(object):
                             shutil.copytree(app_nw_folder, app_nw_res)
                         else:
                             shutil.copy(zip_file, app_nw_res)
-                        self.create_icns_for_app(os.path.join(app_path,
+                        self.create_icns_for_app(utils.path_join(app_path,
                                                               'Contents',
                                                               'Resources',
                                                               'nw.icns'))
@@ -721,7 +722,7 @@ class CommandBase(object):
                             ext = '.exe'
                             windows = True
 
-                        nw_path = os.path.join(export_dest,
+                        nw_path = utils.path_join(export_dest,
                                                ex_setting.dest_files[0])
 
                         if windows:
@@ -729,7 +730,7 @@ class CommandBase(object):
 
                         self.compress_nw(nw_path)
 
-                        dest_binary_path = os.path.join(export_dest,
+                        dest_binary_path = utils.path_join(export_dest,
                                                         self.project_name() +
                                                         ext)
                         if 'linux' in ex_setting.name:
@@ -760,17 +761,17 @@ class CommandBase(object):
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
-        icon_path = os.path.join(self.project_dir(), icon_set.value)
+        icon_path = utils.path_join(self.project_dir(), icon_set.value)
         if os.path.exists(icon_path) and icon_set.value:
             shutil.copy(icon_path, export_dest)
-            icon_path = os.path.join(export_dest, os.path.basename(icon_path))
+            icon_path = utils.path_join(export_dest, os.path.basename(icon_path))
         else:
             icon_path = ''
         name = self.project_name()
         pdir = self.project_dir()
         version = self.get_setting('version')
         desc = self.get_setting('description')
-        dfile_path = os.path.join(export_dest, u'{}.desktop'.format(name))
+        dfile_path = utils.path_join(export_dest, u'{}.desktop'.format(name))
         file_str = (
                     u'[Desktop Entry]\n'
                     u'Version={}\n'
@@ -808,7 +809,7 @@ class CommandBase(object):
         upx_version = comp_dict.get(plat, None)
 
         if upx_version is not None:
-            upx_bin = os.path.join('files', 'compressors', upx_version)
+            upx_bin = utils.path_join('files', 'compressors', upx_version)
             os.chmod(upx_bin, 0755)
             cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), unicode(nw_path)]
             if platform.system() == 'Windows':
@@ -976,17 +977,21 @@ class ArgParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
+def unicode_arg(bytestring):
+    unicode_string = bytestring.decode(sys.getfilesystemencoding())
+    return unicode_string
 
-if __name__ == '__main__':
+def main():
     parser = ArgParser(description=('Command line interface '
                                     'to web2exe. {}'.format(__version__)),
                                      prog='web2execmd')
     command_base = CommandBase()
     command_base.init()
     parser.add_argument('project_dir', metavar='project_dir',
-                        help='The project directory.')
+                        help='The project directory.', type=unicode_arg)
     parser.add_argument('--output-dir', dest='output_dir',
-                        help='The output directory for exports.')
+                        help='The output directory for exports.',
+                        type=unicode_arg)
     parser.add_argument('--quiet', dest='quiet', action='store_true',
                         default=False,
                         help='Silences output messages')
@@ -1014,6 +1019,10 @@ if __name__ == '__main__':
                                'default': setting.default_value})
             action = 'store'
             option_name = setting_name.replace('_', '-')
+
+            if setting.type in ['file', 'string', 'strings']:
+                kwargs.update({'type': unicode_arg})
+
             if isinstance(setting.default_value, bool):
                 action = ('store_true' if setting.default_value is False
                           else 'store_false')
@@ -1058,6 +1067,9 @@ if __name__ == '__main__':
             level=logging.DEBUG
         )
 
+    global logger
+    global handler
+
     logger = logging.getLogger('CMD Logger')
     handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
     logger.addHandler(handler)
@@ -1076,7 +1088,7 @@ if __name__ == '__main__':
 
     command_base._project_dir = args.project_dir
     command_base._output_dir = (args.output_dir or
-                                os.path.join(args.project_dir, 'output'))
+                                utils.path_join(args.project_dir, 'output'))
 
     if args.app_name is None:
         args.app_name = command_base.project_name()
@@ -1109,3 +1121,6 @@ if __name__ == '__main__':
         command_base.load_package_json(args.load_json)
 
     command_base.export()
+
+if __name__ == '__main__':
+    main()
