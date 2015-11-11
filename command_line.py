@@ -116,6 +116,7 @@ class Setting(object):
         self.last_value = None
         self.required = required
         self.type = type
+        self.copy = kwargs.pop('copy', True)
         self.file_types = file_types
         self.scope = kwargs.pop('scope', 'local')
 
@@ -828,7 +829,7 @@ class CommandBase(object):
         upx_version = comp_dict.get(plat, None)
 
         if upx_version is not None:
-            upx_bin = utils.path_join('files', 'compressors', upx_version)
+            upx_bin = upx_version
             os.chmod(upx_bin, 0755)
             cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), unicode(nw_path)]
             if platform.system() == 'Windows':
@@ -856,7 +857,7 @@ class CommandBase(object):
         self.logger.info(u'Copying files to {}'.format(self.project_dir()))
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
-                if setting.type == 'file' and setting.value:
+                if setting.copy and setting.type == 'file' and setting.value:
                     f_path = setting.value.replace(self.project_dir(), '')
                     if os.path.isabs(f_path):
                         try:
@@ -885,7 +886,7 @@ class CommandBase(object):
             with codecs.open(script, 'r', encoding='utf-8') as f:
                 contents = f.read()
 
-            filename, ext = os.path.splitext(script)
+            _, ext = os.path.splitext(script)
 
             export_opts = self.get_export_options()
             export_dir = '{}{}{}'.format(self.output_dir(),
@@ -895,6 +896,8 @@ class CommandBase(object):
             for opt in export_opts:
                 export_dirs.append('{}{}{}'.format(export_dir, os.path.sep, opt))
 
+            command = None
+
             if ext == '.py':
                 env_file = get_file('files/env_vars.py')
                 env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
@@ -903,11 +906,66 @@ class CommandBase(object):
                                                export_dir=export_dir,
                                                export_dirs=str(export_dirs))
                 pycontents = '{}\n{}'.format(env_vars, contents)
-                exec(pycontents)
-                self.progress_text = 'Done executing script.'
-            else:
-                pass
 
+                command = ['python', '-c', pycontents]
+
+
+            elif ext == '.bash':
+                env_file = get_file('files/env_vars.bash')
+                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+                ex_dir_vars = ''
+
+                for ex_dir in export_dirs:
+                    ex_dir_vars += "'{}' ".format(ex_dir)
+
+                env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                               proj_name=self.project_name(),
+                                               export_dir=export_dir,
+                                               export_dirs=ex_dir_vars)
+                shcontents = '{}\n{}'.format(env_vars, contents)
+
+                command = ['bash', '-c', shcontents]
+
+            elif ext == '.bat':
+                env_file = get_file('files/env_vars.bat')
+                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+                ex_dir_vars = ''
+                export_dict = {'mac-x64_dir': '',
+                               'mac-x32_dir': '',
+                               'win-x64_dir': '',
+                               'win-x32_dir': '',
+                               'linux-x64_dir': '',
+                               'linux-x32_dir': ''}
+
+                for i, ex_dir in enumerate(export_dirs):
+                    opt = export_opts[i]
+                    export_dict[opt+'_dir'] = ex_dir
+                    ex_dir_vars += 'set EXPORT_DIRS[{}]={} & '.format(i, ex_dir)
+
+                env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                               proj_name=self.project_name(),
+                                               export_dir=export_dir,
+                                               num_dirs=len(export_dirs),
+                                               export_dirs=ex_dir_vars,
+                                               **export_dict)
+                batcontents = '{}{}'.format(env_vars.replace('\n',''), contents.replace('\n', ' & '))
+                batcontents = batcontents[:-3]
+
+                command = ['cmd', '/c', "'" + batcontents + "'"]
+
+            proc = subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, error = proc.communicate()
+            output = output.strip()
+            error = error.strip()
+
+            with open(get_file('script-output.txt'), 'w+') as f:
+                f.write('Output:\n{}'.format(output))
+                if error:
+                    f.write('\n\nErrors:\n{}\n'.format(error))
+
+
+
+            self.progress_text = 'Done executing script.'
         else:
             self.progress_text = '\nThe script {} does not exist. Not running.'.format(script)
 

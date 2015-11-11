@@ -317,6 +317,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         'webkit_settings': 0,
                         'window_settings': 1,
                         'export_settings': 2,
+                        'web2exe_settings': 2,
                         'compression': 3,
                         'download_settings': 4}
         for setting_group_name, setting_group in self._setting_items:
@@ -330,7 +331,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         red_border = 'QLineEdit{border:3px solid rgba(238, 68, 83, 200); border-radius:5px;}'
 
         settings_valid = True
-        for sgroup in self.settings['setting_groups']:
+        for sgroup in self.settings['setting_groups']+[self.settings['web2exe_settings']]:
             for sname, setting in sgroup.items():
                 if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
                     setting_path = unicode(setting.value)
@@ -383,6 +384,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         for setting_name, setting in self.settings['export_settings'].items():
             if setting.value:
                 export_chosen = True
+
+        if not settings_valid:
+            return export_chosen and settings_valid
 
         for setting_name, setting in self.settings['export_settings'].items():
             if not export_chosen:
@@ -554,6 +558,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def script_done(self):
         self.ex_button.setEnabled(self.required_settings_filled())
         self.enable_ui()
+        self.progress_text = 'Done!'
 
     def done_making_files(self):
         self.ex_button.setEnabled(self.required_settings_filled())
@@ -933,9 +938,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         output_layout = QtGui.QHBoxLayout()
 
         output_label = QtGui.QLabel('Output Directory:')
+        output_label.setMinimumWidth(150)
         self.output_line = QtGui.QLineEdit()
         self.output_line.textChanged.connect(self.call_with_object('setting_changed',
-                                                                  self.output_line, self.get_setting('export_dir')))
+                                                                   self.output_line,
+                                                                   self.get_setting('export_dir')))
         self.output_line.textChanged.connect(self.project_path_changed)
         self.output_line.setStatusTip('The output directory relative to the project directory.')
         output_button = QtGui.QPushButton('...')
@@ -948,11 +955,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         script_layout = QtGui.QHBoxLayout()
 
         script_label = QtGui.QLabel('Execute Script:')
+        script_label.setMinimumWidth(150)
 
         self.script_line = QtGui.QLineEdit()
         self.script_line.setReadOnly(True)
 
         script_setting = self.get_setting('custom_script')
+        self.script_line.setObjectName(script_setting.name)
 
         self.script_line.textChanged.connect(self.call_with_object('setting_changed',
                                                                    self.script_line,
@@ -965,7 +974,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if platform.system() == 'Windows':
             file_types.append('*.bat')
         else:
-            file_types.extend(['*.bash', '*.sh', '*.zsh'])
+            file_types.append('*.bash')
+            file_types.append('*.bat')
 
         script_button.clicked.connect(self.call_with_object('get_file_reg', script_button,
                                                             self.script_line, script_setting,
