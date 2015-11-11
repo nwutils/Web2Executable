@@ -32,6 +32,7 @@ import logging
 import logging.handlers as lh
 import plistlib
 import codecs
+from pprint import pprint
 
 from utils import get_data_path, get_data_file_path
 import utils
@@ -1014,7 +1015,7 @@ def main():
                               'Ignores other command line arguments.'))
     parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(__version__))
 
-    for setting_group_dict in command_base.settings['setting_groups']:
+    for setting_group_dict in command_base.settings['setting_groups']+[command_base.settings['compression']]:
         for setting_name, setting in setting_group_dict.items():
             kwargs = {}
             if setting_name == 'name':
