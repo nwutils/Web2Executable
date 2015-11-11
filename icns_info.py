@@ -1115,8 +1115,8 @@ class ICNSElement(Structure):
                 image = Image.open(StringIO(data))
                 mode_to_bpp = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
                 output = StringIO()
-                bpp = mode_to_bpp[image.mode]
                 image.save(output, format='PNG')
+                bpp = mode_to_bpp[image.mode]
                 png_data = bytearray(output.getvalue())
 
                 icns_info = ICNSInfo()

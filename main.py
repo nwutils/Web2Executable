@@ -547,14 +547,26 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.ex_button.setEnabled(False)
         self.run_in_background('make_output_dirs', self.done_making_files)
 
+    def run_custom_script(self):
+        script = self.get_setting('custom_script').value
+        self.run_script(script)
+
+    def script_done(self):
+        self.ex_button.setEnabled(self.required_settings_filled())
+        self.enable_ui()
+
     def done_making_files(self):
         self.ex_button.setEnabled(self.required_settings_filled())
         self.progress_text = 'Done Exporting.'
-        self.enable_ui()
         self.delete_files()
+
         if self.output_err:
             self.show_error(self.output_err)
             self.enable_ui_after_error()
+        else:
+            self.progress_text = 'Running custom script...'
+            self.ex_button.setEnabled(False)
+            self.run_in_background('run_custom_script', self.script_done)
 
     def extract_files_in_background(self):
         self.progress_text = 'Extracting.'
@@ -815,12 +827,16 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if not title_input.text():
             title_input.setText(proj_name)
 
+        self.load_package_json(utils.get_data_file_path('files/global.json'))
         self.load_package_json()
 
         default_dir = 'output'
         export_dir_setting = self.get_setting('export_dir')
         default_dir = export_dir_setting.value or default_dir
         self.output_line.setText(default_dir)
+
+        script_setting = self.get_setting('custom_script')
+        self.script_line.setText(script_setting.value)
 
         self.set_window_icon()
         self.open_export_button.setEnabled(True)
@@ -842,6 +858,18 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                           self.project_dir() or
                                                           QtCore.QDir.currentPath()),
                                                          setting.file_types)
+        if file_path:
+            file_path = os.path.abspath(file_path) # fixes an issue with windows paths
+            file_path = file_path.replace(self.project_dir()+os.path.sep, '')
+            text_obj.setText(file_path)
+            setting.last_value = file_path
+
+    def get_file_reg(self, obj, text_obj, setting, file_types, *args, **kwargs):
+        file_path, _ = QtGui.QFileDialog.getOpenFileName(self, 'Choose File',
+                                                         (setting.last_value or
+                                                          self.project_dir() or
+                                                          QtCore.QDir.currentPath()),
+                                                          file_types)
         if file_path:
             file_path = os.path.abspath(file_path) # fixes an issue with windows paths
             file_path = file_path.replace(self.project_dir()+os.path.sep, '')
@@ -916,9 +944,40 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         output_layout.addWidget(output_label)
         output_layout.addWidget(self.output_line)
         output_layout.addWidget(output_button)
+
+        script_layout = QtGui.QHBoxLayout()
+
+        script_label = QtGui.QLabel('Execute Script:')
+
+        self.script_line = QtGui.QLineEdit()
+        self.script_line.setReadOnly(True)
+
+        script_setting = self.get_setting('custom_script')
+
+        self.script_line.textChanged.connect(self.call_with_object('setting_changed',
+                                                                   self.script_line,
+                                                                   script_setting))
+        self.script_line.setStatusTip('The script to execute after a project was successfully exported.')
+        script_button = QtGui.QPushButton('...')
+
+        file_types = ['*.py']
+
+        if platform.system() == 'Windows':
+            file_types.append('*.bat')
+        else:
+            file_types.extend(['*.bash', '*.sh', '*.zsh'])
+
+        script_button.clicked.connect(self.call_with_object('get_file_reg', script_button,
+                                                            self.script_line, script_setting,
+                                                            ' '.join(file_types)))
+        script_layout.addWidget(script_label)
+        script_layout.addWidget(self.script_line)
+        script_layout.addWidget(script_button)
+
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(vlayout)
         vbox.addLayout(output_layout)
+        vbox.addLayout(script_layout)
 
         group_box.setLayout(vbox)
         return group_box
@@ -1127,8 +1186,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if self.update_json:
             json_file = utils.path_join(self.project_dir(), 'package.json')
 
+            global_json = utils.get_data_file_path('files/global.json')
+
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                 f.write(self.generate_json())
+
+            with codecs.open(global_json, 'w+', encoding='utf-8') as f:
+                f.write(self.generate_json(global_json=True))
 
         self.ex_button.setEnabled(self.required_settings_filled())
 
@@ -1235,8 +1299,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def _update_range_label(self, label, value):
         label.setText(unicode(value))
 
-    def load_package_json(self):
-        setting_list = super(MainWindow, self).load_package_json()
+    def load_package_json(self, json_path=None):
+        setting_list = super(MainWindow, self).load_package_json(json_path)
         for setting in setting_list:
             setting_field = self.find_child_by_name(setting.name)
             if setting_field:

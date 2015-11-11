@@ -117,6 +117,7 @@ class Setting(object):
         self.required = required
         self.type = type
         self.file_types = file_types
+        self.scope = kwargs.pop('scope', 'local')
 
         self.default_value = kwargs.pop('default_value', None)
         self.button = kwargs.pop('button', None)
@@ -443,8 +444,11 @@ class CommandBase(object):
         setting_list = []
         if p_json:
             json_str = ''
-            with codecs.open(p_json[0], 'r', encoding='utf-8') as f:
-                json_str = f.read()
+            try:
+                with codecs.open(p_json[0], 'r', encoding='utf-8') as f:
+                    json_str = f.read()
+            except IOError:
+                return setting_list
             try:
                 setting_list = self.load_from_json(json_str)
             except ValueError as e:  # Json file is invalid
@@ -452,41 +456,44 @@ class CommandBase(object):
                 self.progress_text = u'{}\n'.format(e)
         return setting_list
 
-    def generate_json(self):
+    def generate_json(self, global_json=False):
         self.logger.info('Generating package.json...')
-        if 'webkit' not in self.original_packagejson:
-            self.original_packagejson['webkit'] = {}
-        if 'window' not in self.original_packagejson:
-            self.original_packagejson['window'] = {}
-        if 'webexe_settings' not in self.original_packagejson:
-            self.original_packagejson['webexe_settings'] = {}
 
-        dic = self.original_packagejson
+        dic = {'webexe_settings': {}}
 
-        for setting_name, setting in self.settings['app_settings'].items():
-            if setting.value is not None:
-                dic[setting_name] = setting.value
-                if setting_name == 'keywords':
-                    dic[setting_name] = re.findall("\w+", setting.value)
+        if not global_json:
+            dic.update({'webkit': {}, 'window': {}})
+            dic.update(self.original_packagejson)
+            for setting_name, setting in self.settings['app_settings'].items():
+                if setting.value is not None:
+                    dic[setting_name] = setting.value
+                    if setting_name == 'keywords':
+                        dic[setting_name] = re.findall("\w+", setting.value)
 
-        for setting_name, setting in self.settings['window_settings'].items():
-            if setting.value is not None:
-                if 'height' in setting.name or 'width' in setting.name:
-                    try:
-                        dic['window'][setting_name] = int(setting.value)
-                    except ValueError:
-                        pass
-                else:
-                    dic['window'][setting_name] = setting.value
+            for setting_name, setting in self.settings['window_settings'].items():
+                if setting.value is not None:
+                    if 'height' in setting.name or 'width' in setting.name:
+                        try:
+                            dic['window'][setting_name] = int(setting.value)
+                        except ValueError:
+                            pass
+                    else:
+                        dic['window'][setting_name] = setting.value
 
-        for setting_name, setting in self.settings['webkit_settings'].items():
-            if setting.value is not None:
-                dic['webkit'][setting_name] = setting.value
+            for setting_name, setting in self.settings['webkit_settings'].items():
+                if setting.value is not None:
+                    dic['webkit'][setting_name] = setting.value
 
-        dl_export_items = (self.settings['download_settings'].items() +
-                           self.settings['export_settings'].items() +
-                           self.settings['compression'].items() +
-                           self.settings['web2exe_settings'].items())
+        if not global_json:
+            dl_export_items = (self.settings['download_settings'].items() +
+                               self.settings['export_settings'].items() +
+                               self.settings['compression'].items() +
+                               self.settings['web2exe_settings'].items())
+        else:
+            dl_export_items = (self.settings['download_settings'].items() +
+                               self.settings['export_settings'].items() +
+                               self.settings['compression'].items())
+
         for setting_name, setting in dl_export_items:
             if setting.value is not None:
                 dic['webexe_settings'][setting_name] = setting.value
@@ -530,7 +537,7 @@ class CommandBase(object):
 
     def load_from_json(self, json_str):
         dic = json.loads(json_str)
-        self.original_packagejson = dic
+        self.original_packagejson.update(dic)
         setting_list = []
         stack = [('root', dic)]
         while stack:
@@ -642,9 +649,15 @@ class CommandBase(object):
 
             json_file = utils.path_join(self.project_dir(), 'package.json')
 
+            global_json = utils.get_data_file_path('files/global.json')
+
             if self.output_package_json:
                 with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                     f.write(self.generate_json())
+
+
+            with codecs.open(global_json, 'w+', encoding='utf-8') as f:
+                f.write(self.generate_json(global_json=True))
 
             zip_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
@@ -861,15 +874,63 @@ class CommandBase(object):
             return ', '.join(val)
         return unicode(val).replace(self.project_dir()+os.path.sep, '')
 
+
+    def run_script(self, script):
+        if not script:
+            return
+
+        if os.path.exists(script):
+            self.progress_text = 'Executing script {}...'.format(script)
+            contents = ''
+            with codecs.open(script, 'r', encoding='utf-8') as f:
+                contents = f.read()
+
+            filename, ext = os.path.splitext(script)
+
+            export_opts = self.get_export_options()
+            export_dir = '{}{}{}'.format(self.output_dir(),
+                                         os.path.sep,
+                                         self.project_name())
+            export_dirs = []
+            for opt in export_opts:
+                export_dirs.append('{}{}{}'.format(export_dir, os.path.sep, opt))
+
+            if ext == '.py':
+                env_file = get_file('files/env_vars.py')
+                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+                env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                               proj_name=self.project_name(),
+                                               export_dir=export_dir,
+                                               export_dirs=str(export_dirs))
+                pycontents = '{}\n{}'.format(env_vars, contents)
+                exec(pycontents)
+                self.progress_text = 'Done executing script.'
+            else:
+                pass
+
+        else:
+            self.progress_text = '\nThe script {} does not exist. Not running.'.format(script)
+
+
     def export(self):
         self.get_files_to_download()
         res = self.try_to_download_files()
         if res:
             self.make_output_dirs()
+            script = self.get_setting('custom_script').value
+            self.run_script(script)
             self.progress_text = '\nDone!\n'
-            self.progress_text = u'Output directory is {}/{}.\n'.format(self.output_dir(),
-                                                                       self.project_name())
+            self.progress_text = u'Output directory is {}{}{}.\n'.format(self.output_dir(),
+                                                                         os.path.sep,
+                                                                         self.project_name())
             self.delete_files()
+
+    def get_export_options(self):
+        options = []
+        for setting_name, setting in self.settings['export_settings'].items():
+            if setting.value is True:
+                options.append(setting_name)
+        return options
 
     def get_files_to_download(self):
         self.files_to_download = []

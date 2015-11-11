@@ -8,7 +8,7 @@ cp -rf files Web2ExeMac-CMD/files/
 rm -rf build dist Web2Executable.app
 
 #sudo python build_mac_setup.py py2app --iconfile icon.icns 
-pyinstaller -w --hidden-import PIL.Jpeg2KImagePlugin --hidden-import PyQt4 --hidden-import configobj --hidden-import pkg_resources --distpath Web2ExeMac --onefile -n Web2Executable main.py
+pyinstaller -w --hidden-import PIL.Jpeg2KImagePlugin --hidden-import PyQt4 --hidden-import PIL --hidden-import configobj --hidden-import pkg_resources --distpath Web2ExeMac --onefile -n Web2Executable main.py
 
 #sudo chown -R joey dist/Web2Executable.app
 #sudo chown -R joey dist/ build/
