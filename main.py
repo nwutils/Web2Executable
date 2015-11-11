@@ -975,7 +975,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             file_types.append('*.bat')
         else:
             file_types.append('*.bash')
-            file_types.append('*.bat')
 
         script_button.clicked.connect(self.call_with_object('get_file_reg', script_button,
                                                             self.script_line, script_setting,

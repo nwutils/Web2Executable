@@ -949,7 +949,8 @@ class CommandBase(object):
                                                export_dirs=ex_dir_vars,
                                                **export_dict)
                 batcontents = '{}{}'.format(env_vars.replace('\n',''), contents.replace('\n', ' & '))
-                batcontents = batcontents[:-3]
+                if batcontents.endswith(' & '):
+                    batcontents = batcontents[:-3]
 
                 command = ['cmd', '/c', "'" + batcontents + "'"]
 
