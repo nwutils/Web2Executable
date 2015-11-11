@@ -940,7 +940,7 @@ class CommandBase(object):
                 for i, ex_dir in enumerate(export_dirs):
                     opt = export_opts[i]
                     export_dict[opt+'_dir'] = ex_dir
-                    ex_dir_vars += 'set EXPORT_DIRS[{}]={} & '.format(i, ex_dir)
+                    ex_dir_vars += 'set EXPORT_DIRS[{}]={}\n'.format(i, ex_dir)
 
                 env_vars = env_contents.format(proj_dir=self.project_dir(),
                                                proj_name=self.project_name(),
@@ -948,11 +948,9 @@ class CommandBase(object):
                                                num_dirs=len(export_dirs),
                                                export_dirs=ex_dir_vars,
                                                **export_dict)
-                batcontents = '{}{}'.format(env_vars.replace('\n',''), contents.replace('\n', ' & '))
-                if batcontents.endswith(' & '):
-                    batcontents = batcontents[:-3]
+                batcontents = '{}{}'.format(env_vars, contents)
 
-                command = ['cmd', '/c', "'" + batcontents + "'"]
+                command = ['cmd', '/c', batcontents]
 
             proc = subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = proc.communicate()
