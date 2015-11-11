@@ -940,7 +940,7 @@ class CommandBase(object):
                 for i, ex_dir in enumerate(export_dirs):
                     opt = export_opts[i]
                     export_dict[opt+'_dir'] = ex_dir
-                    ex_dir_vars += 'set EXPORT_DIRS[{}]={}\n'.format(i, ex_dir)
+                    ex_dir_vars += 'set "EXPORT_DIRS[{}]={}"\n'.format(i, ex_dir)
 
                 env_vars = env_contents.format(proj_dir=self.project_dir(),
                                                proj_name=self.project_name(),
