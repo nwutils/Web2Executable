@@ -27,4 +27,4 @@ cp -rf files Web2Executable.app/Contents/MacOS/
 rm -rf build dist
 
 /Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-CMD.zip Web2ExeMac-CMD
-/Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-v0.2.2b.zip Web2Executable.app
+/Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-v0.3.1b.zip Web2Executable.app

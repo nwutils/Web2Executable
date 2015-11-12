@@ -17,7 +17,7 @@ del command_line_builds\files\compressors\upx-linux-x32
 
 makensis /V4 Web2Exe.nsi
 
-7z a Web2ExeWin-v0.2.4b.zip -r Web2ExeWin
+7z a Web2ExeWin-v0.3.1b.zip -r Web2ExeWin
 cd command_line_builds
 7z a ..\Web2ExeWin-CMD.zip -tzip -r *
 cd ..

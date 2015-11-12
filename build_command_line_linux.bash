@@ -15,4 +15,4 @@ rm Web2ExeLinux/files/error.log Web2ExeLinux/files/last_project_path.txt Web2Exe
 
 
 zip -r -9 Web2ExeLinux-CMD.zip Web2ExeLinux-CMD/*
-zip -r -9 Web2ExeLinux-v0.2.2b.zip Web2ExeLinux
+zip -r -9 Web2ExeLinux-v0.3.1b.zip Web2ExeLinux
