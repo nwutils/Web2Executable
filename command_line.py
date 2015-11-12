@@ -952,6 +952,8 @@ class CommandBase(object):
                 batcontents = '{}\n{}'.format(env_vars, contents)
 
                 bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+                with open(bat_file, 'w+') as f:
+                    f.write(batcontents)
 
                 command = [bat_file]
 
