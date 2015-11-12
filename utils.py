@@ -19,7 +19,11 @@ def get_temp_dir():
     return tempfile.gettempdir()
 
 def path_join(base, *rest):
-    return base + u'/' + u'/'.join(rest)
+    rpath = u'/'.join(rest)
+    if os.path.isabs(rpath):
+        return rpath
+    else:
+        return base + u'/' + rpath
 
 def get_data_path(dir_path):
     parts = dir_path.split('/')

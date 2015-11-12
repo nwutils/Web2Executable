@@ -371,6 +371,16 @@ class CommandBase(object):
                 setting = setting_group[name]
                 return setting
 
+    def get_settings_type(self, type):
+        settings = []
+        for setting_group in (self.settings['setting_groups'] +
+                              [self.settings['export_settings']] +
+                              [self.settings['compression']]):
+            for name, setting in setting_group.items():
+                if setting.type == type:
+                    settings.append(setting)
+        return settings
+
     def show_error(self, error):
         if self.logger is not None:
             self.logger.error(error)

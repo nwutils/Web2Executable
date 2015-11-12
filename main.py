@@ -1329,7 +1329,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                     if index != -1:
                         setting_field.setCurrentIndex(index)
                 if setting.type == 'range':
-                    setting_field.setValue(setting.value)
+                    setting_field.setValue(int(setting.value))
         self.ex_button.setEnabled(self.required_settings_filled())
 
     def show_and_raise(self):
