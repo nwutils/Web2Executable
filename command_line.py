@@ -899,13 +899,27 @@ class CommandBase(object):
             command = None
             bat_file = None
 
+            export_dict = {'mac-x64_dir': '',
+                           'mac-x32_dir': '',
+                           'windows-x64_dir': '',
+                           'windows-x32_dir': '',
+                           'linux-x64_dir': '',
+                           'linux-x32_dir': ''}
+
             if ext == '.py':
                 env_file = get_file('files/env_vars.py')
                 env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+
+                for i, ex_dir in enumerate(export_dirs):
+                    opt = export_opts[i]
+                    export_dict[opt+'_dir'] = ex_dir
+
                 env_vars = env_contents.format(proj_dir=self.project_dir(),
                                                proj_name=self.project_name(),
                                                export_dir=export_dir,
-                                               export_dirs=str(export_dirs))
+                                               export_dirs=str(export_dirs),
+                                               num_dirs=len(export_dirs),
+                                               **export_dict)
                 pycontents = '{}\n{}'.format(env_vars, contents)
 
                 command = ['python', '-c', pycontents]
@@ -916,13 +930,19 @@ class CommandBase(object):
                 env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
                 ex_dir_vars = ''
 
+                for i, ex_dir in enumerate(export_dirs):
+                    opt = export_opts[i]
+                    export_dict[opt+'_dir'] = ex_dir
+
                 for ex_dir in export_dirs:
                     ex_dir_vars += "'{}' ".format(ex_dir)
 
                 env_vars = env_contents.format(proj_dir=self.project_dir(),
                                                proj_name=self.project_name(),
                                                export_dir=export_dir,
-                                               export_dirs=ex_dir_vars)
+                                               num_dirs=len(export_dirs),
+                                               export_dirs=ex_dir_vars,
+                                               **export_dict)
                 shcontents = '{}\n{}'.format(env_vars, contents)
 
                 command = ['bash', '-c', shcontents]
@@ -931,12 +951,6 @@ class CommandBase(object):
                 env_file = get_file('files/env_vars.bat')
                 env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
                 ex_dir_vars = ''
-                export_dict = {'mac-x64_dir': '',
-                               'mac-x32_dir': '',
-                               'windows-x64_dir': '',
-                               'windows-x32_dir': '',
-                               'linux-x64_dir': '',
-                               'linux-x32_dir': ''}
 
                 for i, ex_dir in enumerate(export_dirs):
                     opt = export_opts[i]
