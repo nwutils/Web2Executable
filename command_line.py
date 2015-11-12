@@ -897,6 +897,7 @@ class CommandBase(object):
                 export_dirs.append('{}{}{}'.format(export_dir, os.path.sep, opt))
 
             command = None
+            bat_file = None
 
             if ext == '.py':
                 env_file = get_file('files/env_vars.py')
@@ -948,14 +949,19 @@ class CommandBase(object):
                                                num_dirs=len(export_dirs),
                                                export_dirs=ex_dir_vars,
                                                **export_dict)
-                batcontents = '{}{}'.format(env_vars, contents)
+                batcontents = '{}\n{}'.format(env_vars, contents)
 
-                command = ['cmd', '/c', batcontents]
+                bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
 
-            proc = subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                command = [bat_file]
+
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, error = proc.communicate()
             output = output.strip()
             error = error.strip()
+
+            if bat_file:
+                os.remove(bat_file)
 
             with open(get_file('script-output.txt'), 'w+') as f:
                 f.write('Output:\n{}'.format(output))
