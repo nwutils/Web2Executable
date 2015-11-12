@@ -1,6 +1,6 @@
 '''Command line module for web2exe.'''
 
-__version__ = "v0.2.9b"
+__version__ = "v0.3.0b"
 
 import ssl
 
@@ -966,6 +966,9 @@ class CommandBase(object):
                 batcontents = '{}\n{}'.format(env_vars, contents)
 
                 bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+
+                self.logger.debug(batcontents)
+
                 with open(bat_file, 'w+') as f:
                     f.write(batcontents)
 
@@ -983,8 +986,6 @@ class CommandBase(object):
                 f.write('Output:\n{}'.format(output))
                 if error:
                     f.write('\n\nErrors:\n{}\n'.format(error))
-
-
 
             self.progress_text = 'Done executing script.'
         else:
