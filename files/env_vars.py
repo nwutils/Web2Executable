@@ -8,4 +8,4 @@ WIN64_EXPORT_DIR='{windows-x64_dir}'
 WIN32_EXPORT_DIR='{windows-x32_dir}'
 LINUX64_EXPORT_DIR='{linux-x64_dir}'
 LINUX32_EXPORT_DIR='{linux-x32_dir}'
-NUM_DIRS='{num_dirs}'
+NUM_DIRS={num_dirs}
