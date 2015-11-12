@@ -933,8 +933,8 @@ class CommandBase(object):
                 ex_dir_vars = ''
                 export_dict = {'mac-x64_dir': '',
                                'mac-x32_dir': '',
-                               'win-x64_dir': '',
-                               'win-x32_dir': '',
+                               'windows-x64_dir': '',
+                               'windows-x32_dir': '',
                                'linux-x64_dir': '',
                                'linux-x32_dir': ''}
 
