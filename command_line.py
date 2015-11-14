@@ -391,18 +391,27 @@ class CommandBase(object):
     def get_versions(self):
         if self.logger is not None:
             self.logger.info('Getting versions...')
-        response = urllib2.urlopen(self.settings['version_info']['url'])
-        html = response.read()
 
-        nw_version = self.get_setting('nw_version')
+        union_versions = set()
 
-        old_versions = set(nw_version.values)
-        new_versions = set(re.findall('(\S+) / \S+', html))
+        for url in self.settings['version_info']['urls']:
+            response = urllib2.urlopen(url)
+            html = response.read()
 
-        union_versions = list(old_versions.union(new_versions))
+            nw_version = self.get_setting('nw_version')
+
+            old_versions = set(nw_version.values)
+            old_versions = old_versions.union(union_versions)
+            new_versions = set(re.findall('(\S+) / \S+', html))
+
+            union_versions = old_versions.union(new_versions)
 
         versions = sorted(union_versions,
                           key=Version, reverse=True)
+
+        if len(versions) > 19:
+            #Cut off old versions
+            versions = versions[:-19]
 
         nw_version.values = versions
         f = None
