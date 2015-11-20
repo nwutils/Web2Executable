@@ -75,12 +75,20 @@ def zip_files(zip_file_name, *args, **kwargs):
                             file_loc = os.path.relpath(path_join(root, file), directory)
                             if verbose:
                                 log(file_loc)
-                            zip_file.write(file_loc)
+                            try:
+                                zip_file.write(file_loc)
+                            except ValueError:
+                                os.utime(file_loc, None)
+                                zip_file.write(file_loc)
                         for direc in dirs:
                             dir_loc = os.path.relpath(path_join(root, direc), directory)
                             if verbose:
                                 log(dir_loc)
-                            zip_file.write(dir_loc)
+                            try:
+                                zip_file.write(dir_loc)
+                            except ValueError:
+                                os.utime(file_loc, None)
+                                zip_file.write(file_loc)
 
             else:
                 file = os.path.abspath(arg)
@@ -89,7 +97,11 @@ def zip_files(zip_file_name, *args, **kwargs):
                 file_loc = os.path.relpath(arg, directory)
                 if verbose:
                     log(file_loc)
-                zip_file.write(file_loc)
+                try:
+                    zip_file.write(file_loc)
+                except ValueError:
+                    os.utime(file_loc, None)
+                    zip_file.write(file_loc)
 
     os.chdir(old_path)
 
