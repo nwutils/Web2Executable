@@ -19,7 +19,17 @@ def get_temp_dir():
     return tempfile.gettempdir()
 
 def path_join(base, *rest):
-    rpath = u'/'.join(rest)
+    try:
+        base = base.decode('utf-8')
+    except UnicodeEncodeError:
+        base = unicode(base)
+    new_rest = []
+    for i in xrange(len(rest)):
+        try:
+            new_rest.append(rest[i].decode('utf-8'))
+        except UnicodeEncodeError:
+            new_rest.append(unicode(rest[i]))
+    rpath = u'/'.join(new_rest)
     if os.path.isabs(rpath):
         return rpath
     else:

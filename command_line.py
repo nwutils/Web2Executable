@@ -83,7 +83,7 @@ handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
 logger.addHandler(handler)
 
 def my_excepthook(type_, value, tback):
-    output_err = u''.join(traceback.format_exception(type_, value, tback))
+    output_err = u''.join(unicode(traceback.format_exception(type_, value, tback)))
     logger.error(u'{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
@@ -421,9 +421,9 @@ class CommandBase(object):
                 f.write(v+os.linesep)
             f.close()
         except IOError:
-            error = u''.join(traceback.format_exception(sys.exc_info()[0],
-                                                       sys.exc_info()[1],
-                                                       sys.exc_info()[2]))
+            error = u''.join(unicode(traceback.format_exception(sys.exc_info()[0],
+                                                                sys.exc_info()[1],
+                                                                sys.exc_info()[2])))
             self.show_error(error)
             self.enable_ui_after_error()
         finally:
@@ -448,9 +448,9 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = u''.join(traceback.format_exception(sys.exc_info()[0],
-                                                       sys.exc_info()[1],
-                                                       sys.exc_info()[2]))
+            error = u''.join(unicode(traceback.format_exception(sys.exc_info()[0],
+                                                                sys.exc_info()[1],
+                                                                sys.exc_info()[2])))
             self.show_error(error)
             self.enable_ui_after_error()
 
@@ -790,9 +790,9 @@ class CommandBase(object):
                             os.remove(nw_path)
 
         except Exception:
-            exc = traceback.format_exception(sys.exc_info()[0],
-                                             sys.exc_info()[1],
-                                             sys.exc_info()[2])
+            exc = unicode(traceback.format_exception(sys.exc_info()[0],
+                                                     sys.exc_info()[1],
+                                                     sys.exc_info()[2]))
             self.logger.error(exc)
             self.output_err += u''.join(exc)
         finally:
@@ -1241,7 +1241,7 @@ def main():
     logger.addHandler(handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = u''.join(traceback.format_exception(type_, value, tback))
+        output_err = u''.join(unicode(traceback.format_exception(type_, value, tback)))
         logger.error(u'{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
