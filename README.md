@@ -3,6 +3,8 @@ Web2Executable
 
 [Downloads](https://github.com/jyapayne/Web2Executable/wiki/Downloads)
 
+[Releases](https://github.com/jyapayne/Web2Executable/releases) (new!)
+
 What is it?
 -----------
 
