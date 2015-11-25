@@ -793,8 +793,8 @@ class CommandBase(object):
             exc = traceback.format_exception(sys.exc_info()[0],
                                              sys.exc_info()[1],
                                              sys.exc_info()[2])
-            self.output_err += u''.join(exc)
             self.logger.error(exc)
+            self.output_err += u''.join(exc)
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
