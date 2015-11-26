@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Web2Exe"
-!define PRODUCT_VERSION "0.3.1b"
+!define /file PRODUCT_VERSION "files\version.txt"
 !define PRODUCT_PUBLISHER "SimplyPixelated"
 !define PRODUCT_WEB_SITE "http://www.simplypixelated.com"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"

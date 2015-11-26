@@ -1,3 +1,5 @@
+VERSION=$(cat files/version.txt)
+
 rm -rf Web2ExeMac*
 rm  files/error.log files/last_project_path.txt files/recent_files.txt
 rm -rf files/downloads/*
@@ -27,4 +29,4 @@ cp -rf files Web2Executable.app/Contents/MacOS/
 rm -rf build dist
 
 /Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-CMD.zip Web2ExeMac-CMD
-/Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-v0.3.1b.zip Web2Executable.app
+/Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-${VERSION}.zip Web2Executable.app

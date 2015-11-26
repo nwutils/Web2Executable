@@ -1,7 +1,5 @@
 '''Command line module for web2exe.'''
 
-__version__ = "v0.3.3b"
-
 import ssl
 
 try:
@@ -51,6 +49,8 @@ from configobj import ConfigObj
 
 COMMAND_LINE = True
 
+
+
 inside_packed_exe = getattr(sys, 'frozen', '')
 
 if inside_packed_exe:
@@ -64,6 +64,12 @@ def get_file(path):
     parts = path.split('/')
     independent_path = utils.path_join(CWD, *parts)
     return independent_path
+
+__version__ = "v0.0.0"
+
+with open(get_file('files/version.txt')) as f:
+    __version__ = f.read().strip()
+
 
 TEMP_DIR = get_temp_dir()
 DEFAULT_DOWNLOAD_PATH = get_data_path('files/downloads')
