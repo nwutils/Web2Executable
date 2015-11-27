@@ -23,6 +23,6 @@ set /p Version=<files\version.txt
 cd command_line_builds
 7z a ..\Web2ExeWin-CMD.zip -tzip -r *
 cd ..
-7z a Web2Exe-Setup.zip Web2Exe-Setup.exe
+7z a Web2ExeWin-Setup.zip Web2Exe-Setup.exe
 
 call python upload_release.py
