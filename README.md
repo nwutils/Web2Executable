@@ -1,9 +1,9 @@
 Web2Executable
 ==============
 
-[Downloads](https://github.com/jyapayne/Web2Executable/wiki/Downloads)
-
 [Releases](https://github.com/jyapayne/Web2Executable/releases) (new!)
+
+[Downloads](https://github.com/jyapayne/Web2Executable/wiki/Downloads) (Use Releases for new Downloads)
 
 What is it?
 -----------
