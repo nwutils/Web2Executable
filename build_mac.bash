@@ -30,3 +30,5 @@ rm -rf build dist
 
 /Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-CMD.zip Web2ExeMac-CMD
 /Applications/Keka.app/Contents/Resources/keka7z a -r Web2ExeMac-${VERSION}.zip Web2Executable.app
+
+python upload_release.py
