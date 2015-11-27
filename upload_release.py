@@ -28,6 +28,7 @@ def main():
     password = getpass.getpass('Password:')
 
     if req.status_code == 200:
+        print 'Found release:', version
         json_data = json.loads(req.text)
         tag = json_data.get('tag_name', '')
         cur_ver = Version(tag[1:-1])
@@ -38,6 +39,7 @@ def main():
             upload_url = json_data['upload_url'].replace('{?name,label}', '')
 
     if not update:
+        print 'Creating release:', version
         data = {'tag_name': version,
                 'target_commitish': 'master',
                 'name': 'Web2Executable ' + version}

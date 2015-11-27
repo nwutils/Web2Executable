@@ -17,7 +17,7 @@ del command_line_builds\files\compressors\upx-linux-x32
 
 makensis /V4 Web2Exe.nsi
 
-set /p Version=<version.txt
+set /p Version=<files\version.txt
 
 7z a Web2ExeWin-%Version%.zip -r Web2ExeWin
 cd command_line_builds
