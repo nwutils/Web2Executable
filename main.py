@@ -30,6 +30,77 @@ def url_exists(path):
         return True
     return False
 
+class ExistingProjectDialog(QtGui.QDialog):
+    def __init__(self, recent_projects, directory_callback, parent=None):
+        super(ExistingProjectDialog, self).__init__(parent)
+        self.setWindowTitle('Open Project Folder')
+        self.setMinimumWidth(500)
+        self.parent().menuBar().hide()
+
+        group_box = QtGui.QGroupBox('Existing Projects')
+        gbox_layout = QtGui.QVBoxLayout()
+        self.project_list = QtGui.QListWidget()
+
+        gbox_layout.addWidget(self.project_list)
+        group_box.setLayout(gbox_layout)
+
+        self.callback = directory_callback
+
+        self.projects = recent_projects
+
+        for i in xrange(len(recent_projects)):
+            project = recent_projects[i]
+            text = u'{} - {}'.format(os.path.basename(project), project)
+            self.project_list.addItem(text)
+
+        self.project_list.itemClicked.connect(self.project_clicked)
+
+        self.cancel = QtGui.QPushButton('Cancel')
+        self.open = QtGui.QPushButton('Open Selected')
+        self.browse = QtGui.QPushButton('Browse...')
+
+        self.open.setEnabled(False)
+        self.open.clicked.connect(self.open_clicked)
+
+        self.browse.clicked.connect(self.browse_clicked)
+
+        buttons = QtGui.QWidget()
+
+        button_layout = QtGui.QHBoxLayout()
+        button_layout.addWidget(self.cancel)
+        button_layout.addWidget(QtGui.QWidget())
+        button_layout.addWidget(self.browse)
+        button_layout.addWidget(self.open)
+
+        buttons.setLayout(button_layout)
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(group_box)
+        layout.addWidget(buttons)
+
+        self.setLayout(layout)
+        self.cancel.clicked.connect(self.cancelled)
+
+    def browse_clicked(self):
+
+        directory = QtGui.QFileDialog.getExistingDirectory(self, 'Find Project Directory',
+                self.parent().project_dir() or self.parent().last_project_dir)
+
+        if directory:
+            self.callback(directory)
+            self.close()
+
+    def open_clicked(self):
+        pos = self.project_list.currentRow()
+        self.callback(self.projects[pos])
+        self.close()
+
+    def project_clicked(self, item):
+        self.open.setEnabled(True)
+
+    def cancelled(self):
+        self.close()
+
 class Validator(QtGui.QRegExpValidator):
     def __init__(self, regex, action, parent=None):
         self.exp = regex
@@ -123,6 +194,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def __init__(self, width, height, app, parent=None):
         super(MainWindow, self).__init__(parent)
         CommandBase.__init__(self)
+
+        recent_projects = self.load_recent_projects()
+
+        existing_dialog = ExistingProjectDialog(recent_projects, self.load_project, parent=self)
+        existing_dialog.show()
+
+        drect = QtGui.QApplication.desktop().availableGeometry(self)
+        center = drect.center()
+        self.move(center.x() - self.width() * 0.5, center.y() - self.height()*0.5)
 
         self.icon_style = 'width:48px;height:48px;background-color:white;border-radius:5px;border:1px solid rgb(50,50,50);'
 

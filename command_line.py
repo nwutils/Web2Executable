@@ -63,6 +63,8 @@ else:
 def get_file(path):
     parts = path.split('/')
     independent_path = utils.path_join(CWD, *parts)
+    if utils.is_windows() and os.path.isabs(independent_path):
+        independent_path = u'//?/' + independent_path
     return independent_path
 
 __version__ = "v0.0.0"
@@ -89,7 +91,7 @@ handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
 logger.addHandler(handler)
 
 def my_excepthook(type_, value, tback):
-    output_err = u''.join(unicode(traceback.format_exception(type_, value, tback)))
+    output_err = u''.join([unicode(x) for x in traceback.format_exception(type_, value, tback)])
     logger.error(u'{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
@@ -427,9 +429,9 @@ class CommandBase(object):
                 f.write(v+os.linesep)
             f.close()
         except IOError:
-            error = u''.join(unicode(traceback.format_exception(sys.exc_info()[0],
-                                                                sys.exc_info()[1],
-                                                                sys.exc_info()[2])))
+            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+                                                                             sys.exc_info()[1],
+                                                                             sys.exc_info()[2])])
             self.show_error(error)
             self.enable_ui_after_error()
         finally:
@@ -454,9 +456,9 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = u''.join(unicode(traceback.format_exception(sys.exc_info()[0],
-                                                                sys.exc_info()[1],
-                                                                sys.exc_info()[2])))
+            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+                                                                             sys.exc_info()[1],
+                                                                             sys.exc_info()[2])])
             self.show_error(error)
             self.enable_ui_after_error()
 
@@ -796,11 +798,11 @@ class CommandBase(object):
                             os.remove(nw_path)
 
         except Exception:
-            exc = unicode(traceback.format_exception(sys.exc_info()[0],
-                                                     sys.exc_info()[1],
-                                                     sys.exc_info()[2]))
-            self.logger.error(exc)
-            self.output_err += u''.join(exc)
+            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+                                                                             sys.exc_info()[1],
+                                                                             sys.exc_info()[2])])
+            self.logger.error(error)
+            self.output_err += error
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -1247,7 +1249,7 @@ def main():
     logger.addHandler(handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = u''.join(unicode(traceback.format_exception(type_, value, tback)))
+        output_err = u''.join([unicode(x) for x in traceback.format_exception(type_, value, tback)])
         logger.error(u'{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
@@ -1258,9 +1260,13 @@ def main():
     if args.quiet:
         command_base.quiet = True
 
-    command_base._project_dir = args.project_dir
+    if utils.is_windows() and os.path.isabs(args.project_dir):
+        command_base._project_dir = u'//?/' + args.project_dir
+    else:
+        command_base._project_dir = args.project_dir
+
     command_base._output_dir = (args.output_dir or
-                                utils.path_join(args.project_dir, 'output'))
+                                utils.path_join(command_base._project_dir, 'output'))
 
     if args.app_name is None:
         args.app_name = command_base.project_name()
