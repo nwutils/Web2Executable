@@ -25,4 +25,6 @@ cd command_line_builds
 cd ..
 7z a Web2ExeWin-Setup.zip Web2Exe-Setup.exe
 
+del *.zip
+
 call python upload_release.py
