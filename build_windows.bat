@@ -1,4 +1,5 @@
 rd /S /Q Web2ExeWin
+del *.zip
 call pyinstaller --onefile --hidden-import PIL.Jpeg2KImagePlugin --hidden-import configobj --hidden-import pkg_resources -i icon.ico --distpath command_line_builds -n web2exe-win command_line.py
 rd /S /Q command_line_builds\files
 echo D | xcopy /s files command_line_builds\files
@@ -24,7 +25,5 @@ cd command_line_builds
 7z a ..\Web2ExeWin-CMD.zip -tzip -r *
 cd ..
 7z a Web2ExeWin-Setup.zip Web2Exe-Setup.exe
-
-del *.zip
 
 call python upload_release.py
