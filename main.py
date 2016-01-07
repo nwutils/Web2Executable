@@ -34,8 +34,8 @@ class ExistingProjectDialog(QtGui.QDialog):
     def __init__(self, recent_projects, directory_callback, parent=None):
         super(ExistingProjectDialog, self).__init__(parent)
         self.setWindowTitle('Open Project Folder')
+        self.setWindowIcon(QtGui.QIcon(get_file('files/images/icon.png')))
         self.setMinimumWidth(500)
-        self.parent().menuBar().hide()
 
         group_box = QtGui.QGroupBox('Existing Projects')
         gbox_layout = QtGui.QVBoxLayout()

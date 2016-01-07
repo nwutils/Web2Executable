@@ -63,8 +63,6 @@ else:
 def get_file(path):
     parts = path.split('/')
     independent_path = utils.path_join(CWD, *parts)
-    if utils.is_windows() and os.path.isabs(independent_path):
-        independent_path = u'//?/' + independent_path
     return independent_path
 
 __version__ = "v0.0.0"

@@ -51,8 +51,6 @@ def get_data_path(dir_path):
 def get_data_file_path(file_path):
     parts = file_path.split('/')
     data_path = get_data_path('/'.join(parts[:-1]))
-    if is_windows() and os.path.isabs(data_path):
-        data_path = u'//?/' + data_path
     return path_join(data_path, parts[-1])
 
 def log(*args):
