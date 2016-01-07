@@ -197,8 +197,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         recent_projects = self.load_recent_projects()
 
-        existing_dialog = ExistingProjectDialog(recent_projects, self.load_project, parent=self)
-        existing_dialog.show()
+        self.existing_dialog = ExistingProjectDialog(recent_projects, self.load_project, parent=self)
 
         drect = QtGui.QApplication.desktop().availableGeometry(self)
         center = drect.center()
@@ -1415,6 +1414,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def show_and_raise(self):
         self.show()
         self.raise_()
+        self.existing_dialog.show()
+        self.existing_dialog.raise_()
 
 
 if __name__ == '__main__':
