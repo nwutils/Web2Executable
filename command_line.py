@@ -1258,10 +1258,7 @@ def main():
     if args.quiet:
         command_base.quiet = True
 
-    if utils.is_windows() and os.path.isabs(args.project_dir):
-        command_base._project_dir = u'//?/' + args.project_dir
-    else:
-        command_base._project_dir = args.project_dir
+    command_base._project_dir = args.project_dir
 
     command_base._output_dir = (args.output_dir or
                                 utils.path_join(command_base._project_dir, 'output'))

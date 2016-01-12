@@ -40,9 +40,6 @@ def get_data_path(dir_path):
     dirs = AppDirs('Web2Executable', 'Web2Executable')
     data_path = path_join(dirs.user_data_dir, *parts)
 
-    if is_windows() and os.path.isabs(data_path):
-        data_path = u'//?/' + data_path
-
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
