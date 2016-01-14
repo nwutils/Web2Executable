@@ -1037,7 +1037,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         script_label.setMinimumWidth(150)
 
         self.script_line = QtGui.QLineEdit()
-        self.script_line.setReadOnly(True)
 
         script_setting = self.get_setting('custom_script')
         self.script_line.setObjectName(script_setting.name)

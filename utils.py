@@ -3,6 +3,7 @@ import os, zipfile, io, platform
 import sys, tempfile
 import subprocess
 from appdirs import AppDirs
+import shutil
 
 #try:
 #    import zlib
@@ -29,7 +30,9 @@ def path_join(base, *rest):
             new_rest.append(rest[i].decode('utf-8'))
         except UnicodeEncodeError:
             new_rest.append(unicode(rest[i]))
+
     rpath = u'/'.join(new_rest)
+
     if os.path.isabs(rpath):
         return rpath
     else:
@@ -40,6 +43,9 @@ def get_data_path(dir_path):
     dirs = AppDirs('Web2Executable', 'Web2Executable')
     data_path = path_join(dirs.user_data_dir, *parts)
 
+    if is_windows():
+        data_path = data_path.replace(u'\\', u'/')
+
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
@@ -49,6 +55,37 @@ def get_data_file_path(file_path):
     parts = file_path.split('/')
     data_path = get_data_path('/'.join(parts[:-1]))
     return path_join(data_path, parts[-1])
+
+def rmtree(path, **kwargs):
+    if is_windows():
+        if os.path.isabs(path):
+            path = u'//?/'+path
+    shutil.rmtree(path, **kwargs)
+
+def copy(src, dest, **kwargs):
+    if is_windows():
+        if os.path.isabs(src):
+            src = u'//?/'+src
+        if os.path.isabs(dest):
+            dest = u'//?/'+dest
+    shutil.copy(src, dest, **kwargs)
+
+def move(src, dest, **kwargs):
+    if is_windows():
+        if os.path.isabs(src):
+            src = u'//?/'+src
+        if os.path.isabs(dest):
+            dest = u'//?/'+dest
+    shutil.move(src, dest, **kwargs)
+
+def copytree(src, dest, **kwargs):
+    if is_windows():
+        if os.path.isabs(src):
+            src = u'//?/'+src
+        if os.path.isabs(dest):
+            dest = u'//?/'+dest
+    shutil.copytree(src, dest, **kwargs)
+
 
 def log(*args):
     if DEBUG:

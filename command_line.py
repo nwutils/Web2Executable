@@ -197,7 +197,7 @@ class Setting(object):
 
     def extract(self, ex_path, version):
         if os.path.exists(ex_path):
-            shutil.rmtree(ex_path, ignore_errors=True)
+            utils.rmtree(ex_path, ignore_errors=True)
 
         path = self.save_file_path(version)
 
@@ -225,8 +225,8 @@ class Setting(object):
         if os.path.exists(dir_name):
             for p in os.listdir(dir_name):
                 abs_file = utils.path_join(dir_name, p)
-                shutil.move(abs_file, ex_path)
-            shutil.rmtree(dir_name, ignore_errors=True)
+                utils.move(abs_file, ex_path)
+            utils.rmtree(dir_name, ignore_errors=True)
 
     def get_file_bytes(self, version):
         fbytes = []
@@ -637,7 +637,7 @@ class CommandBase(object):
             if not icon_path.endswith('.icns'):
                 save_icns(icon_path, icns_path)
             else:
-                shutil.copy(icon_path, icns_path)
+                utils.copy(icon_path, icns_path)
 
     def replace_icon_in_exe(self, exe_path):
         icon_setting = self.get_setting('icon')
@@ -658,11 +658,11 @@ class CommandBase(object):
 
             output_dir = utils.path_join(self.output_dir(), self.project_name())
             if os.path.exists(output_dir):
-                shutil.rmtree(output_dir, ignore_errors=True)
+                utils.rmtree(output_dir, ignore_errors=True)
 
             temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
             if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir, ignore_errors=True)
+                utils.rmtree(temp_dir, ignore_errors=True)
 
             self.progress_text = 'Making new directories...\n'
 
@@ -689,8 +689,8 @@ class CommandBase(object):
 
             app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
 
-            shutil.copytree(self.project_dir(), app_nw_folder,
-                            ignore=shutil.ignore_patterns(output_dir))
+            utils.copytree(self.project_dir(), app_nw_folder,
+                           ignore=shutil.ignore_patterns(output_dir))
 
             zip_files(zip_file, self.project_dir(), exclude_paths=[output_dir])
             for ex_setting in self.settings['export_settings'].values():
@@ -706,13 +706,13 @@ class CommandBase(object):
                         export_dest = export_dest.replace('node-webkit', 'nwjs')
 
                     if os.path.exists(export_dest):
-                        shutil.rmtree(export_dest, ignore_errors=True)
+                        utils.rmtree(export_dest, ignore_errors=True)
 
                     # shutil will make the directory for us
-                    shutil.copytree(get_data_path('files/'+ex_setting.name),
-                                    export_dest,
+                    utils.copytree(get_data_path('files/'+ex_setting.name),
+                                   export_dest,
                                     ignore=shutil.ignore_patterns('place_holder.txt'))
-                    shutil.rmtree(get_data_path('files/'+ex_setting.name), ignore_errors=True)
+                    utils.rmtree(get_data_path('files/'+ex_setting.name), ignore_errors=True)
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
@@ -722,13 +722,13 @@ class CommandBase(object):
                                                 self.project_name()+'.app')
 
                         try:
-                            shutil.move(utils.path_join(export_dest,
+                            utils.move(utils.path_join(export_dest,
                                                      'nwjs.app'),
-                                        app_path)
+                                       app_path)
                         except IOError:
-                            shutil.move(utils.path_join(export_dest,
+                            utils.move(utils.path_join(export_dest,
                                                      'node-webkit.app'),
-                                        app_path)
+                                       app_path)
 
                         plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
 
@@ -751,9 +751,9 @@ class CommandBase(object):
                                                   'app.nw')
 
                         if uncompressed:
-                            shutil.copytree(app_nw_folder, app_nw_res)
+                            utils.copytree(app_nw_folder, app_nw_res)
                         else:
-                            shutil.copy(zip_file, app_nw_res)
+                            utils.copy(zip_file, app_nw_res)
                         self.create_icns_for_app(utils.path_join(app_path,
                                                               'Contents',
                                                               'Resources',
@@ -802,13 +802,13 @@ class CommandBase(object):
             self.logger.error(error)
             self.output_err += error
         finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            utils.rmtree(temp_dir, ignore_errors=True)
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
         icon_path = utils.path_join(self.project_dir(), icon_set.value)
         if os.path.exists(icon_path) and icon_set.value:
-            shutil.copy(icon_path, export_dest)
+            utils.copy(icon_path, export_dest)
             icon_path = utils.path_join(export_dest, os.path.basename(icon_path))
         else:
             icon_path = ''
@@ -886,7 +886,7 @@ class CommandBase(object):
                     f_path = setting.value.replace(self.project_dir(), '')
                     if os.path.isabs(f_path):
                         try:
-                            shutil.copy(setting.value, self.project_dir())
+                            utils.copy(setting.value, self.project_dir())
                             self.logger.info(u'Copying file {} to {}'.format(setting.value, self.project_dir()))
                         except shutil.Error as e:  # same file warning
                             self.logger.warning(u'Warning: {}'.format(e))
