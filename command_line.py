@@ -65,6 +65,10 @@ def get_file(path):
     independent_path = utils.path_join(CWD, *parts)
     return independent_path
 
+def is_installed():
+    uninst = get_file('uninst.exe')
+    return utils.is_windows() and os.path.exists(uninst)
+
 __version__ = "v0.0.0"
 
 with open(get_file('files/version.txt')) as f:
@@ -842,6 +846,7 @@ class CommandBase(object):
         compression = self.get_setting('nw_compression_level')
         if compression.value == 0:
             return
+
         comp_dict = {'Darwin64bit': get_file('files/compressors/upx-mac'),
                      'Darwin32bit': get_file('files/compressors/upx-mac'),
                      'Linux64bit':  get_file('files/compressors/upx-linux-x64'),
@@ -849,6 +854,10 @@ class CommandBase(object):
                      'Windows64bit':  get_file('files/compressors/upx-win.exe'),
                      'Windows32bit':  get_file('files/compressors/upx-win.exe')
                      }
+
+        if is_installed():
+            comp_dict['Windows64bit'] = get_data_file_path('files/compressors/upx-win.exe')
+            comp_dict['Windows32bit'] = get_data_file_path('files/compressors/upx-win.exe')
 
         plat = platform.system()+platform.architecture()[0]
         upx_version = comp_dict.get(plat, None)

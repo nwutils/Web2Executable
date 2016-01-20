@@ -78,8 +78,12 @@ Section "Web2Executable" SEC01
   SectionIn RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
-  File /r "Web2ExeWin\"
+  File /r /x compressors "Web2ExeWin\"
   
+  CreateDirectory "$LocalAppData\Web2Executable\Web2Executable\files\compressors"
+  SetOutPath "$LocalAppData\Web2Executable\Web2Executable\files\compressors"
+  File "Web2ExeWin\files\compressors\upx-win.exe"
+
   ; Shortcuts
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
   CreateDirectory "$SMPROGRAMS\$ICONS_GROUP"
