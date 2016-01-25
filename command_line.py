@@ -12,7 +12,7 @@ from pycns import save_icns
 from pepy.pe import PEFile
 
 import argparse
-import urllib2
+import urllib.request as request
 import platform
 import re
 import time
@@ -40,10 +40,7 @@ from semantic_version import Version
 from zipfile import ZipFile
 from tarfile import TarFile
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from io import StringIO
 
 from configobj import ConfigObj
 
@@ -93,7 +90,7 @@ handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
 logger.addHandler(handler)
 
 def my_excepthook(type_, value, tback):
-    output_err = u''.join([unicode(x) for x in traceback.format_exception(type_, value, tback)])
+    output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
     logger.error(u'{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
@@ -150,10 +147,10 @@ class Setting(object):
         self.get_file_information_from_url()
 
     def filter_name(self, text):
-        action = unicode
-        if hasattr(unicode, self.filter_action):
-            action = getattr(unicode, self.filter_action)
-        return action(unicode(text))
+        if hasattr(self.filter_action, text):
+            action = getattr(self.filter_action, text)
+            return action(text)
+        return text
 
     def get_file_information_from_url(self):
         if hasattr(self, 'url'):
@@ -256,9 +253,9 @@ class Setting(object):
                 elif self.file_ext == '.zip':
                     new_bytes = file.read(extract_p)
             except KeyError as e:
-                logger.error(unicode(e))
+                logger.error(str(e))
                 # dirty hack to support old versions of nw
-                if 'no item named' in unicode(e):
+                if 'no item named' in str(e):
                     extract_path = '/'.join(extract_path.split('/')[1:])
                     try:
                         if self.file_ext == '.gz':
@@ -266,7 +263,7 @@ class Setting(object):
                         elif self.file_ext == '.zip':
                             new_bytes = file.read(extract_path)
                     except KeyError as e:
-                        logger.error(unicode(e))
+                        logger.error(str(e))
 
             if new_bytes is not None:
                 fbytes.append((dest_path, new_bytes))
@@ -335,7 +332,7 @@ class CommandBase(object):
         config_io = StringIO(contents)
         config = ConfigObj(config_io, unrepr=True).dict()
         settings = {'setting_groups': []}
-        setting_items = (config['setting_groups'].items() +
+        setting_items = (list(config['setting_groups'].items()) +
                          [('export_settings', config['export_settings'])] +
                          [('compression', config['compression'])])
         for setting_group, setting_group_dict in setting_items:
@@ -351,7 +348,7 @@ class CommandBase(object):
         for setting_group, setting_group_dict in sgroup_items:
             settings['setting_groups'].append(settings[setting_group])
 
-        self._setting_items = (config['setting_groups'].items() +
+        self._setting_items = (list(config['setting_groups'].items()) +
                          [('export_settings', config['export_settings'])] +
                          [('compression', config['compression'])])
         config.pop('setting_groups')
@@ -405,8 +402,8 @@ class CommandBase(object):
         union_versions = set()
 
         for url in self.settings['version_info']['urls']:
-            response = urllib2.urlopen(url)
-            html = response.read()
+            response = request.urlopen(url)
+            html = response.read().decode('utf-8')
 
             nw_version = self.get_setting('nw_version')
 
@@ -431,7 +428,7 @@ class CommandBase(object):
                 f.write(v+os.linesep)
             f.close()
         except IOError:
-            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                              sys.exc_info()[1],
                                                                              sys.exc_info()[2])])
             self.show_error(error)
@@ -458,7 +455,7 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                              sys.exc_info()[1],
                                                                              sys.exc_info()[2])])
             self.show_error(error)
@@ -498,7 +495,7 @@ class CommandBase(object):
                 if setting.value is not None:
                     dic[setting_name] = setting.value
                     if setting_name == 'keywords':
-                        dic[setting_name] = re.findall("\w+", setting.value)
+                        dic[setting_name] = re.findall('\w+', setting.value)
 
             for setting_name, setting in self.settings['window_settings'].items():
                 if setting.value is not None:
@@ -515,14 +512,14 @@ class CommandBase(object):
                     dic['webkit'][setting_name] = setting.value
 
         if not global_json:
-            dl_export_items = (self.settings['download_settings'].items() +
-                               self.settings['export_settings'].items() +
-                               self.settings['compression'].items() +
-                               self.settings['web2exe_settings'].items())
+            dl_export_items = (list(self.settings['download_settings'].items()) +
+                               list(self.settings['export_settings'].items()) +
+                               list(self.settings['compression'].items()) +
+                               list(self.settings['web2exe_settings'].items()))
         else:
-            dl_export_items = (self.settings['download_settings'].items() +
-                               self.settings['export_settings'].items() +
-                               self.settings['compression'].items())
+            dl_export_items = (list(self.settings['download_settings'].items()) +
+                               list(self.settings['export_settings'].items()) +
+                               list(self.settings['compression'].items()))
 
         for setting_name, setting in dl_export_items:
             if setting.value is not None:
@@ -539,7 +536,7 @@ class CommandBase(object):
     @extract_error.setter
     def extract_error(self, value):
         if value is not None and not self.quiet and COMMAND_LINE:
-            self._extract_error = unicode(value)
+            self._extract_error = value
             sys.stderr.write(u'\r{}'.format(self._extract_error))
             sys.stderr.flush()
 
@@ -550,7 +547,7 @@ class CommandBase(object):
     @output_err.setter
     def output_err(self, value):
         if value is not None and not self.quiet and COMMAND_LINE:
-            self._output_err = unicode(value)
+            self._output_err = value
             sys.stderr.write(u'\r{}'.format(self._output_err))
             sys.stderr.flush()
 
@@ -561,7 +558,7 @@ class CommandBase(object):
     @progress_text.setter
     def progress_text(self, value):
         if value is not None and not self.quiet and COMMAND_LINE:
-            self._progress_text = unicode(value)
+            self._progress_text = value
             sys.stdout.write(u'\r{}'.format(self._progress_text))
             sys.stdout.flush()
 
@@ -624,7 +621,7 @@ class CommandBase(object):
                 if os.path.exists(save_file_path):
                     os.remove(save_file_path)
                 self.extract_error = e
-                self.logger.error(unicode(self.extract_error))
+                self.logger.error(self.extract_error)
                 # cannot use GUI in thread to notify user. Save it for later
         self.progress_text = '\nDone.\n'
         return True
@@ -814,7 +811,7 @@ class CommandBase(object):
                             os.remove(nw_path)
 
         except Exception:
-            error = u''.join([unicode(x) for x in traceback.format_exception(sys.exc_info()[0],
+            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                              sys.exc_info()[1],
                                                                              sys.exc_info()[2])])
             self.logger.error(error)
@@ -860,7 +857,7 @@ class CommandBase(object):
         with codecs.open(dfile_path, 'w+', encoding='utf-8') as f:
             f.write(file_str)
 
-        os.chmod(dfile_path, 0755)
+        os.chmod(dfile_path, 0o755)
 
     def compress_nw(self, nw_path):
         compression = self.get_setting('nw_compression_level')
@@ -884,8 +881,8 @@ class CommandBase(object):
 
         if upx_version is not None:
             upx_bin = upx_version
-            os.chmod(upx_bin, 0755)
-            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), unicode(nw_path)]
+            os.chmod(upx_bin, 0o755)
+            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), nw_path]
             if platform.system() == 'Windows':
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -927,7 +924,7 @@ class CommandBase(object):
     def convert_val_to_str(self, val):
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
-        return unicode(val).replace(self.project_dir()+os.path.sep, '')
+        return str(val).replace(self.project_dir()+os.path.sep, '')
 
 
     def run_script(self, script):
@@ -1115,9 +1112,9 @@ class CommandBase(object):
         elif tmp_exists and (os.stat(tmp_file).st_size > 0):
             tmp_size = os.stat(tmp_file).st_size
             headers = {'Range': 'bytes={}-'.format(tmp_size)}
-            url = urllib2.Request(url, headers=headers)
+            url = request.Request(url, headers=headers)
 
-        web_file = urllib2.urlopen(url)
+        web_file = request.urlopen(url)
         f = open(tmp_file, 'ab')
         meta = web_file.info()
         file_size = tmp_size + int(meta.getheaders("Content-Length")[0])
@@ -1179,8 +1176,7 @@ class ArgParser(argparse.ArgumentParser):
         sys.exit(2)
 
 def unicode_arg(bytestring):
-    unicode_string = bytestring.decode(sys.getfilesystemencoding())
-    return unicode_string
+    return bytestring
 
 def main():
     parser = ArgParser(description=('Command line interface '
@@ -1233,7 +1229,7 @@ def main():
             else:
                 if setting.values:
                     kwargs.update({'choices': setting.values})
-                    setting.description += u' Possible values: {{{}}}'.format(', '.join([unicode(x) for x in setting.values]))
+                    setting.description += u' Possible values: {{{}}}'.format(', '.join([x for x in setting.values]))
                     kwargs.update({'metavar': ''})
                 else:
                     kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
@@ -1276,7 +1272,7 @@ def main():
     logger.addHandler(handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = u''.join([unicode(x) for x in traceback.format_exception(type_, value, tback)])
+        output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
         logger.error(u'{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 

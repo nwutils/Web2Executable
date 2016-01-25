@@ -48,7 +48,7 @@ class ExistingProjectDialog(QtGui.QDialog):
 
         self.projects = recent_projects
 
-        for i in xrange(len(recent_projects)):
+        for i in range(len(recent_projects)):
             project = recent_projects[i]
             text = u'{} - {}'.format(os.path.basename(project), project)
             self.project_list.addItem(text)
@@ -104,9 +104,9 @@ class ExistingProjectDialog(QtGui.QDialog):
 class Validator(QtGui.QRegExpValidator):
     def __init__(self, regex, action, parent=None):
         self.exp = regex
-        self.action = unicode
-        if hasattr(unicode, action):
-            self.action = getattr(unicode, action)
+        self.action = str
+        if hasattr(str, action):
+            self.action = getattr(str, action)
         reg = QtCore.QRegExp(regex)
         super(Validator, self).__init__(reg, parent)
 
@@ -115,7 +115,7 @@ class Validator(QtGui.QRegExpValidator):
         return result
 
     def fixup(self, text):
-        return ''.join(re.findall(self.exp, self.action(unicode(text))))
+        return ''.join(re.findall(self.exp, self.action(text)))
 
 
 class BackgroundThread(QtCore.QThread):
@@ -184,7 +184,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def update_recent_files(self):
         previous_files = self.load_recent_projects()
         self.recent_separator.setVisible(len(previous_files) > 0)
-        for i in xrange(len(previous_files)):
+        for i in range(len(previous_files)):
             text = u'{} - {}'.format(i+1, os.path.basename(previous_files[i]))
             action = self.recent_file_actions[i]
             action.setText(text)
@@ -223,7 +223,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.recent_file_actions = []
 
-        for i in xrange(MAX_RECENT):
+        for i in range(MAX_RECENT):
             if i == 9:
                 key = 0
             else:
@@ -381,7 +381,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.cancel_button.setEnabled(False)
 
     def show_error(self, exception):
-        QtGui.QMessageBox.information(self, 'Error!', unicode(exception))
+        QtGui.QMessageBox.information(self, 'Error!', exception)
 
     def disable_ui_while_working(self):
         self.option_settings_enabled(False)
@@ -413,10 +413,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         for sgroup in self.settings['setting_groups']+[self.settings['web2exe_settings']]:
             for sname, setting in sgroup.items():
                 if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
-                    setting_path = unicode(setting.value)
+                    setting_path = setting.value
                 else:
                     setting_path = utils.path_join(self.project_dir(),
-                                                   unicode(setting.value))
+                                                   setting.value)
 
                 if setting.required and not setting.value:
                     settings_valid = False
@@ -605,7 +605,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     @progress_text.setter
     def progress_text(self, value):
-        self.progress_label.setText(unicode(value))
+        self.progress_label.setText(value)
 
     def run_in_background(self, method_name, callback):
         self.thread = BackgroundThread(self, method_name)
@@ -737,7 +737,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         path = QUrl.toPercentEncoding(url.path(), "!$&'()*+,;=:@/")
         if path:
-            path = unicode(path)
+            path = str(path)
         else:
             path = u'/'
 
@@ -1115,7 +1115,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         text.textChanged.connect(self.call_with_object('setting_changed',
                                                        text, setting))
         if setting.value:
-            text.setText(unicode(setting.value))
+            text.setText(setting.value)
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -1139,7 +1139,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                      text, setting))
 
         if setting.value:
-            text.setText(unicode(setting.value))
+            text.setText(setting.value)
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -1167,7 +1167,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                    text, setting))
 
         if setting.value:
-            text.setText(unicode(setting.value))
+            text.setText(setting.value)
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
@@ -1195,12 +1195,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         old_val = setting.default_value
 
                     setting.value = old_val.replace('\\', '\\\\')
-                    widget.setText(unicode(old_val))
+                    widget.setText(old_val)
                 elif setting.type == 'strings':
                     old_val = []
                     if setting.default_value is not None:
                         old_val = setting.default_value
-                    setting.value = [unicode(v.replace('\\', '\\\\')) for v in old_val]
+                    setting.value = [v.replace('\\', '\\\\') for v in old_val]
                     widget.setText(','.join(setting.value))
 
                 elif setting.type == 'check':
@@ -1222,10 +1222,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def set_kiosk_emulation_options(self, is_checked):
         if is_checked:
             width_field = self.find_child_by_name('width')
-            width_field.setText(unicode(self.desktop_width))
+            width_field.setText(self.desktop_width)
 
             height_field = self.find_child_by_name('height')
-            height_field.setText(unicode(self.desktop_height))
+            height_field.setText(self.desktop_height)
 
             toolbar_field = self.find_child_by_name('toolbar')
             toolbar_field.setChecked(not is_checked)
@@ -1367,7 +1367,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         slider.setStatusTip(setting.description)
         slider.setToolTip(setting.description)
 
-        range_label = QtGui.QLabel(unicode(setting.default_value))
+        range_label = QtGui.QLabel(str(setting.default_value))
         range_label.setMaximumWidth(30)
 
         slider.valueChanged.connect(self.call_with_object('_update_range_label',
@@ -1384,7 +1384,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return hlayout
 
     def _update_range_label(self, label, value):
-        label.setText(unicode(value))
+        label.setText(value)
 
     def load_package_json(self, json_path=None):
         setting_list = super(MainWindow, self).load_package_json(json_path)
