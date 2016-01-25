@@ -662,18 +662,32 @@ class CommandBase(object):
 
             output_dir = utils.path_join(self.output_dir(), self.project_name())
             if os.path.exists(output_dir):
-                utils.rmtree(output_dir, ignore_errors=True)
+                try:
+                    utils.rmtree(output_dir)
+                except OSError as e:
+                    error = u'Failed to remove output directory: {}.'.format(output_dir)
+                    error += '\nError recieved: {}'.format(e)
+                    self.logger.error(error)
+                    self.output_err += error
 
             temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
+
             if os.path.exists(temp_dir):
-                utils.rmtree(temp_dir, ignore_errors=True)
+                try:
+                    utils.rmtree(temp_dir)
+                except OSError as e:
+                    error = u'Failed to remove temporary directory: {}.'.format(temp_dir)
+                    error += '\nError recieved: {}'.format(e)
+                    self.logger.error(error)
+                    self.output_err += error
 
             self.progress_text = 'Making new directories...\n'
 
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
-            os.makedirs(temp_dir)
+            if not os.path.exists(temp_dir):
+                os.makedirs(temp_dir)
 
             self.copy_files_to_project_folder()
 
@@ -806,7 +820,13 @@ class CommandBase(object):
             self.logger.error(error)
             self.output_err += error
         finally:
-            utils.rmtree(temp_dir, ignore_errors=True)
+            try:
+                utils.rmtree(temp_dir)
+            except OSError as e:
+                error = u'Failed to remove temporary directory: {}.'.format(temp_dir)
+                error += '\nError recieved: {}'.format(e)
+                self.logger.error(error)
+                self.output_err += error
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
