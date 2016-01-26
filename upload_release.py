@@ -23,12 +23,12 @@ def main():
     rel_id = None
     upload_url = None
 
-    github_user = raw_input('Github user:')
+    github_user = input('Github user:')
 
     password = getpass.getpass('Password:')
 
     if req.status_code == 200:
-        print 'Found release:', version
+        print('Found release:', version)
         json_data = json.loads(req.text)
         tag = json_data.get('tag_name', '')
         cur_ver = Version(tag[1:-1])
@@ -39,7 +39,7 @@ def main():
             upload_url = json_data['upload_url'].replace('{?name,label}', '')
 
     if not update:
-        print 'Creating release:', version
+        print('Creating release:', version)
         data = {'tag_name': version,
                 'target_commitish': 'master',
                 'name': 'Web2Executable ' + version}
@@ -49,21 +49,21 @@ def main():
             upload_url = json_data['upload_url'].replace('{?name,label}', '')
             rel_id = json_data['id']
         else:
-            print 'Authentication failed!'
+            print('Authentication failed!')
 
     if rel_id:
         zip_files = glob('*.zip')
         for zip_file in zip_files:
             with open(zip_file, 'rb') as zipf:
                 file_data = zipf.read()
-                print 'Uploading file {}...'.format(zip_file)
+                print('Uploading file {}...'.format(zip_file))
                 data = {'name': zip_file}
                 headers = {'Content-Type': 'application/zip'}
                 r = requests.post(upload_url, params=data, data=file_data, headers=headers, auth=(github_user, password))
                 if r.status_code == 201:
-                    print 'Success!'
+                    print('Success!')
                 else:
-                    print 'Error:', r.text
+                    print('Error:', r.text)
 
 
 if __name__ == '__main__':
