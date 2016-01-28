@@ -659,24 +659,12 @@ class CommandBase(object):
 
             output_dir = utils.path_join(self.output_dir(), self.project_name())
             if os.path.exists(output_dir):
-                try:
-                    utils.rmtree(output_dir)
-                except OSError as e:
-                    error = u'Failed to remove output directory: {}.'.format(output_dir)
-                    error += '\nError recieved: {}'.format(e)
-                    self.logger.error(error)
-                    self.output_err += error
+                utils.rmtree(output_dir, onerror=self.remove_readonly)
 
             temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
 
             if os.path.exists(temp_dir):
-                try:
-                    utils.rmtree(temp_dir)
-                except OSError as e:
-                    error = u'Failed to remove temporary directory: {}.'.format(temp_dir)
-                    error += '\nError recieved: {}'.format(e)
-                    self.logger.error(error)
-                    self.output_err += error
+                utils.rmtree(temp_dir, onerror=self.remove_readonly)
 
             self.progress_text = 'Making new directories...\n'
 
@@ -817,13 +805,7 @@ class CommandBase(object):
             self.logger.error(error)
             self.output_err += error
         finally:
-            try:
-                utils.rmtree(temp_dir)
-            except OSError as e:
-                error = u'Failed to remove temporary directory: {}.'.format(temp_dir)
-                error += '\nError recieved: {}'.format(e)
-                self.logger.error(error)
-                self.output_err += error
+            utils.rmtree(temp_dir, onerror=self.remove_readonly)
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
@@ -901,6 +883,16 @@ class CommandBase(object):
                 self.progress_text += '.'
                 time.sleep(2)
             output, err = proc.communicate()
+
+    def remove_readonly(self, action, name, exc):
+        try:
+            os.chmod(name, stat.S_IWRITE)
+            os.remove(name)
+        except Exception as e:
+            error = u'Failed to remove file: {}.'.format(name)
+            error += '\nError recieved: {}'.format(e)
+            self.logger.error(error)
+            self.output_err += error
 
     def copy_files_to_project_folder(self):
         old_dir = CWD
