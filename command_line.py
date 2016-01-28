@@ -1221,7 +1221,7 @@ def main():
             else:
                 if setting.values:
                     kwargs.update({'choices': setting.values})
-                    setting.description += u' Possible values: {{{}}}'.format(', '.join([x for x in setting.values]))
+                    setting.description += u' Possible values: {{{}}}'.format(', '.join([str(x) for x in setting.values]))
                     kwargs.update({'metavar': ''})
                 else:
                     kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
