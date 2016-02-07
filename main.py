@@ -1384,7 +1384,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return hlayout
 
     def _update_range_label(self, label, value):
-        label.setText(value)
+        label.setText(str(value))
 
     def load_package_json(self, json_path=None):
         setting_list = super(MainWindow, self).load_package_json(json_path)
