@@ -26,10 +26,12 @@ def path_join(base, *rest):
 
     rpath = u'/'.join(new_rest)
 
-    if os.path.isabs(rpath):
-        return rpath
-    else:
-        return base + u'/' + rpath
+    if not os.path.isabs(rpath):
+        rpath = base + u'/' + rpath
+
+    if is_windows():
+        rpath = rpath.replace('/', '\\')
+    return rpath
 
 def get_data_path(dir_path):
     parts = dir_path.split('/')
@@ -52,31 +54,31 @@ def get_data_file_path(file_path):
 def rmtree(path, **kwargs):
     if is_windows():
         if os.path.isabs(path):
-            path = u'//?/'+path
+            path = '\\\\?\\'+path.replace('/', '\\')
     shutil.rmtree(path, **kwargs)
 
 def copy(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'//?/'+src
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'//?/'+dest
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copy(src, dest, **kwargs)
 
 def move(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'//?/'+src
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'//?/'+dest
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.move(src, dest, **kwargs)
 
 def copytree(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'//?/'+src
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'//?/'+dest
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copytree(src, dest, **kwargs)
 
 
@@ -102,6 +104,8 @@ def zip_files(zip_file_name, *args, **kwargs):
     old_path = os.getcwd()
 
     for arg in args:
+        if is_windows():
+            arg = '\\\\?\\'+os.path.abspath(arg).replace('/', '\\')
         if os.path.exists(arg):
             if os.path.isdir(arg):
                 directory = os.path.abspath(arg)
