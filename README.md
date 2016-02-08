@@ -77,11 +77,14 @@ Error: The application has failed to start because the side by side configuratio
 
 ### Run from Python Source
 
-Requires the pyside library and python 2.X. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed. I've only tested the code on python 2.7.3-2.7.9, so I can't speak about any lower version, but it should work as long as PySide is supported.
-
+Requires the PySide library and Python 3.4.3 or higher. If you want to replace the icon in the Windows Exe's, this will do it automatically with the latest code if you have PIL or Pillow installed.
 ####GUI
 
-Install dependencies **PIL or Pillow** for icon and icns exporting.
+Install dependencies:
+
+```
+pip install -r requirements.txt
+```
 
 Initiate submodules:
 
@@ -92,7 +95,7 @@ git submodule update --init --recursive
 Run with:
 
 ```
-python main.py
+python3.4 main.py
 ```
 
 It's a pretty simple app. Just point it to the directory where your web application lives, customize the options (the two marked with a star are the only ones required) and then choose your export options. The app will export under YOUR_OUTPUT_DIR/YOUR_APP_NAME. 
@@ -103,10 +106,10 @@ Dependencies: configobj (install with pip) and Pillow if you want icon replaceme
 
 Run the command_line.py with the --help option to see a list of export options. Optionally, if you don't want to install python, there are builds for Mac and Windows in the command_line_builds folder of this repository.
 
-Example usage (if using the prebuilt binary, replace `python command_line.py` with the exe name):
+Example usage (if using the prebuilt binary, replace `python3.4 command_line.py` with the exe name):
 
 ```
-python command_line.py /var/www/html/CargoBlaster/ --main html/index.html --export-to linux-x64 windows mac --width 900 --height 700 --nw-version 0.10.5
+python3.4 command_line.py /var/www/html/CargoBlaster/ --main html/index.html --export-to linux-x64 windows mac --width 900 --height 700 --nw-version 0.10.5
 ```
 
 ###GUI Instructions
