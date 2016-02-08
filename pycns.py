@@ -27,7 +27,7 @@ def pngs_from_icns(icns_path):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print 'Usage: pycns input_image_path output_icns_path'
+        print('Usage: pycns input_image_path output_icns_path')
         sys.exit()
 
     image_path, icns_path = sys.argv[1:3]

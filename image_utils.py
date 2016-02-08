@@ -1,10 +1,10 @@
-from cStringIO import StringIO
+from io import BytesIO
 try:
     from PIL import Image as im
     IMAGE_UTILS_AVAILABLE = True
     Image = im.open
     def resize(image, size):
-        output = StringIO()
+        output = BytesIO()
         back = im.new('RGBA', size, (0,0,0,0))
         image.thumbnail(size, im.ANTIALIAS)
         offset = [0,0]
@@ -32,7 +32,7 @@ def nearest_icon_size(width, height):
     if maximum <= SMALLEST_ICON_SIZE:
         return SMALLEST_ICON_SIZE
 
-    for i in xrange(len(sizes)-1):
+    for i in range(len(sizes)-1):
         current_size = sizes[i]
         next_size = sizes[i+1]
         if current_size > maximum >= next_size:

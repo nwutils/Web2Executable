@@ -3,7 +3,7 @@ import image_utils
 import png
 from PIL import Image
 import os
-from cStringIO import StringIO
+from io import BytesIO
 
 #---------------------CONSTANTS-----------------------------------------------#
 
@@ -406,13 +406,13 @@ def encode_rle24(data):
     if len(data) >= 65536:
         dataTempCount = 4
 
-    for colorOffset in xrange(3):
+    for colorOffset in range(3):
         runCount = 0
         runLength = 1
         runType = 0
         dataRun[0] = data[colorOffset]
 
-        for dataInCount in xrange(1, dataInChanSize):
+        for dataInCount in range(1, dataInChanSize):
             dataByte = data[colorOffset+(dataInCount*4)]
             if runLength < 2:
                 dataRun[runLength] = dataByte
@@ -588,7 +588,7 @@ def to_bytes(n, length, endianess='big'):
 def from_bytes(byte_str):
     bits = (len(byte_str)-1)*8
     result = 0
-    for i in xrange(len(byte_str)):
+    for i in range(len(byte_str)):
         result = (byte_str[i] << bits) + result
         bits -= 8
     return result
@@ -625,12 +625,9 @@ class Printable(object):
         return u', '.join(vals)
 
     def __repr__(self):
-        return unicode(self)
+        return str(self)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return u'{} [{}]'.format(self.__class__.__name__, self._dict_string())
 
 
@@ -953,7 +950,7 @@ class ICNSInfo(Printable):
             icon_info.iconPixelDepth = 1
             icon_info.iconBitDepth = 1
         else:
-            print 'Unable to parse icon type {}'.format(type_to_str(type))
+            print('Unable to parse icon type {}'.format(type_to_str(type)))
             icon_info.iconType = ICNS_NULL_TYPE
 
         icon_info.iconRawDataSize = icon_info.iconSize.height * icon_info.iconSize.width * icon_info.iconBitDepth/ICNS_BYTE_BITS
@@ -1112,9 +1109,9 @@ class ICNSElement(Structure):
                 icns_info.iconRawDataSize = width * height * 4
                 icns_info.data = bytearray(list(png_data))
             else:
-                image = Image.open(StringIO(data))
+                image = Image.open(BytesIO(data))
                 mode_to_bpp = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
-                output = StringIO()
+                output = BytesIO()
                 image.save(output, format='PNG')
                 bpp = mode_to_bpp[image.mode]
                 png_data = bytearray(output.getvalue())
@@ -1291,7 +1288,7 @@ def get_image_with_mask(icns_data, element_type):
                             ICNS_32x32_8BIT_DATA,
                             ICNS_16x16_8BIT_DATA,
                             ICNS_16x12_8BIT_DATA]:
-            for pixel_id in xrange(pixel_count):
+            for pixel_id in range(pixel_count):
                 color_index = old_data[data_count]
                 color_rgb = icns_colormap_8[color_index]
                 new_data[pixel_id*4+0] = color_rgb[0]
@@ -1304,7 +1301,7 @@ def get_image_with_mask(icns_data, element_type):
                               ICNS_16x16_4BIT_DATA,
                               ICNS_16x12_4BIT_DATA]:
             data_value = 0
-            for pixel_id in xrange(pixel_count):
+            for pixel_id in range(pixel_count):
                 if (pixel_id % 2) == 0:
                     data_value = old_data[data_count]
                     data_count += 1
@@ -1319,7 +1316,7 @@ def get_image_with_mask(icns_data, element_type):
                               ICNS_16x16_1BIT_DATA,
                               ICNS_16x12_1BIT_DATA]:
             data_value = 0
-            for pixel_id in xrange(pixel_count):
+            for pixel_id in range(pixel_count):
                 if (pixel_id % 8) == 0:
                     data_value = old_data[data_count]
                     data_count += 1
@@ -1341,7 +1338,7 @@ def get_image_with_mask(icns_data, element_type):
                      ICNS_16x16_8BIT_MASK]:
         pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
         data_count = 0
-        for pixel_id in xrange(pixel_count):
+        for pixel_id in range(pixel_count):
             icns_image.data[pixel_id*4+3] = mask_image.data[data_count]
             data_count += 1
 
@@ -1352,7 +1349,7 @@ def get_image_with_mask(icns_data, element_type):
         pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
         data_count = 0
         data_value = 0
-        for pixel_id in xrange(pixel_count):
+        for pixel_id in range(pixel_count):
             if (pixel_id % 8) == 0:
                 data_value = mask_image.data[data_count]
                 data_count += 1
@@ -1360,7 +1357,7 @@ def get_image_with_mask(icns_data, element_type):
             data_value = data_value << 1
             icns_image.data[pixel_id*4+3] = color_index
     im = Image.frombytes('RGBA', [icns_image.iconSize.width,icns_image.iconSize.height],str(icns_image.data))
-    output = StringIO()
+    output = BytesIO()
     im.save(output, format='PNG')
     icns_image.data = bytearray(output.getvalue())
 

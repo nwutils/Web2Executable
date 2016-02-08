@@ -1,7 +1,7 @@
 pillow
-qt
 pyside
 configobj
 semantic_version
 appdirs
 validators
+requests

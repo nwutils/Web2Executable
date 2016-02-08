@@ -20,16 +20,9 @@ def get_temp_dir():
     return tempfile.gettempdir()
 
 def path_join(base, *rest):
-    try:
-        base = base.decode('utf-8')
-    except UnicodeEncodeError:
-        base = unicode(base)
     new_rest = []
-    for i in xrange(len(rest)):
-        try:
-            new_rest.append(rest[i].decode('utf-8'))
-        except UnicodeEncodeError:
-            new_rest.append(unicode(rest[i]))
+    for i in range(len(rest)):
+        new_rest.append(str(rest[i]))
 
     rpath = u'/'.join(new_rest)
 
@@ -37,7 +30,7 @@ def path_join(base, *rest):
         rpath = base + u'/' + rpath
 
     if is_windows():
-        rpath = rpath.replace(u'/', u'\\')
+        rpath = rpath.replace('/', '\\')
     return rpath
 
 def get_data_path(dir_path):
@@ -61,31 +54,31 @@ def get_data_file_path(file_path):
 def rmtree(path, **kwargs):
     if is_windows():
         if os.path.isabs(path):
-            path = u'\\\\?\\'+path.replace(u'/', u'\\')
+            path = '\\\\?\\'+path.replace('/', '\\')
     shutil.rmtree(path, **kwargs)
 
 def copy(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'\\\\?\\'+src.replace(u'/', u'\\')
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'\\\\?\\'+dest.replace(u'/', u'\\')
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copy(src, dest, **kwargs)
 
 def move(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'\\\\?\\'+src.replace(u'/', u'\\')
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'\\\\?\\'+dest.replace(u'/', u'\\')
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.move(src, dest, **kwargs)
 
 def copytree(src, dest, **kwargs):
     if is_windows():
         if os.path.isabs(src):
-            src = u'\\\\?\\'+src.replace(u'/', u'\\')
+            src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
-            dest = u'\\\\?\\'+dest.replace(u'/', u'\\')
+            dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copytree(src, dest, **kwargs)
 
 def log(*args):
@@ -111,7 +104,7 @@ def zip_files(zip_file_name, *args, **kwargs):
 
     for arg in args:
         if is_windows():
-            arg = u'\\\\?\\'+os.path.abspath(arg).replace(u'/', u'\\')
+            arg = '\\\\?\\'+os.path.abspath(arg).replace('/', '\\')
         if os.path.exists(arg):
             if os.path.isdir(arg):
                 directory = os.path.abspath(arg)

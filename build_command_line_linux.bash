@@ -19,4 +19,4 @@ rm Web2ExeLinux/files/error.log Web2ExeLinux/files/last_project_path.txt Web2Exe
 zip -r -9 Web2ExeLinux-CMD.zip Web2ExeLinux-CMD/*
 zip -r -9 Web2ExeLinux-${VERSION}.zip Web2ExeLinux
 
-python upload_release.py
+python3.4 upload_release.py
