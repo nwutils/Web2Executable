@@ -9,9 +9,9 @@ try:
         image.thumbnail(size, im.ANTIALIAS)
         offset = [0,0]
         if image.size[0] >= image.size[1]:
-            offset[1] = back.size[1]/2-image.size[1]/2
+            offset[1] = int(back.size[1]/2-image.size[1]/2)
         else:
-            offset[0] = back.size[0]/2-image.size[0]/2
+            offset[0] = int(back.size[0]/2-image.size[0]/2)
         back.paste(image, tuple(offset))
         back.save(output, image.format)
         contents = output.getvalue()

@@ -669,12 +669,12 @@ class Structure(Printable):
         values = []
         for field in self._fields:
             val = getattr(self, field.name)
-            if not isinstance(val, basestring):
+            if not isinstance(val, (str, bytes)):
                 values.append(val)
                 s += struct_symbols[field.size]
             else:
                 s += 'B'*len(val)
-                values.extend(struct.unpack('>'+'B'*len(val), val))
+                values.extend(struct.unpack('>'+'B'*len(val), bytearray(val, encoding='utf-8')))
 
 
         return struct.pack(s, *values)
@@ -984,7 +984,7 @@ class ICNSHeader(Structure):
         for icon_s in icon_sizes:
             icns_element = ICNSElement()
 
-            im_data = image_utils.resize(image, (icon_s, icon_s))
+            im_data = image_utils.resize(image, (int(icon_s), int(icon_s)))
 
             png_file = png.Reader(bytes=im_data)
 
