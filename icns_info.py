@@ -1097,6 +1097,10 @@ class ICNSElement(Structure):
 
                 width, height, png_data, stats_dict = png_file.read_flat()
 
+                im = Image.frombytes('RGBA', [width, height], bytes(png_data))
+                output = BytesIO()
+                im.save(output, format='PNG')
+
                 bpp = stats_dict['bitdepth'] * 4
 
                 icns_info = ICNSInfo()
@@ -1107,14 +1111,14 @@ class ICNSElement(Structure):
                 icns_info.iconChannels = 4 if bpp == 32 else 1
                 icns_info.iconPixelDepth = int(bpp / icns_info.iconChannels)
                 icns_info.iconRawDataSize = int(width * height * 4)
-                icns_info.data = bytes(png_data)
+                icns_info.data = bytes(output.getvalue())
             else:
                 image = Image.open(BytesIO(data))
                 mode_to_bpp = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
                 output = BytesIO()
                 image.save(output, format='PNG')
                 bpp = mode_to_bpp[image.mode]
-                png_data = bytearray(output.getvalue())
+                png_data = bytes(output.getvalue())
 
                 icns_info = ICNSInfo()
                 icns_info.isImage = 1
@@ -1124,7 +1128,7 @@ class ICNSElement(Structure):
                 icns_info.iconChannels = 4 if bpp == 32 else 1
                 icns_info.iconPixelDepth = int(bpp / icns_info.iconChannels)
                 icns_info.iconRawDataSize = int(image.size[0] * image.size[1] * 4)
-                icns_info.data = bytes(png_data)
+                icns_info.data = png_data
 
         else:
             icns_info = ICNSInfo.from_type(icon_type)
@@ -1264,99 +1268,100 @@ def icns_parse_family_data(icns_data):
 def get_image_with_mask(icns_data, element_type):
     element = ICNSElement.from_family(icns_data, element_type)
     icns_image = element.get_image()
-    if element_type not in [ICNS_256x256_32BIT_ARGB_DATA,
-                            ICNS_512x512_32BIT_ARGB_DATA,
-                            ICNS_1024x1024_32BIT_ARGB_DATA]:
-        mask_type = get_mask_type_for_icon_type(element_type)
-        mask_element = ICNSElement.from_family(icns_data, mask_type)
-        mask_image = mask_element.get_mask()
+    if element_type in [ICNS_256x256_32BIT_ARGB_DATA,
+                        ICNS_512x512_32BIT_ARGB_DATA,
+                        ICNS_1024x1024_32BIT_ARGB_DATA]:
+        return icns_image
+    mask_type = get_mask_type_for_icon_type(element_type)
+    mask_element = ICNSElement.from_family(icns_data, mask_type)
+    mask_image = mask_element.get_mask()
 
+    old_bit_depth = icns_image.iconPixelDepth * icns_image.iconChannels
+    if old_bit_depth < 32:
         old_bit_depth = icns_image.iconPixelDepth * icns_image.iconChannels
-        if old_bit_depth < 32:
-            old_bit_depth = icns_image.iconPixelDepth * icns_image.iconChannels
-            pixel_count = icns_image.iconSize.width * icns_image.iconSize.height
-            new_block_size = icns_image.iconSize.width * 32
-            new_data_size = new_block_size * icns_image.iconSize.height
+        pixel_count = icns_image.iconSize.width * icns_image.iconSize.height
+        new_block_size = icns_image.iconSize.width * 32
+        new_data_size = new_block_size * icns_image.iconSize.height
 
-            old_data = icns_image.data
-            new_data = bytearray(int(new_data_size))
+        old_data = icns_image.data
+        new_data = bytearray(int(new_data_size))
 
-            data_count = 0
+        data_count = 0
 
-            if element_type in [ICNS_48x48_8BIT_DATA,
-                                ICNS_32x32_8BIT_DATA,
-                                ICNS_16x16_8BIT_DATA,
-                                ICNS_16x12_8BIT_DATA]:
-                for pixel_id in range(pixel_count):
-                    color_index = old_data[data_count]
-                    color_rgb = icns_colormap_8[color_index]
-                    new_data[pixel_id*4+0] = color_rgb[0]
-                    new_data[pixel_id*4+1] = color_rgb[1]
-                    new_data[pixel_id*4+2] = color_rgb[2]
-                    new_data[pixel_id*4+3] = 0xFF
-                    data_count += 1
-            elif element_type in [ICNS_48x48_4BIT_DATA,
-                                  ICNS_32x32_4BIT_DATA,
-                                  ICNS_16x16_4BIT_DATA,
-                                  ICNS_16x12_4BIT_DATA]:
-                data_value = 0
-                for pixel_id in range(pixel_count):
-                    if (pixel_id % 2) == 0:
-                        data_value = old_data[data_count]
-                        data_count += 1
-                    color_index = (data_value & 0xF0) >> 4
-                    color_rgb = icns_colormap_4[color_index]
-                    new_data[pixel_id*4+0] = color_rgb[0]
-                    new_data[pixel_id*4+1] = color_rgb[1]
-                    new_data[pixel_id*4+2] = color_rgb[2]
-                    new_data[pixel_id*4+3] = 0xFF
-            elif element_type in [ICNS_48x48_1BIT_DATA,
-                                  ICNS_32x32_1BIT_DATA,
-                                  ICNS_16x16_1BIT_DATA,
-                                  ICNS_16x12_1BIT_DATA]:
-                data_value = 0
-                for pixel_id in range(pixel_count):
-                    if (pixel_id % 8) == 0:
-                        data_value = old_data[data_count]
-                        data_count += 1
-                    color_index = 0x00 if (data_value & 0x80) else 0xFF
-                    data_value = data_value << 1
-                    new_data[pixel_id*4+0] = color_index
-                    new_data[pixel_id*4+1] = color_index
-                    new_data[pixel_id*4+2] = color_index
-                    new_data[pixel_id*4+3] = 0xFF
-
-            icns_image.iconPixelDepth = 8
-            icns_image.iconChannels = 4
-            icns_image.iconRawDataSize = int(new_data_size)
-            icns_image.data = new_data
-
-        if mask_type in [ICNS_128x128_8BIT_MASK,
-                         ICNS_48x48_8BIT_MASK,
-                         ICNS_32x32_8BIT_MASK,
-                         ICNS_16x16_8BIT_MASK]:
-            pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
-            data_count = 0
+        if element_type in [ICNS_48x48_8BIT_DATA,
+                            ICNS_32x32_8BIT_DATA,
+                            ICNS_16x16_8BIT_DATA,
+                            ICNS_16x12_8BIT_DATA]:
             for pixel_id in range(pixel_count):
-                icns_image.data[pixel_id*4+3] = mask_image.data[data_count]
+                color_index = old_data[data_count]
+                color_rgb = icns_colormap_8[color_index]
+                new_data[pixel_id*4+0] = color_rgb[0]
+                new_data[pixel_id*4+1] = color_rgb[1]
+                new_data[pixel_id*4+2] = color_rgb[2]
+                new_data[pixel_id*4+3] = 0xFF
                 data_count += 1
-
-        elif mask_type in [ICNS_48x48_1BIT_MASK,
-                           ICNS_32x32_1BIT_MASK,
-                           ICNS_16x16_1BIT_MASK,
-                           ICNS_16x12_1BIT_MASK]:
-            pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
-            data_count = 0
+        elif element_type in [ICNS_48x48_4BIT_DATA,
+                              ICNS_32x32_4BIT_DATA,
+                              ICNS_16x16_4BIT_DATA,
+                              ICNS_16x12_4BIT_DATA]:
+            data_value = 0
+            for pixel_id in range(pixel_count):
+                if (pixel_id % 2) == 0:
+                    data_value = old_data[data_count]
+                    data_count += 1
+                color_index = (data_value & 0xF0) >> 4
+                color_rgb = icns_colormap_4[color_index]
+                new_data[pixel_id*4+0] = color_rgb[0]
+                new_data[pixel_id*4+1] = color_rgb[1]
+                new_data[pixel_id*4+2] = color_rgb[2]
+                new_data[pixel_id*4+3] = 0xFF
+        elif element_type in [ICNS_48x48_1BIT_DATA,
+                              ICNS_32x32_1BIT_DATA,
+                              ICNS_16x16_1BIT_DATA,
+                              ICNS_16x12_1BIT_DATA]:
             data_value = 0
             for pixel_id in range(pixel_count):
                 if (pixel_id % 8) == 0:
-                    data_value = mask_image.data[data_count]
+                    data_value = old_data[data_count]
                     data_count += 1
-                color_index = 0xFF if (data_value & 0x80) else 0x00
+                color_index = 0x00 if (data_value & 0x80) else 0xFF
                 data_value = data_value << 1
-                icns_image.data[pixel_id*4+3] = color_index
+                new_data[pixel_id*4+0] = color_index
+                new_data[pixel_id*4+1] = color_index
+                new_data[pixel_id*4+2] = color_index
+                new_data[pixel_id*4+3] = 0xFF
 
+        icns_image.iconPixelDepth = 8
+        icns_image.iconChannels = 4
+        icns_image.iconRawDataSize = int(new_data_size)
+        icns_image.data = new_data
+
+    if mask_type in [ICNS_128x128_8BIT_MASK,
+                     ICNS_48x48_8BIT_MASK,
+                     ICNS_32x32_8BIT_MASK,
+                     ICNS_16x16_8BIT_MASK]:
+        pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
+        data_count = 0
+        for pixel_id in range(pixel_count):
+            icns_image.data[pixel_id*4+3] = mask_image.data[data_count]
+            data_count += 1
+
+    elif mask_type in [ICNS_48x48_1BIT_MASK,
+                       ICNS_32x32_1BIT_MASK,
+                       ICNS_16x16_1BIT_MASK,
+                       ICNS_16x12_1BIT_MASK]:
+        pixel_count = mask_image.iconSize.width * mask_image.iconSize.height
+        data_count = 0
+        data_value = 0
+        for pixel_id in range(pixel_count):
+            if (pixel_id % 8) == 0:
+                data_value = mask_image.data[data_count]
+                data_count += 1
+            color_index = 0xFF if (data_value & 0x80) else 0x00
+            data_value = data_value << 1
+            icns_image.data[pixel_id*4+3] = color_index
     im = Image.frombytes('RGBA', [icns_image.iconSize.width,icns_image.iconSize.height], bytes(icns_image.data))
+    #print(icns_image.data)
     output = BytesIO()
     im.save(output, format='PNG')
     icns_image.data = bytes(output.getvalue())
