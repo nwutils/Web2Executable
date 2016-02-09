@@ -581,7 +581,7 @@ def get_mask_type_for_icon_type(icon_type):
 
 def to_bytes(n, length, endianess='big'):
     h = '%x' % n
-    s = ('0'*(len(h) % 2) + h).zfill(length*2).decode('hex')
+    s = bytes.fromhex(('0'*(len(h) % 2) + h).zfill(length*2))
     return s if endianess == 'big' else s[::-1]
 
 
@@ -601,7 +601,7 @@ def type_to_str(type):
     s.append(type >> 8 & 0xff)
     s.append(type & 0xff)
     s.append(0)
-    return str(s)
+    return bytes(s)
 
 class Printable(object):
     def _attrs(self):
@@ -953,8 +953,8 @@ class ICNSInfo(Printable):
             print('Unable to parse icon type {}'.format(type_to_str(type)))
             icon_info.iconType = ICNS_NULL_TYPE
 
-        icon_info.iconRawDataSize = icon_info.iconSize.height * icon_info.iconSize.width * icon_info.iconBitDepth/ICNS_BYTE_BITS
-        icon_info.data = bytearray(icon_info.iconRawDataSize)
+        icon_info.iconRawDataSize = int(icon_info.iconSize.height * icon_info.iconSize.width * icon_info.iconBitDepth/ICNS_BYTE_BITS)
+        icon_info.data = bytearray(int(icon_info.iconRawDataSize))
 
         return icon_info
 
@@ -999,12 +999,12 @@ class ICNSHeader(Structure):
 
             icns_info = ICNSInfo()
             icns_info.isImage = 1
-            icns_info.iconSize.width = icon_size
-            icns_info.iconSize.height = icon_size
+            icns_info.iconSize.width = int(icon_size)
+            icns_info.iconSize.height = int(icon_size)
             icns_info.iconBitDepth = bpp
             icns_info.iconChannels = 4 if bpp == 32 else 1
-            icns_info.iconPixelDepth = bpp / icns_info.iconChannels
-            icns_info.iconRawDataSize = width * height * 4
+            icns_info.iconPixelDepth = int(bpp / icns_info.iconChannels)
+            icns_info.iconRawDataSize = int(width * height * 4)
             icns_info.data = bytearray(list(data))
 
             icon_type = icns_info.get_image_type()
@@ -1101,12 +1101,12 @@ class ICNSElement(Structure):
 
                 icns_info = ICNSInfo()
                 icns_info.isImage = 1
-                icns_info.iconSize.width = width
-                icns_info.iconSize.height = height
+                icns_info.iconSize.width = int(width)
+                icns_info.iconSize.height = int(height)
                 icns_info.iconBitDepth = bpp
                 icns_info.iconChannels = 4 if bpp == 32 else 1
-                icns_info.iconPixelDepth = bpp / icns_info.iconChannels
-                icns_info.iconRawDataSize = width * height * 4
+                icns_info.iconPixelDepth = int(bpp / icns_info.iconChannels)
+                icns_info.iconRawDataSize = int(width * height * 4)
                 icns_info.data = bytearray(list(png_data))
             else:
                 image = Image.open(BytesIO(data))
@@ -1118,12 +1118,12 @@ class ICNSElement(Structure):
 
                 icns_info = ICNSInfo()
                 icns_info.isImage = 1
-                icns_info.iconSize.width = image.size[0]
-                icns_info.iconSize.height = image.size[1]
+                icns_info.iconSize.width = int(image.size[0])
+                icns_info.iconSize.height = int(image.size[1])
                 icns_info.iconBitDepth = bpp
                 icns_info.iconChannels = 4 if bpp == 32 else 1
-                icns_info.iconPixelDepth = bpp / icns_info.iconChannels
-                icns_info.iconRawDataSize = image.size[0] * image.size[1] * 4
+                icns_info.iconPixelDepth = int(bpp / icns_info.iconChannels)
+                icns_info.iconRawDataSize = int(image.size[0] * image.size[1] * 4)
                 icns_info.data = png_data
 
         else:
@@ -1185,7 +1185,7 @@ class ICNSElement(Structure):
         icns_info = ICNSInfo.from_type(mask_type)
         mask_bit_depth = icns_info.iconSize.width * icns_info.iconSize.height
         mask_data_size = icns_info.iconRawDataSize
-        mask_data_row_size = icns_info.iconSize.width * mask_bit_depth / ICNS_BYTE_BITS
+        mask_data_row_size = int(icns_info.iconSize.width * mask_bit_depth / ICNS_BYTE_BITS)
 
         if mask_type in [ICNS_128x128_8BIT_MASK,
                          ICNS_48x48_8BIT_MASK,
@@ -1193,7 +1193,7 @@ class ICNSElement(Structure):
                          ICNS_16x16_8BIT_MASK]:
             data_count = 0
             while data_count < icns_info.iconSize.height:
-                data_pos = data_count * mask_data_row_size
+                data_pos = int(data_count * mask_data_row_size)
                 icns_info.data[data_pos:data_pos+mask_data_row_size] = data[data_pos:data_pos+mask_data_row_size]
                 data_count += 1
 
@@ -1280,7 +1280,7 @@ def get_image_with_mask(icns_data, element_type):
         new_data_size = new_block_size * icns_image.iconSize.height
 
         old_data = icns_image.data
-        new_data = bytearray(new_data_size)
+        new_data = bytearray(int(new_data_size))
 
         data_count = 0
 
@@ -1329,7 +1329,7 @@ def get_image_with_mask(icns_data, element_type):
 
         icns_image.iconPixelDepth = 8
         icns_image.iconChannels = 4
-        icns_image.iconRawDataSize = new_data_size
+        icns_image.iconRawDataSize = int(new_data_size)
         icns_image.data = new_data
 
     if mask_type in [ICNS_128x128_8BIT_MASK,
@@ -1356,7 +1356,8 @@ def get_image_with_mask(icns_data, element_type):
             color_index = 0xFF if (data_value & 0x80) else 0x00
             data_value = data_value << 1
             icns_image.data[pixel_id*4+3] = color_index
-    im = Image.frombytes('RGBA', [icns_image.iconSize.width,icns_image.iconSize.height],str(icns_image.data))
+    im = Image.frombytes('RGBA', [icns_image.iconSize.width,icns_image.iconSize.height], bytes(icns_image.data))
+    #print(icns_image.data)
     output = BytesIO()
     im.save(output, format='PNG')
     icns_image.data = bytearray(output.getvalue())
@@ -1398,7 +1399,7 @@ def extract_icons(all_icns_data):
                     image_count += 1
 
                     image_data = get_image_with_mask(icns_data, element.TypeID)
-                    image_data.data = str(image_data.data)
+                    image_data.data = bytes(image_data.data)
                     data.append(image_data)
 
             offset += element.Size
