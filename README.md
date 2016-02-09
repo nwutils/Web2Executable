@@ -130,7 +130,7 @@ If you have an issue, please check the FAQ before filing an issue to see if it h
 
 ### Additional Info
 
-[Changelog](https://github.com/jyapayne/Web2Executable/wiki/Changelog)
+[Changelog](https://github.com/jyapayne/Web2Executable/releases)
 
 [Screenshots](https://github.com/jyapayne/Web2Executable/wiki/Screenshots)
 
