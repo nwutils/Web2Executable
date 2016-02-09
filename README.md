@@ -19,6 +19,12 @@ If you got some value out of using my app, consider donating a dollar to keep me
 
 On the other hand, if you have any annoyances with the application and want to contribute to making it better for everyone, please file an issue with "Annoyance:" as the first part of the title. Sometimes it's hard to know what is annoying for people and input is much appreciated :)
 
+What About Electron?
+--------------------
+
+If you want to export using Electron instead of NW.js, try [Electrify](https://github.com/jyapayne/Electrify), my other app based on Web2Executable.
+
+
 Who's Using It?
 ---------------
 
