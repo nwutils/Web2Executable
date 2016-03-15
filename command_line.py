@@ -492,13 +492,15 @@ class CommandBase(object):
             dic.update({'webkit': {}, 'window': {}})
             dic.update(self.original_packagejson)
             for setting_name, setting in self.settings['app_settings'].items():
-                if setting.value is not None:
+                if setting.value is not None and setting.value != '':
                     dic[setting_name] = setting.value
                     if setting_name == 'keywords':
                         dic[setting_name] = re.findall('\w+', setting.value)
+                else:
+                    dic.pop(setting_name, '')
 
             for setting_name, setting in self.settings['window_settings'].items():
-                if setting.value is not None:
+                if setting.value is not None and setting.value != '':
                     if 'height' in setting.name or 'width' in setting.name:
                         try:
                             dic['window'][setting_name] = int(setting.value)
@@ -506,10 +508,14 @@ class CommandBase(object):
                             pass
                     else:
                         dic['window'][setting_name] = setting.value
+                else:
+                    dic['window'].pop(setting_name, '')
 
             for setting_name, setting in self.settings['webkit_settings'].items():
-                if setting.value is not None:
+                if setting.value is not None and setting.value != '':
                     dic['webkit'][setting_name] = setting.value
+                else:
+                    dic['webkit'].pop(setting_name, '')
 
         if not global_json:
             dl_export_items = (list(self.settings['download_settings'].items()) +
@@ -607,14 +613,6 @@ class CommandBase(object):
                     extract_path = get_data_path('files/'+setting.name)
                     setting.extract(extract_path, version)
 
-                    #if os.path.exists(save_file_path):
-                    #    setting_fbytes = setting.get_file_bytes(version)
-                    #    for dest_file, fbytes in setting_fbytes:
-                    #        path = utils.path_join(extract_path, dest_file)
-                    #        with open(path, 'wb+') as d:
-                    #            d.write(fbytes)
-                    #        self.progress_text += '.'
-
                     self.progress_text += '.'
 
             except (tarfile.ReadError, zipfile.BadZipfile) as e:
@@ -690,12 +688,18 @@ class CommandBase(object):
 
             zip_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
-            app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
+            uncomp_setting = self.get_setting('uncompressed_folder')
+            uncompressed = uncomp_setting.value
 
-            utils.copytree(self.project_dir(), app_nw_folder,
-                           ignore=shutil.ignore_patterns(output_dir))
+            if uncompressed:
+                app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
 
-            zip_files(zip_file, self.project_dir(), exclude_paths=[output_dir])
+                utils.copytree(self.project_dir(), app_nw_folder,
+                               ignore=shutil.ignore_patterns(output_dir))
+
+            else:
+                zip_files(zip_file, self.project_dir(), exclude_paths=[output_dir])
+
             for ex_setting in self.settings['export_settings'].values():
                 if ex_setting.value:
                     self.progress_text = '\n'
@@ -704,8 +708,8 @@ class CommandBase(object):
                     export_dest = utils.path_join(output_dir, ex_setting.name)
                     versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
 
-                    minor = int(versions[1])
-                    if minor >= 12:
+                    minor_ver = int(versions[1])
+                    if minor_ver >= 12:
                         export_dest = export_dest.replace('node-webkit', 'nwjs')
 
                     if os.path.exists(export_dest):
@@ -719,18 +723,16 @@ class CommandBase(object):
                     self.progress_text += '.'
 
                     if 'mac' in ex_setting.name:
-                        uncomp_setting = self.get_setting('uncompressed_folder')
-                        uncompressed = uncomp_setting.value
                         app_path = utils.path_join(export_dest,
-                                                self.project_name()+'.app')
+                                                   self.project_name()+'.app')
 
                         try:
                             utils.move(utils.path_join(export_dest,
-                                                     'nwjs.app'),
+                                                       'nwjs.app'),
                                        app_path)
                         except IOError:
                             utils.move(utils.path_join(export_dest,
-                                                     'node-webkit.app'),
+                                                       'node-webkit.app'),
                                        app_path)
 
                         plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
@@ -749,18 +751,18 @@ class CommandBase(object):
                         self.progress_text += '.'
 
                         app_nw_res = utils.path_join(app_path,
-                                                  'Contents',
-                                                  'Resources',
-                                                  'app.nw')
+                                                     'Contents',
+                                                     'Resources',
+                                                     'app.nw')
 
                         if uncompressed:
                             utils.copytree(app_nw_folder, app_nw_res)
                         else:
                             utils.copy(zip_file, app_nw_res)
                         self.create_icns_for_app(utils.path_join(app_path,
-                                                              'Contents',
-                                                              'Resources',
-                                                              'nw.icns'))
+                                                                 'Contents',
+                                                                 'Resources',
+                                                                 'nw.icns'))
 
                         self.progress_text += '.'
                     else:
@@ -771,7 +773,7 @@ class CommandBase(object):
                             windows = True
 
                         nw_path = utils.path_join(export_dest,
-                                               ex_setting.dest_files[0])
+                                                  ex_setting.dest_files[0])
 
                         if windows:
                             self.replace_icon_in_exe(nw_path)
@@ -779,12 +781,20 @@ class CommandBase(object):
                         self.compress_nw(nw_path)
 
                         dest_binary_path = utils.path_join(export_dest,
-                                                        self.project_name() +
-                                                        ext)
+                                                           self.project_name() +
+                                                           ext)
                         if 'linux' in ex_setting.name:
                             self.make_desktop_file(dest_binary_path, export_dest)
 
-                        join_files(dest_binary_path, nw_path, zip_file)
+                        if minor_ver >= 13:
+                            package_loc = utils.path_join(export_dest, 'package.nw')
+                            if uncompressed:
+                                utils.copytree(app_nw_folder, package_loc)
+                                utils.copy(nw_path, dest_binary_path)
+                            else:
+                                join_files(dest_binary_path, nw_path, zip_file)
+                        else:
+                            join_files(dest_binary_path, nw_path, zip_file)
 
                         sevenfivefive = (stat.S_IRWXU |
                                          stat.S_IRGRP |
