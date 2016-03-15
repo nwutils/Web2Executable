@@ -180,7 +180,8 @@ class Setting(object):
             versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
 
             minor = int(versions[1])
-            if minor >= 12:
+            major = int(versions[0])
+            if minor >= 12 or major > 0:
                 path = path.replace('node-webkit', 'nwjs')
 
             return path
@@ -245,7 +246,8 @@ class Setting(object):
                 versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
 
                 minor = int(versions[1])
-                if minor >= 12:
+                major = int(versions[0])
+                if minor >= 12 or major > 0:
                     extract_p = extract_p.replace('node-webkit', 'nwjs')
 
                 if self.file_ext == '.gz':
@@ -445,7 +447,8 @@ class CommandBase(object):
         versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
 
         minor = int(versions[1])
-        if minor >= 12:
+        major = int(versions[0])
+        if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
 
         try:
@@ -488,10 +491,19 @@ class CommandBase(object):
 
         dic = {'webexe_settings': {}}
 
+        version = self.selected_version()
+        versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+        major_ver = int(versions[0])
+        minor_ver = int(versions[1])
+
         if not global_json:
             dic.update({'webkit': {}, 'window': {}})
             dic.update(self.original_packagejson)
             for setting_name, setting in self.settings['app_settings'].items():
+                if major_ver > 0 or minor_ver >= 13:
+                    dic.pop(setting_name, '')
+                    setting_name = setting_name.replace('-', '_')
+
                 if setting.value is not None and setting.value != '':
                     dic[setting_name] = setting.value
                     if setting_name == 'keywords':
@@ -500,6 +512,9 @@ class CommandBase(object):
                     dic.pop(setting_name, '')
 
             for setting_name, setting in self.settings['window_settings'].items():
+                if major_ver > 0 or minor_ver >= 13:
+                    dic['window'].pop(setting_name, '')
+                    setting_name = setting_name.replace('-', '_')
                 if setting.value is not None and setting.value != '':
                     if 'height' in setting.name or 'width' in setting.name:
                         try:
@@ -512,6 +527,9 @@ class CommandBase(object):
                     dic['window'].pop(setting_name, '')
 
             for setting_name, setting in self.settings['webkit_settings'].items():
+                if major_ver > 0 or minor_ver >= 13:
+                    dic['webkit'].pop(setting_name, '')
+                    setting_name = setting_name.replace('-', '_')
                 if setting.value is not None and setting.value != '':
                     dic['webkit'][setting_name] = setting.value
                 else:
@@ -604,7 +622,9 @@ class CommandBase(object):
     def extract_files(self):
         self.extract_error = None
         location = self.get_setting('download_dir').value
+
         version = self.selected_version()
+
         for setting_name, setting in self.settings['export_settings'].items():
             save_file_path = setting.save_file_path(version,
                                                     location)
@@ -709,7 +729,8 @@ class CommandBase(object):
                     versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
 
                     minor_ver = int(versions[1])
-                    if minor_ver >= 12:
+                    major_ver = int(versions[0])
+                    if minor_ver >= 12 or major_ver > 0:
                         export_dest = export_dest.replace('node-webkit', 'nwjs')
 
                     if os.path.exists(export_dest):
@@ -759,10 +780,21 @@ class CommandBase(object):
                             utils.copytree(app_nw_folder, app_nw_res)
                         else:
                             utils.copy(zip_file, app_nw_res)
-                        self.create_icns_for_app(utils.path_join(app_path,
-                                                                 'Contents',
-                                                                 'Resources',
-                                                                 'nw.icns'))
+
+                        if minor_ver >= 13 or major_ver > 0:
+                            self.create_icns_for_app(utils.path_join(app_path,
+                                                                     'Contents',
+                                                                     'Resources',
+                                                                     'app.icns'))
+                            self.create_icns_for_app(utils.path_join(app_path,
+                                                                     'Contents',
+                                                                     'Resources',
+                                                                     'document.icns'))
+                        else:
+                            self.create_icns_for_app(utils.path_join(app_path,
+                                                                     'Contents',
+                                                                     'Resources',
+                                                                     'nw.icns'))
 
                         self.progress_text += '.'
                     else:
@@ -786,7 +818,7 @@ class CommandBase(object):
                         if 'linux' in ex_setting.name:
                             self.make_desktop_file(dest_binary_path, export_dest)
 
-                        if minor_ver >= 13:
+                        if minor_ver >= 13 or major_ver > 0:
                             package_loc = utils.path_join(export_dest, 'package.nw')
                             if uncompressed:
                                 utils.copytree(app_nw_folder, package_loc)
@@ -1091,7 +1123,8 @@ class CommandBase(object):
         versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
 
         minor = int(versions[1])
-        if minor >= 12:
+        major = int(versions[0])
+        if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
 
         url = path

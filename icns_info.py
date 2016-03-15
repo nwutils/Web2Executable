@@ -398,10 +398,10 @@ icns_colormap_8 =[
 
 def encode_rle24(data):
     dataRun = bytearray(130)
-    dataInChanSize = len(data)/4
+    dataInChanSize = int(len(data)/4)
     dataTempCount = 0
 
-    dataTemp = bytearray(len(data) + len(data)/4)
+    dataTemp = bytearray(int(len(data) + dataInChanSize))
 
     if len(data) >= 65536:
         dataTempCount = 4
@@ -497,7 +497,7 @@ def decode_rle24(data, pixel_count):
     data_offset = 0
     pixel_offset = 0
     i = 0
-    dest_icon_data = bytearray(pixel_count*4)
+    dest_icon_data = bytearray(int(pixel_count*4))
 
     if from_bytes(data[:4]) == 0:
         data_offset = 4
