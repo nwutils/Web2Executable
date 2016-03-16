@@ -181,17 +181,13 @@ class Setting(object):
 
             minor = int(versions[1])
             major = int(versions[0])
+
             if minor >= 12 or major > 0:
                 path = path.replace('node-webkit', 'nwjs')
 
             return path
 
         return ''
-
-    def extract_file_path(self, version):
-        if self.extract_file:
-            return self.extract_file.format(version)
-        return u''
 
     def set_extra_attributes_from_keyword_args(self, **kwargs):
         for undefined_key, undefined_value in kwargs.items():
@@ -229,48 +225,6 @@ class Setting(object):
                 abs_file = utils.path_join(dir_name, p)
                 utils.move(abs_file, ex_path)
             utils.rmtree(dir_name, ignore_errors=True)
-
-    def get_file_bytes(self, version):
-        fbytes = []
-
-        path = self.save_file_path(version)
-
-        file = self.extract_class(path,
-                                  *self.extract_args)
-        for extract_path, dest_path in zip(self.extract_files,
-                                           self.dest_files):
-            new_bytes = None
-            try:
-                extract_p = extract_path.format(version)
-
-                versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
-
-                minor = int(versions[1])
-                major = int(versions[0])
-                if minor >= 12 or major > 0:
-                    extract_p = extract_p.replace('node-webkit', 'nwjs')
-
-                if self.file_ext == '.gz':
-                    new_bytes = file.extractfile(extract_p).read()
-                elif self.file_ext == '.zip':
-                    new_bytes = file.read(extract_p)
-            except KeyError as e:
-                logger.error(str(e))
-                # dirty hack to support old versions of nw
-                if 'no item named' in str(e):
-                    extract_path = '/'.join(extract_path.split('/')[1:])
-                    try:
-                        if self.file_ext == '.gz':
-                            new_bytes = file.extractfile(extract_path).read()
-                        elif self.file_ext == '.zip':
-                            new_bytes = file.read(extract_path)
-                    except KeyError as e:
-                        logger.error(str(e))
-
-            if new_bytes is not None:
-                fbytes.append((dest_path, new_bytes))
-
-        return fbytes
 
     def __repr__(self):
         url = ''
@@ -491,10 +445,9 @@ class CommandBase(object):
 
         dic = {'webexe_settings': {}}
 
-        version = self.selected_version()
-        versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
-        major_ver = int(versions[0])
-        minor_ver = int(versions[1])
+        versions = self.get_version_tuple()
+        major_ver = versions[0]
+        minor_ver = versions[1]
 
         if not global_json:
             dic.update({'webkit': {}, 'window': {}})
@@ -670,184 +623,313 @@ class CommandBase(object):
             p.write(exe_path)
             p = None
 
-    def make_output_dirs(self):
-        self.output_err = ''
+    def write_package_json(self):
+        json_file = utils.path_join(self.project_dir(), 'package.json')
+
+        global_json = utils.get_data_file_path('files/global.json')
+
+        if self.output_package_json:
+            with codecs.open(json_file, 'w+', encoding='utf-8') as f:
+                f.write(self.generate_json())
+
+
+        with codecs.open(global_json, 'w+', encoding='utf-8') as f:
+            f.write(self.generate_json(global_json=True))
+
+    def clean_dirs(self, *dirs):
+        for directory in dirs:
+            if os.path.exists(directory):
+                utils.rmtree(directory, onerror=self.remove_readonly)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+    def handle_mac_export(self, export_dest):
+        app_path = utils.path_join(export_dest,
+                                   self.project_name()+'.app')
+
         try:
-            self.progress_text = 'Removing old output directory...\n'
+            utils.move(utils.path_join(export_dest,
+                                       'nwjs.app'),
+                       app_path)
+        except IOError:
+            utils.move(utils.path_join(export_dest,
+                                       'node-webkit.app'),
+                       app_path)
 
-            output_dir = utils.path_join(self.output_dir(), self.project_name())
-            if os.path.exists(output_dir):
-                utils.rmtree(output_dir, onerror=self.remove_readonly)
+        plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
 
-            temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
+        plist_dict = plistlib.readPlist(plist_path)
 
-            if os.path.exists(temp_dir):
-                utils.rmtree(temp_dir, onerror=self.remove_readonly)
+        plist_dict['CFBundleDisplayName'] = self.project_name()
+        plist_dict['CFBundleName'] = self.project_name()
+        version_setting = self.get_setting('version')
+        plist_dict['CFBundleShortVersionString'] = version_setting.value
+        plist_dict['CFBundleVersion'] = version_setting.value
 
-            self.progress_text = 'Making new directories...\n'
+        plistlib.writePlist(plist_dict, plist_path)
 
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
+        self.progress_text += '.'
 
-            if not os.path.exists(temp_dir):
-                os.makedirs(temp_dir)
+        app_nw_res = utils.path_join(app_path,
+                                     'Contents',
+                                     'Resources',
+                                     'app.nw')
 
-            self.copy_files_to_project_folder()
+        if uncompressed:
+            utils.copytree(app_loc, app_nw_res)
+        else:
+            utils.copy(app_loc, app_nw_res)
 
-            json_file = utils.path_join(self.project_dir(), 'package.json')
-
-            global_json = utils.get_data_file_path('files/global.json')
-
-            if self.output_package_json:
-                with codecs.open(json_file, 'w+', encoding='utf-8') as f:
-                    f.write(self.generate_json())
-
-
-            with codecs.open(global_json, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_json(global_json=True))
-
-            zip_file = utils.path_join(temp_dir, self.project_name()+'.nw')
-
-            uncomp_setting = self.get_setting('uncompressed_folder')
-            uncompressed = uncomp_setting.value
-
-            if uncompressed:
-                app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
-
-                utils.copytree(self.project_dir(), app_nw_folder,
-                               ignore=shutil.ignore_patterns(output_dir))
-
-            else:
-                zip_files(zip_file, self.project_dir(), exclude_paths=[output_dir])
-
-            for ex_setting in self.settings['export_settings'].values():
-                if ex_setting.value:
-                    self.progress_text = '\n'
-                    name = ex_setting.display_name
-                    self.progress_text = u'Making files for {}...'.format(name)
-                    export_dest = utils.path_join(output_dir, ex_setting.name)
-                    versions = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
-
-                    minor_ver = int(versions[1])
-                    major_ver = int(versions[0])
-                    if minor_ver >= 12 or major_ver > 0:
-                        export_dest = export_dest.replace('node-webkit', 'nwjs')
-
-                    if os.path.exists(export_dest):
-                        utils.rmtree(export_dest, ignore_errors=True)
-
-                    # shutil will make the directory for us
-                    utils.copytree(get_data_path('files/'+ex_setting.name),
-                                   export_dest,
-                                    ignore=shutil.ignore_patterns('place_holder.txt'))
-                    utils.rmtree(get_data_path('files/'+ex_setting.name), ignore_errors=True)
-                    self.progress_text += '.'
-
-                    if 'mac' in ex_setting.name:
-                        app_path = utils.path_join(export_dest,
-                                                   self.project_name()+'.app')
-
-                        try:
-                            utils.move(utils.path_join(export_dest,
-                                                       'nwjs.app'),
-                                       app_path)
-                        except IOError:
-                            utils.move(utils.path_join(export_dest,
-                                                       'node-webkit.app'),
-                                       app_path)
-
-                        plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
-
-                        plist_dict = plistlib.readPlist(plist_path)
-
-                        plist_dict['CFBundleDisplayName'] = self.project_name()
-                        plist_dict['CFBundleName'] = self.project_name()
-                        version_setting = self.get_setting('version')
-                        plist_dict['CFBundleShortVersionString'] = version_setting.value
-                        plist_dict['CFBundleVersion'] = version_setting.value
-
-                        plistlib.writePlist(plist_dict, plist_path)
-
-
-                        self.progress_text += '.'
-
-                        app_nw_res = utils.path_join(app_path,
+        if minor_ver >= 13 or major_ver > 0:
+            self.create_icns_for_app(utils.path_join(app_path,
                                                      'Contents',
                                                      'Resources',
-                                                     'app.nw')
+                                                     'app.icns'))
+            self.create_icns_for_app(utils.path_join(app_path,
+                                                     'Contents',
+                                                     'Resources',
+                                                     'document.icns'))
+            strings_path = utils.path_join(app_path,
+                                           'Contents',
+                                           'Resources',
+                                           'en.lproj',
+                                           'InfoPlist.strings')
 
-                        if uncompressed:
-                            utils.copytree(app_nw_folder, app_nw_res)
-                        else:
-                            utils.copy(zip_file, app_nw_res)
+            strings = open(strings_path, mode='rb').read()
+            strings = str(strings)
+            strings = strings.replace('nwjs', self.project_name())
+            with open(strings_path, mode='wb+') as f:
+                f.write(bytes(strings, 'utf-8'))
 
-                        if minor_ver >= 13 or major_ver > 0:
-                            self.create_icns_for_app(utils.path_join(app_path,
-                                                                     'Contents',
-                                                                     'Resources',
-                                                                     'app.icns'))
-                            self.create_icns_for_app(utils.path_join(app_path,
-                                                                     'Contents',
-                                                                     'Resources',
-                                                                     'document.icns'))
-                        else:
-                            self.create_icns_for_app(utils.path_join(app_path,
-                                                                     'Contents',
-                                                                     'Resources',
-                                                                     'nw.icns'))
+        else:
+            self.create_icns_for_app(utils.path_join(app_path,
+                                                     'Contents',
+                                                     'Resources',
+                                                     'nw.icns'))
 
-                        self.progress_text += '.'
-                    else:
-                        ext = ''
-                        windows = False
-                        if 'windows' in ex_setting.name:
-                            ext = '.exe'
-                            windows = True
+        self.progress_text += '.'
 
-                        nw_path = utils.path_join(export_dest,
-                                                  ex_setting.dest_files[0])
+    def get_export_dest(self, ex_setting, output_dir):
+        export_dest = utils.path_join(output_dir, ex_setting.name)
 
-                        if windows:
-                            self.replace_icon_in_exe(nw_path)
+        versions = self.get_version_tuple()
+        major_ver, minor_ver, _ = versions
 
-                        self.compress_nw(nw_path)
+        if minor_ver >= 12 or major_ver > 0:
+            export_dest = export_dest.replace('node-webkit', 'nwjs')
 
-                        dest_binary_path = utils.path_join(export_dest,
-                                                           self.project_name() +
-                                                           ext)
-                        if 'linux' in ex_setting.name:
-                            self.make_desktop_file(dest_binary_path, export_dest)
+        return export_dest
 
-                        if minor_ver >= 13 or major_ver > 0:
-                            package_loc = utils.path_join(export_dest, 'package.nw')
-                            if uncompressed:
-                                utils.copytree(app_nw_folder, package_loc)
-                                utils.copy(nw_path, dest_binary_path)
-                            else:
-                                join_files(dest_binary_path, nw_path, zip_file)
-                        else:
-                            join_files(dest_binary_path, nw_path, zip_file)
+    def copy_export_files(self, ex_setting, export_dest):
+        if os.path.exists(export_dest):
+            utils.rmtree(export_dest)
 
-                        sevenfivefive = (stat.S_IRWXU |
-                                         stat.S_IRGRP |
-                                         stat.S_IXGRP |
-                                         stat.S_IROTH |
-                                         stat.S_IXOTH)
-                        os.chmod(dest_binary_path, sevenfivefive)
+        # shutil will make the directory for us
+        utils.copytree(get_data_path('files/'+ex_setting.name),
+                       export_dest,
+                        ignore=shutil.ignore_patterns('place_holder.txt'))
+        utils.rmtree(get_data_path('files/'+ex_setting.name))
 
-                        self.progress_text += '.'
+    def replace_localized_app_name(self, app_path):
+        strings_path = utils.path_join(app_path,
+                                       'Contents',
+                                       'Resources',
+                                       'en.lproj',
+                                       'InfoPlist.strings')
 
-                        if os.path.exists(nw_path):
-                            os.remove(nw_path)
+        strings = open(strings_path, mode='rb').read()
+        strings = str(strings)
+        strings = strings.replace('nwjs', self.project_name())
+        with open(strings_path, mode='wb+') as f:
+            f.write(bytes(strings, 'utf-8'))
 
+    def replace_plist(self, app_path):
+        plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
+
+        plist_dict = plistlib.readPlist(plist_path)
+
+        plist_dict['CFBundleDisplayName'] = self.project_name()
+        plist_dict['CFBundleName'] = self.project_name()
+        version_setting = self.get_setting('version')
+        plist_dict['CFBundleShortVersionString'] = version_setting.value
+        plist_dict['CFBundleVersion'] = version_setting.value
+
+        plistlib.writePlist(plist_dict, plist_path)
+
+    def process_mac_setting(self, app_loc, export_dest, uncompressed):
+        app_path = utils.path_join(export_dest,
+                                   self.project_name()+'.app')
+
+        try:
+            utils.move(utils.path_join(export_dest,
+                                       'nwjs.app'),
+                       app_path)
+        except IOError:
+            utils.move(utils.path_join(export_dest,
+                                       'node-webkit.app'),
+                       app_path)
+
+        self.replace_plist(app_path)
+
+        app_nw_res = utils.path_join(app_path,
+                                     'Contents',
+                                     'Resources',
+                                     'app.nw')
+
+        if uncompressed:
+            utils.copytree(app_loc, app_nw_res)
+        else:
+            utils.copy(app_loc, app_nw_res)
+
+        self.progress_text += '.'
+
+        versions = self.get_version_tuple()
+        major_ver, minor_ver, _ = versions
+
+        if minor_ver >= 13 or major_ver > 0:
+            self.create_icns_for_app(utils.path_join(app_path,
+                                                     'Contents',
+                                                     'Resources',
+                                                     'app.icns'))
+            self.create_icns_for_app(utils.path_join(app_path,
+                                                     'Contents',
+                                                     'Resources',
+                                                     'document.icns'))
+            self.replace_localized_app_name(app_path)
+
+        else:
+            self.create_icns_for_app(utils.path_join(app_path,
+                                                     'Contents',
+                                                     'Resources',
+                                                     'nw.icns'))
+
+        self.progress_text += '.'
+
+
+    def process_export_setting(self, ex_setting, output_dir,
+                               temp_dir, app_loc, uncompressed):
+        if ex_setting.value:
+            self.progress_text = '\n'
+
+            name = ex_setting.display_name
+
+            self.progress_text = u'Making files for {}...'.format(name)
+
+            export_dest = self.get_export_dest(ex_setting, output_dir)
+
+            self.copy_export_files(ex_setting, export_dest)
+
+            self.progress_text += '.'
+
+            if 'mac' in ex_setting.name:
+                self.process_mac_setting(app_loc, export_dest, uncompressed)
+            else:
+                nw_path = utils.path_join(export_dest,
+                                          ex_setting.binary_location)
+
+                ext = ''
+                if 'windows' in ex_setting.name:
+                    ext = '.exe'
+                    self.replace_icon_in_exe(nw_path)
+
+                self.compress_nw(nw_path)
+
+                dest_binary_path = utils.path_join(export_dest,
+                                                   self.project_name() +
+                                                   ext)
+                if 'linux' in ex_setting.name:
+                    self.make_desktop_file(dest_binary_path, export_dest)
+
+                self.copy_executable(export_dest, dest_binary_path,
+                                     nw_path, app_loc, uncompressed)
+
+                self.set_executable(dest_binary_path)
+
+                self.progress_text += '.'
+
+                if os.path.exists(nw_path):
+                    os.remove(nw_path)
+
+
+
+    def make_output_dirs(self):
+        output_dir = utils.path_join(self.output_dir(), self.project_name())
+        temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
+
+        self.progress_text = 'Making new directories...\n'
+
+        self.clean_dirs(temp_dir, output_dir)
+
+        self.copy_files_to_project_folder()
+        self.write_package_json()
+
+        app_loc = self.get_app_nw_loc(temp_dir, output_dir)
+
+        uncomp_setting = self.get_setting('uncompressed_folder')
+        uncompressed = uncomp_setting.value
+
+        for ex_setting in self.settings['export_settings'].values():
+            self.process_export_setting(ex_setting, output_dir, temp_dir,
+                                        app_loc, uncompressed)
+
+
+    def try_make_output_dirs(self):
+        self.output_err = ''
+        try:
+            self.make_output_dirs()
         except Exception:
             error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
-                                                                             sys.exc_info()[1],
-                                                                             sys.exc_info()[2])])
+                                                                    sys.exc_info()[1],
+                                                                    sys.exc_info()[2])])
             self.logger.error(error)
             self.output_err += error
         finally:
+            temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
             utils.rmtree(temp_dir, onerror=self.remove_readonly)
+
+    def get_app_nw_loc(self, temp_dir, output_dir):
+        app_file = utils.path_join(temp_dir, self.project_name()+'.nw')
+
+        uncomp_setting = self.get_setting('uncompressed_folder')
+        uncompressed = uncomp_setting.value
+
+        if uncompressed:
+            app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
+
+            utils.copytree(self.project_dir(), app_nw_folder,
+                           ignore=shutil.ignore_patterns(output_dir))
+            return app_nw_folder
+        else:
+            zip_files(app_file, self.project_dir(), exclude_paths=[output_dir])
+            return app_file
+
+    def get_version_tuple(self):
+        strs = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+        return [int(s) for s in strs]
+
+    def copy_executable(self, export_path, dest_path,
+                        nw_path, app_loc, uncompressed):
+        versions = self.get_version_tuple()
+        major_ver, minor_ver, _ = versions
+
+        if minor_ver >= 13 or major_ver > 0:
+            package_loc = utils.path_join(export_path, 'package.nw')
+            if uncompressed:
+                utils.copytree(app_loc, package_loc)
+                utils.copy(nw_path, dest_path)
+            else:
+                join_files(dest_path, nw_path, app_loc)
+        else:
+            join_files(dest_path, nw_path, app_loc)
+
+
+    def set_executable(self, path):
+        sevenfivefive = (stat.S_IRWXU |
+                         stat.S_IRGRP |
+                         stat.S_IXGRP |
+                         stat.S_IROTH |
+                         stat.S_IXOTH)
+        os.chmod(path, sevenfivefive)
 
     def make_desktop_file(self, nw_path, export_dest):
         icon_set = self.get_setting('icon')
@@ -1120,10 +1202,9 @@ class CommandBase(object):
 
         location = self.get_setting('download_dir').value
 
-        versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
+        versions = self.get_version_tuple()
+        major, minor, _ = versions
 
-        minor = int(versions[1])
-        major = int(versions[0])
         if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
 
@@ -1198,10 +1279,9 @@ class CommandBase(object):
 
     def delete_files(self):
         for ex_setting in self.settings['export_settings'].values():
-            for dest_file in ex_setting.dest_files:
-                f_path = get_data_file_path('files/{}/{}'.format(ex_setting.name, dest_file))
-                if os.path.exists(f_path):
-                    os.remove(f_path)
+            f_path = get_data_file_path('files/{}/'.format(ex_setting.name))
+            if os.path.exists(f_path):
+                utils.rmtree(f_path)
 
 
 class ArgParser(argparse.ArgumentParser):
