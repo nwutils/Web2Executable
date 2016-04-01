@@ -13,6 +13,9 @@ ZIP_MODE = zipfile.ZIP_STORED
 
 DEBUG = False
 
+def replace_right(source, target, replacement, replacements=None):
+    return replacement.join(source.rsplit(target, replacements))
+
 def is_windows():
     return platform.system() == 'Windows'
 

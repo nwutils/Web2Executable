@@ -211,8 +211,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.setStatusBar(status_bar)
 
         self.project_path = ''
-        #if platform.system() == 'Darwin':
-        #    self.menuBar().setNativeMenuBar(False)
         self.project_menu = self.menuBar().addMenu('File')
         browse_action = QtGui.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
@@ -692,6 +690,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def download_file(self, path, setting):
         version_file = self.settings['base_url'].format(self.selected_version())
 
+        sdk_build_setting = self.get_setting('sdk_build')
+        sdk_build = sdk_build_setting.value
+
         location = self.get_setting('download_dir').value
 
         versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
@@ -700,18 +701,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if minor >= 12:
             path = path.replace('node-webkit', 'nwjs')
 
+        if minor >= 13 and sdk_build:
+            path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
+
         self.progress_text = u'Downloading {}'.format(path.replace(version_file, ''))
 
         url = QUrl(path)
-        file_name = setting.save_file_path(self.selected_version(), location)
+        file_name = setting.save_file_path(self.selected_version(), location, sdk_build)
 
         archive_exists = QFile.exists(file_name)
-
-        #dest_files_exist = False
-
-        # for dest_file in setting.dest_files:
-        #    dest_file_path = utils.path_join('files', setting.name, dest_file)
-        #    dest_files_exist &= QFile.exists(dest_file_path)
 
         forced = self.get_setting('force_download').value
 
@@ -793,8 +791,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         vlayout.setContentsMargins(10, 5, 10, 5)
 
         vlayout.addLayout(title_hbox)
-        #vlayout.addLayout(input_layout)
-        #vlayout.addLayout(output_layout)
 
         group_box.setLayout(vlayout)
 
@@ -883,8 +879,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.save_project_path(directory)
         self.update_recent_files()
         self.reset_settings()
-        #self.input_line.setText(directory)
-
 
         proj_name = os.path.basename(directory)
         self.title_label.setText(proj_name)

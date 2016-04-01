@@ -164,7 +164,7 @@ class Setting(object):
                 self.extract_class = TarFile.open
                 self.extract_args = ('r:gz',)
 
-    def save_file_path(self, version, location=None):
+    def save_file_path(self, version, location=None, sdk_build=False):
         if location:
             self.save_path = location
         else:
@@ -185,6 +185,9 @@ class Setting(object):
             if minor >= 12 or major > 0:
                 path = path.replace('node-webkit', 'nwjs')
 
+            if sdk_build:
+                path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
+
             return path
 
         return ''
@@ -193,11 +196,11 @@ class Setting(object):
         for undefined_key, undefined_value in kwargs.items():
             setattr(self, undefined_key, undefined_value)
 
-    def extract(self, ex_path, version):
+    def extract(self, ex_path, version, sdk_build=False):
         if os.path.exists(ex_path):
             utils.rmtree(ex_path, ignore_errors=True)
 
-        path = self.save_file_path(version)
+        path = self.save_file_path(version, sdk_build=sdk_build)
 
         file = self.extract_class(path,
                                   *self.extract_args)
@@ -400,10 +403,16 @@ class CommandBase(object):
         path = setting.url.format(version, version)
         versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
 
+        sdk_build_setting = self.get_setting('sdk_build')
+        sdk_build = sdk_build_setting.value
+
         minor = int(versions[1])
         major = int(versions[0])
         if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
+
+        if minor >= 13 and sdk_build:
+            path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
         try:
             return self.download_file(setting.url.format(version, version),
@@ -576,15 +585,18 @@ class CommandBase(object):
         self.extract_error = None
         location = self.get_setting('download_dir').value
 
+        sdk_build_setting = self.get_setting('sdk_build')
+        sdk_build = sdk_build_setting.value
         version = self.selected_version()
 
         for setting_name, setting in self.settings['export_settings'].items():
             save_file_path = setting.save_file_path(version,
-                                                    location)
+                                                    location,
+                                                    sdk_build)
             try:
                 if setting.value:
                     extract_path = get_data_path('files/'+setting.name)
-                    setting.extract(extract_path, version)
+                    setting.extract(extract_path, version, sdk_build)
 
                     self.progress_text += '.'
 
@@ -1202,14 +1214,20 @@ class CommandBase(object):
 
         location = self.get_setting('download_dir').value
 
+        sdk_build_setting = self.get_setting('sdk_build')
+        sdk_build = sdk_build_setting.value
+
         versions = self.get_version_tuple()
         major, minor, _ = versions
 
         if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
 
+        if minor >= 13 and sdk_build:
+            path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
+
         url = path
-        file_name = setting.save_file_path(self.selected_version(), location)
+        file_name = setting.save_file_path(self.selected_version(), location, sdk_build)
         tmp_file = list(os.path.split(file_name))
         tmp_file[-1] = '.tmp.' + tmp_file[-1]
         tmp_file = os.sep.join(tmp_file)
