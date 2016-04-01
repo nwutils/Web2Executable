@@ -185,7 +185,7 @@ class Setting(object):
             if minor >= 12 or major > 0:
                 path = path.replace('node-webkit', 'nwjs')
 
-            if sdk_build:
+            if minor >= 13 and sdk_build:
                 path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
             return path
