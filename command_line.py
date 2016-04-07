@@ -368,7 +368,7 @@ class CommandBase(object):
 
             old_versions = set(nw_version.values)
             old_versions = old_versions.union(union_versions)
-            new_versions = set(re.findall('(\S+) / \S+', html))
+            new_versions = set(re.findall('(\S+) / \d{2}-\d{2}-\d{4}', html))
 
             union_versions = old_versions.union(new_versions)
 
