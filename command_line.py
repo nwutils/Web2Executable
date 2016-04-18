@@ -462,7 +462,7 @@ class CommandBase(object):
             dic.update({'webkit': {}, 'window': {}})
             dic.update(self.original_packagejson)
             for setting_name, setting in self.settings['app_settings'].items():
-                if major_ver > 0 or minor_ver >= 13:
+                if (major_ver > 0 or minor_ver >= 13) and setting_name != 'node-remote':
                     dic.pop(setting_name, '')
                     setting_name = setting_name.replace('-', '_')
 
