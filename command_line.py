@@ -919,7 +919,10 @@ class CommandBase(object):
             return app_file
 
     def get_version_tuple(self):
-        strs = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+        try:
+            strs = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+        except IndexError:
+            strs = ['0','0','0']
         return [int(s) for s in strs]
 
     def copy_executable(self, export_path, dest_path,
