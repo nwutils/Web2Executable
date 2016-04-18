@@ -1242,6 +1242,19 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             resizable_field = self.find_child_by_name('resizable')
             resizable_field.setChecked(not is_checked)
 
+    def refresh_export(self):
+        versions = self.get_version_tuple()
+        major_ver = versions[0]
+        minor_ver = versions[1]
+
+        mac = self.find_child_by_name('mac-x32')
+        if (major_ver > 0 or minor_ver >= 13):
+            if mac:
+                mac.setEnabled(False)
+        else:
+            if mac:
+                mac.setEnabled(True)
+
     def setting_changed(self, obj, setting, *args, **kwargs):
         if (setting.type == 'string' or
             setting.type == 'file' or
