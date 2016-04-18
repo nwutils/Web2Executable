@@ -458,11 +458,17 @@ class CommandBase(object):
         major_ver = versions[0]
         minor_ver = versions[1]
 
+        nwjs_13_renames = ['always-on-top',
+                           'visible-on-all-workspaces',
+                           'new-instance',
+                           'inject-js-start',
+                           'inject-js-end']
+
         if not global_json:
             dic.update({'webkit': {}, 'window': {}})
             dic.update(self.original_packagejson)
             for setting_name, setting in self.settings['app_settings'].items():
-                if major_ver > 0 or minor_ver >= 13:
+                if (major_ver > 0 or minor_ver >= 13) and setting_name in nwjs_13_renames:
                     dic.pop(setting_name, '')
                     setting_name = setting_name.replace('-', '_')
 
@@ -474,7 +480,7 @@ class CommandBase(object):
                     dic.pop(setting_name, '')
 
             for setting_name, setting in self.settings['window_settings'].items():
-                if major_ver > 0 or minor_ver >= 13:
+                if major_ver > 0 or minor_ver >= 13 and setting_name in nwjs_13_renames:
                     dic['window'].pop(setting_name, '')
                     setting_name = setting_name.replace('-', '_')
                 if setting.value is not None and setting.value != '':
@@ -489,9 +495,6 @@ class CommandBase(object):
                     dic['window'].pop(setting_name, '')
 
             for setting_name, setting in self.settings['webkit_settings'].items():
-                if major_ver > 0 or minor_ver >= 13:
-                    dic['webkit'].pop(setting_name, '')
-                    setting_name = setting_name.replace('-', '_')
                 if setting.value is not None and setting.value != '':
                     dic['webkit'][setting_name] = setting.value
                 else:
