@@ -1257,7 +1257,7 @@ class CommandBase(object):
         web_file = request.urlopen(url)
         f = open(tmp_file, 'ab')
         meta = web_file.info()
-        file_size = tmp_size + int(meta.getheaders("Content-Length")[0])
+        file_size = tmp_size + int(meta.get_all("Content-Length")[0])
 
         version = self.selected_version()
         version_file = self.settings['base_url'].format(version)
