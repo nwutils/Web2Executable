@@ -867,7 +867,7 @@ class CommandBase(object):
 
 
 
-    def make_output_dirs(self):
+    def make_output_dirs(self, write_json=True):
         output_dir = utils.path_join(self.output_dir(), self.project_name())
         temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
 
@@ -876,7 +876,9 @@ class CommandBase(object):
         self.clean_dirs(temp_dir, output_dir)
 
         self.copy_files_to_project_folder()
-        self.write_package_json()
+
+        if write_json:
+            self.write_package_json()
 
         app_loc = self.get_app_nw_loc(temp_dir, output_dir)
 
@@ -1177,11 +1179,11 @@ class CommandBase(object):
             self.progress_text = '\nThe script {} does not exist. Not running.'.format(script)
 
 
-    def export(self):
+    def export(self, write_json=True):
         self.get_files_to_download()
         res = self.try_to_download_files()
         if res:
-            self.make_output_dirs()
+            self.make_output_dirs(write_json)
             script = self.get_setting('custom_script').value
             self.run_script(script)
             self.progress_text = '\nDone!\n'
@@ -1452,12 +1454,23 @@ def main():
             if setting is not None:
                 setting.value = val
 
+    write_json = False
+
     if args.load_json is True:
         command_base.load_package_json()
     elif args.load_json:
         command_base.load_package_json(args.load_json)
 
-    command_base.export()
+        project_dir = command_base.project_dir()
+        json_path = os.path.abspath(os.path.expanduser(args.load_json))
+        left_over_path = json_path.replace(project_dir, '')
+
+        # Write package.json if it's not already in the root
+        # of the project
+        if left_over_path != 'package.json':
+            write_json = True
+
+    command_base.export(write_json)
 
 if __name__ == '__main__':
     main()
