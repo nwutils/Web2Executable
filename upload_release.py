@@ -2,6 +2,7 @@
 
 import requests
 import json
+import os
 from pprint import pprint
 from glob import glob
 
@@ -27,23 +28,43 @@ def main():
 
     password = getpass.getpass('Password:')
 
+    zip_files = glob('*.zip')
+    file_names = set([os.path.basename(zip_file) for zip_file in zip_files])
+
     if req.status_code == 200:
-        print('Found release:', version)
+        print('\nFound release:', version)
+
         json_data = json.loads(req.text)
         tag = json_data.get('tag_name', '')
+
         cur_ver = Version(tag[1:-1])
         new_ver = Version(version[1:-1])
+
         if new_ver <= cur_ver:
             update = True
             rel_id = json_data['id']
+            assets = json_data.get('assets', [])
+
+            for asset in assets:
+                if asset['name'] in file_names:
+                    print('Found existing asset {}. Deleting...'.format(asset['name']))
+                    req = requests.delete(asset['url'], auth=(github_user, password))
+                    if req.status_code == 204:
+                        print('Delete success!')
+                    else:
+                        print('Delete failed!')
+                        print('Error:', req.text)
+
             upload_url = json_data['upload_url'].replace('{?name,label}', '')
 
     if not update:
-        print('Creating release:', version)
+        print('\nCreating release:', version)
         data = {'tag_name': version,
                 'target_commitish': 'master',
                 'name': 'Web2Executable ' + version}
+
         post_res = requests.post(base_url, data=json.dumps(data), auth=(github_user, password))
+
         if post_res.status_code == 201:
             json_data = json.loads(post_res.text)
             upload_url = json_data['upload_url'].replace('{?name,label}', '')
@@ -52,18 +73,27 @@ def main():
             print('Authentication failed!')
 
     if rel_id:
-        zip_files = glob('*.zip')
         for zip_file in zip_files:
             with open(zip_file, 'rb') as zipf:
                 file_data = zipf.read()
-                print('Uploading file {}...'.format(zip_file))
+
+                print('\nUploading file {}...'.format(zip_file))
+
                 data = {'name': zip_file}
                 headers = {'Content-Type': 'application/zip'}
-                r = requests.post(upload_url, params=data, data=file_data, headers=headers, auth=(github_user, password))
-                if r.status_code == 201:
+
+                req = requests.post(
+                    upload_url,
+                    params=data,
+                    data=file_data,
+                    headers=headers,
+                    auth=(github_user, password)
+                )
+
+                if req.status_code == 201:
                     print('Success!')
                 else:
-                    print('Error:', r.text)
+                    print('Error:', req.text)
 
 
 if __name__ == '__main__':
