@@ -128,6 +128,8 @@ def zip_files(zip_file_name, *args, **kwargs):
                             except ValueError:
                                 os.utime(file_loc, None)
                                 zip_file.write(file_loc)
+                            except FileNotFoundError:
+                                pass
                         for direc in dirs:
                             dir_loc = os.path.relpath(path_join(root, direc), directory)
                             if verbose:
@@ -137,6 +139,8 @@ def zip_files(zip_file_name, *args, **kwargs):
                             except ValueError:
                                 os.utime(file_loc, None)
                                 zip_file.write(file_loc)
+                            except FileNotFoundError:
+                                pass
 
             else:
                 file = os.path.abspath(arg)
