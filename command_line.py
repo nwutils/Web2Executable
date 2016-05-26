@@ -354,13 +354,29 @@ class CommandBase(object):
     def enable_ui_after_error(self):
         pass
 
+    def get_default_nwjs_branch(self):
+        """
+        Get the default nwjs branch to search for
+        the changelog from github.
+        """
+        github_url = self.settings['version_info']['github_api_url']
+
+        resp = request.urlopen(github_url)
+        json_string = resp.read().decode('utf-8')
+        data = json.loads(json_string)
+
+        return data['default_branch']
+
     def get_versions(self):
         if self.logger is not None:
             self.logger.info('Getting versions...')
 
         union_versions = set()
 
+        current_branch = self.get_default_nwjs_branch()
+
         for url in self.settings['version_info']['urls']:
+            url = url.format(current_branch)
             response = request.urlopen(url)
             html = response.read().decode('utf-8')
 
