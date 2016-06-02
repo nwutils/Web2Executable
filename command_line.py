@@ -1,4 +1,4 @@
-'''Command line module for web2exe.'''
+"""Command line module for web2exe."""
 
 import ssl
 
@@ -44,9 +44,20 @@ from io import StringIO
 
 from configobj import ConfigObj
 
+## Constants --------------------------------------------
+
 COMMAND_LINE = True
 
+NWJS_13_RENAMES = ['always-on-top',
+                   'visible-on-all-workspaces',
+                   'new-instance',
+                   'inject-js-start',
+                   'inject-js-end']
 
+### The following sections are code that needs to be run when importing
+### from main.py.
+
+## CWD Computation --------------------------------------
 
 inside_packed_exe = getattr(sys, 'frozen', '')
 
@@ -55,7 +66,9 @@ if inside_packed_exe:
     CWD = os.path.dirname(sys.executable)
 else:
     # we are running in a normal Python environment
-    CWD = os.getcwd()
+    CWD = os.path.dirname(os.path.realpath(__file__))
+
+## CMD Utility functions --------------------------------
 
 def get_file(path):
     parts = path.split('/')
@@ -66,6 +79,8 @@ def is_installed():
     uninst = get_file('uninst.exe')
     return utils.is_windows() and os.path.exists(uninst)
 
+## Version Setting ----------------------------------------
+
 __version__ = "v0.0.0"
 
 with open(get_file('files/version.txt')) as f:
@@ -74,6 +89,8 @@ with open(get_file('files/version.txt')) as f:
 
 TEMP_DIR = get_temp_dir()
 DEFAULT_DOWNLOAD_PATH = get_data_path('files/downloads')
+
+## Logger setup ----------------------------------------------
 
 logger = logging.getLogger('W2E logger')
 LOG_FILENAME = get_data_file_path('files/error.log')
@@ -89,6 +106,8 @@ if __name__ != '__main__':
 handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
 logger.addHandler(handler)
 
+## Custom except hook to log all errors ----------------------
+
 def my_excepthook(type_, value, tback):
     output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
     logger.error(u'{}'.format(output_err))
@@ -97,22 +116,15 @@ def my_excepthook(type_, value, tback):
 sys.excepthook = my_excepthook
 
 
+# Ensure that the default download path exists
 try:
     os.makedirs(DEFAULT_DOWNLOAD_PATH)
 except:
     pass
 
 
-def get_base_url():
-    url = None
-    try:
-        url = codecs.open(get_file('files', 'base_url.txt'), encoding='utf-8').read().strip()
-    except (OSError, IOError):
-        url = 'http://dl.node-webkit.org/v{}/'
-    return url
-
-
 class Setting(object):
+    """Class that describes a setting from the setting.cfg file"""
     def __init__(self, name='', display_name=None, value=None,
                  required=False, type=None, file_types=None, *args, **kwargs):
         self.name = name
@@ -147,12 +159,14 @@ class Setting(object):
         self.get_file_information_from_url()
 
     def filter_name(self, text):
+        """Use the filter action to filter out invalid text"""
         if hasattr(self.filter_action, text):
             action = getattr(self.filter_action, text)
             return action(text)
         return text
 
     def get_file_information_from_url(self):
+        """Extract the file information from the setting url"""
         if hasattr(self, 'url'):
             self.file_name = self.url.split(u'/')[-1]
             self.full_file_path = utils.path_join(self.save_path, self.file_name)
@@ -165,6 +179,7 @@ class Setting(object):
                 self.extract_args = ('r:gz',)
 
     def save_file_path(self, version, location=None, sdk_build=False):
+        """Get the save file path based on the version"""
         if location:
             self.save_path = location
         else:
@@ -233,18 +248,21 @@ class Setting(object):
         url = ''
         if hasattr(self, 'url'):
             url = self.url
-        return (u'Setting: (name={}, '
-                u'display_name={}, '
-                u'value={}, required={}, '
-                u'type={}, url={})').format(self.name,
-                                           self.display_name,
-                                           self.value,
-                                           self.required,
-                                           self.type,
-                                           url)
+        return (
+            u'Setting: (name={}, '
+            u'display_name={}, '
+            u'value={}, required={}, '
+            u'type={}, url={})'
+        ).format(self.name,
+                 self.display_name,
+                 self.value,
+                 self.required,
+                 self.type,
+                 url)
 
 
 class CommandBase(object):
+    """The common class for the CMD and the GUI"""
     def __init__(self):
         self.quiet = False
         self.logger = None
@@ -269,6 +287,7 @@ class CommandBase(object):
         self.progress_text = '\nDone.\n'
 
     def setup_nw_versions(self):
+        """Get the nw versions stored in the local file"""
         nw_version = self.get_setting('nw_version')
         nw_version.values = []
         try:
@@ -280,20 +299,27 @@ class CommandBase(object):
             nw_version.values.append(nw_version.default_value)
 
     def get_nw_versions(self):
+        """Get the already downloaded nw versions from the settings"""
         nw_version = self.get_setting('nw_version')
         return nw_version.values[:]
 
     def get_settings(self):
+        """Load all of the settings from the settings config file"""
         config_file = get_file('files/settings.cfg')
+
         contents = codecs.open(config_file, encoding='utf-8').read()
+
         contents = contents.replace(u'{DEFAULT_DOWNLOAD_PATH}',
                                     DEFAULT_DOWNLOAD_PATH)
+
         config_io = StringIO(contents)
         config = ConfigObj(config_io, unrepr=True).dict()
+
         settings = {'setting_groups': []}
         setting_items = (list(config['setting_groups'].items()) +
                          [('export_settings', config['export_settings'])] +
                          [('compression', config['compression'])])
+
         for setting_group, setting_group_dict in setting_items:
             settings[setting_group] = {}
             for setting_name, setting_dict in setting_group_dict.items():
@@ -310,26 +336,40 @@ class CommandBase(object):
         self._setting_items = (list(config['setting_groups'].items()) +
                          [('export_settings', config['export_settings'])] +
                          [('compression', config['compression'])])
+
         config.pop('setting_groups')
         config.pop('export_settings')
         config.pop('compression')
+
         self._setting_items += config.items()
+
         for key, val in config.items():
             settings[key] = val
 
         return settings
 
     def project_dir(self):
+        """Get the stored project_dir"""
         return self._project_dir
 
     def output_dir(self):
+        """Get the stored output_dir"""
         return self._output_dir
 
     def project_name(self):
+        """Get the project name"""
         return (self._project_name or
                 os.path.basename(os.path.abspath(self.project_dir())))
 
     def get_setting(self, name):
+        """Get a setting by name
+
+        Args:
+            name: a string to search for
+
+        Returns:
+            A setting object or None
+        """
         for setting_group in (self.settings['setting_groups'] +
                               [self.settings['export_settings']] +
                               [self.settings['compression']]):
@@ -338,6 +378,7 @@ class CommandBase(object):
                 return setting
 
     def get_settings_type(self, type):
+        """Get all settings with a specific type"""
         settings = []
         for setting_group in (self.settings['setting_groups'] +
                               [self.settings['export_settings']] +
@@ -348,10 +389,14 @@ class CommandBase(object):
         return settings
 
     def show_error(self, error):
+        """Show an error using the logger"""
         if self.logger is not None:
             self.logger.error(error)
 
     def enable_ui_after_error(self):
+        """
+        Empty method for compatibility with the GUI superclass. DO NOT DELETE!
+        """
         pass
 
     def get_default_nwjs_branch(self):
@@ -368,6 +413,7 @@ class CommandBase(object):
         return data['default_branch']
 
     def get_versions(self):
+        """Get the versions from the NW.js Github changelog"""
         if self.logger is not None:
             self.logger.info('Getting versions...')
 
@@ -413,6 +459,10 @@ class CommandBase(object):
                 f.close()
 
     def download_file_with_error_handling(self):
+        """
+        Try to download a file and safely handle errors by showing them
+        in the GUI.
+        """
         setting = self.files_to_download.pop()
         location = self.get_setting('download_dir').value
         version = self.selected_version()
@@ -424,6 +474,7 @@ class CommandBase(object):
 
         minor = int(versions[1])
         major = int(versions[0])
+
         if minor >= 12 or major > 0:
             path = path.replace('node-webkit', 'nwjs')
 
@@ -444,13 +495,20 @@ class CommandBase(object):
             self.enable_ui_after_error()
 
     def load_package_json(self, json_path=None):
+        """Load the package.json in the project or from json_path
+
+        Args:
+            json_path: the path to a custom json file with web2exe settings
+        """
         self.logger.info('Loading package.json')
+
         if json_path is not None:
             p_json = [json_path]
         else:
             p_json = glob.glob(utils.path_join(self.project_dir(),
                                             'package.json'))
         setting_list = []
+
         if p_json:
             json_str = ''
             try:
@@ -458,6 +516,7 @@ class CommandBase(object):
                     json_str = f.read()
             except IOError:
                 return setting_list
+
             try:
                 setting_list = self.load_from_json(json_str)
             except ValueError as e:  # Json file is invalid
@@ -465,57 +524,59 @@ class CommandBase(object):
                 self.progress_text = u'{}\n'.format(e)
         return setting_list
 
-    def generate_json(self, global_json=False):
-        self.logger.info('Generating package.json...')
-
-        dic = {'webexe_settings': {}}
-
+    def process_app_settings(self, dic):
+        """Process the app settings into the dic"""
         versions = self.get_version_tuple()
         major_ver = versions[0]
         minor_ver = versions[1]
 
-        nwjs_13_renames = ['always-on-top',
-                           'visible-on-all-workspaces',
-                           'new-instance',
-                           'inject-js-start',
-                           'inject-js-end']
+        for setting_name, setting in self.settings['app_settings'].items():
+            if (major_ver > 0 or minor_ver >= 13) and setting_name in NWJS_13_RENAMES:
+                dic.pop(setting_name, '')
+                setting_name = setting_name.replace('-', '_')
 
-        if not global_json:
-            dic.update({'webkit': {}, 'window': {}})
-            dic.update(self.original_packagejson)
-            for setting_name, setting in self.settings['app_settings'].items():
-                if (major_ver > 0 or minor_ver >= 13) and setting_name in nwjs_13_renames:
-                    dic.pop(setting_name, '')
-                    setting_name = setting_name.replace('-', '_')
+            if setting.value is not None and setting.value != '':
+                dic[setting_name] = setting.value
+                if setting_name == 'keywords':
+                    dic[setting_name] = re.findall('\w+', setting.value)
+            else:
+                dic.pop(setting_name, '')
 
-                if setting.value is not None and setting.value != '':
-                    dic[setting_name] = setting.value
-                    if setting_name == 'keywords':
-                        dic[setting_name] = re.findall('\w+', setting.value)
+    def process_window_settings(self, dic):
+        """Process the window settings into the dic"""
+        versions = self.get_version_tuple()
+        major_ver = versions[0]
+        minor_ver = versions[1]
+
+        for setting_name, setting in self.settings['window_settings'].items():
+            if major_ver > 0 or minor_ver >= 13 and setting_name in NWJS_13_RENAMES:
+                dic['window'].pop(setting_name, '')
+                setting_name = setting_name.replace('-', '_')
+            if setting.value is not None and setting.value != '':
+                if 'height' in setting.name or 'width' in setting.name:
+                    try:
+                        dic['window'][setting_name] = int(setting.value)
+                    except ValueError:
+                        pass
                 else:
-                    dic.pop(setting_name, '')
+                    dic['window'][setting_name] = setting.value
+            else:
+                dic['window'].pop(setting_name, '')
 
-            for setting_name, setting in self.settings['window_settings'].items():
-                if major_ver > 0 or minor_ver >= 13 and setting_name in nwjs_13_renames:
-                    dic['window'].pop(setting_name, '')
-                    setting_name = setting_name.replace('-', '_')
-                if setting.value is not None and setting.value != '':
-                    if 'height' in setting.name or 'width' in setting.name:
-                        try:
-                            dic['window'][setting_name] = int(setting.value)
-                        except ValueError:
-                            pass
-                    else:
-                        dic['window'][setting_name] = setting.value
-                else:
-                    dic['window'].pop(setting_name, '')
+    def process_webkit_settings(self, dic):
+        """Process the webkit settings into the dic"""
+        for setting_name, setting in self.settings['webkit_settings'].items():
+            if setting.value is not None and setting.value != '':
+                dic['webkit'][setting_name] = setting.value
+            else:
+                dic['webkit'].pop(setting_name, '')
 
-            for setting_name, setting in self.settings['webkit_settings'].items():
-                if setting.value is not None and setting.value != '':
-                    dic['webkit'][setting_name] = setting.value
-                else:
-                    dic['webkit'].pop(setting_name, '')
-
+    def process_webexe_settings(self, dic, global_json):
+        """Set the web2exe settings based on remaining options
+        Args:
+            dic: a dict-like object representing the to be saved options
+            global_json: a boolean telling whether to load global json options
+        """
         if not global_json:
             dl_export_items = (list(self.settings['download_settings'].items()) +
                                list(self.settings['export_settings'].items()) +
@@ -530,16 +591,35 @@ class CommandBase(object):
             if setting.value is not None:
                 dic['webexe_settings'][setting_name] = setting.value
 
+
+    def generate_json(self, global_json=False):
+        """Generates the json config files for the exported app"""
+        self.logger.info('Generating package.json...')
+
+        dic = {'webexe_settings': {}}
+
+        if not global_json:
+            dic.update({'webkit': {}, 'window': {}})
+            dic.update(self.original_packagejson)
+
+            self.process_app_settings(dic)
+            self.process_window_settings(dic)
+            self.process_webkit_settings(dic)
+
+        self.process_webexe_settings(dic, global_json)
+
         s = json.dumps(dic, indent=4)
 
         return s
 
     @property
     def extract_error(self):
+        """Get the current extract error"""
         return self._extract_error
 
     @extract_error.setter
     def extract_error(self, value):
+        """Write the extract error to the terminal"""
         if value is not None and not self.quiet and COMMAND_LINE:
             self._extract_error = value
             sys.stderr.write(u'\r{}'.format(self._extract_error))
@@ -547,10 +627,12 @@ class CommandBase(object):
 
     @property
     def output_err(self):
+        """Get the current error"""
         return self._output_err
 
     @output_err.setter
     def output_err(self, value):
+        """Write an error to the terminal"""
         if value is not None and not self.quiet and COMMAND_LINE:
             self._output_err = value
             sys.stderr.write(u'\r{}'.format(self._output_err))
@@ -558,16 +640,30 @@ class CommandBase(object):
 
     @property
     def progress_text(self):
+        """Get the progress text currently set"""
         return self._progress_text
 
     @progress_text.setter
     def progress_text(self, value):
+        """Write progress text to the terminal
+
+        Args:
+            value: The value to write to the terminal
+        """
         if value is not None and not self.quiet and COMMAND_LINE:
             self._progress_text = value
             sys.stdout.write(u'\r{}'.format(self._progress_text))
             sys.stdout.flush()
 
     def load_from_json(self, json_str):
+        """Load settings from the supplied json string
+
+        Args:
+            json_str: the json string to parse all of the GUI options from
+
+        Returns:
+            A list of Setting objects
+        """
         dic = json.loads(json_str)
         self.original_packagejson.update(dic)
         setting_list = []
@@ -598,9 +694,11 @@ class CommandBase(object):
         return setting_list
 
     def selected_version(self):
+        """Get the currently selected version from the NW.js dropdown"""
         return self.get_setting('nw_version').value
 
     def extract_files(self):
+        """Extract nw.js files to the specific version path"""
         self.extract_error = None
         location = self.get_setting('download_dir').value
 
@@ -629,6 +727,13 @@ class CommandBase(object):
         return True
 
     def create_icns_for_app(self, icns_path):
+        """
+        Converts the project icon to ICNS format and saves it
+        to the path specified
+
+        Args:
+            icns_path: The path to write the icns file to
+        """
         icon_setting = self.get_setting('icon')
         mac_app_icon_setting = self.get_setting('mac_icon')
         icon_path = (mac_app_icon_setting.value
@@ -643,6 +748,11 @@ class CommandBase(object):
                 utils.copy(icon_path, icns_path)
 
     def replace_icon_in_exe(self, exe_path):
+        """Modifies the nw.js executable to have the project icon
+
+        Args:
+            exe_path: The path to write the new exe to
+        """
         icon_setting = self.get_setting('icon')
         exe_icon_setting = self.get_setting('exe_icon')
         icon_path = (exe_icon_setting.value
@@ -655,92 +765,43 @@ class CommandBase(object):
             p = None
 
     def write_package_json(self):
+        """Collects filled options and writes corresponding json files"""
         json_file = utils.path_join(self.project_dir(), 'package.json')
 
         global_json = utils.get_data_file_path('files/global.json')
 
+        # Write package json
         if self.output_package_json:
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                 f.write(self.generate_json())
 
-
+        # Write global settings that are kept when installing new
+        # versions
         with codecs.open(global_json, 'w+', encoding='utf-8') as f:
             f.write(self.generate_json(global_json=True))
 
     def clean_dirs(self, *dirs):
+        """Delete directory trees with :py:func:`utils.rmtree` and recreate them
+
+        Args:
+            *dirs: directories to be cleaned
+        """
         for directory in dirs:
             if os.path.exists(directory):
                 utils.rmtree(directory, onerror=self.remove_readonly)
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-    def handle_mac_export(self, export_dest):
-        app_path = utils.path_join(export_dest,
-                                   self.project_name()+'.app')
-
-        try:
-            utils.move(utils.path_join(export_dest,
-                                       'nwjs.app'),
-                       app_path)
-        except IOError:
-            utils.move(utils.path_join(export_dest,
-                                       'node-webkit.app'),
-                       app_path)
-
-        plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
-
-        plist_dict = plistlib.readPlist(plist_path)
-
-        plist_dict['CFBundleDisplayName'] = self.project_name()
-        plist_dict['CFBundleName'] = self.project_name()
-        version_setting = self.get_setting('version')
-        plist_dict['CFBundleShortVersionString'] = version_setting.value
-        plist_dict['CFBundleVersion'] = version_setting.value
-
-        plistlib.writePlist(plist_dict, plist_path)
-
-        self.progress_text += '.'
-
-        app_nw_res = utils.path_join(app_path,
-                                     'Contents',
-                                     'Resources',
-                                     'app.nw')
-
-        if uncompressed:
-            utils.copytree(app_loc, app_nw_res)
-        else:
-            utils.copy(app_loc, app_nw_res)
-
-        if minor_ver >= 13 or major_ver > 0:
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
-                                                     'app.icns'))
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
-                                                     'document.icns'))
-            strings_path = utils.path_join(app_path,
-                                           'Contents',
-                                           'Resources',
-                                           'en.lproj',
-                                           'InfoPlist.strings')
-
-            strings = open(strings_path, mode='rb').read()
-            strings = str(strings)
-            strings = strings.replace('nwjs', self.project_name())
-            with open(strings_path, mode='wb+') as f:
-                f.write(bytes(strings, 'utf-8'))
-
-        else:
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
-                                                     'nw.icns'))
-
-        self.progress_text += '.'
-
     def get_export_dest(self, ex_setting, output_dir):
+        """Get the export destination path using the export setting
+
+        Args:
+            ex_setting: an export setting (eg: mac-x64)
+            output_dir: the path of the output project directory
+
+        Returns:
+            A path to store the output files
+        """
         export_dest = utils.path_join(output_dir, ex_setting.name)
 
         versions = self.get_version_tuple()
@@ -752,6 +813,13 @@ class CommandBase(object):
         return export_dest
 
     def copy_export_files(self, ex_setting, export_dest):
+        """Copy the export files to the destination path
+
+        Args:
+            ex_setting: an export setting (eg: mac-x64)
+            export_dest: the path returned by get_export_dest()
+        """
+
         if os.path.exists(export_dest):
             utils.rmtree(export_dest)
 
@@ -762,6 +830,13 @@ class CommandBase(object):
         utils.rmtree(get_data_path('files/'+ex_setting.name))
 
     def replace_localized_app_name(self, app_path):
+        """
+        Replace app name in InfoPlist.strings to make
+        the app name appear in Finder
+
+        Args:
+            app_path: The exported application path
+        """
         strings_path = utils.path_join(app_path,
                                        'Contents',
                                        'Resources',
@@ -775,6 +850,13 @@ class CommandBase(object):
             f.write(bytes(strings, 'utf-8'))
 
     def replace_plist(self, app_path):
+        """Replaces the Info.plist file with the project settings
+        contents
+
+        Args:
+            app_path: The exported application path
+        """
+
         plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
 
         plist_dict = plistlib.readPlist(plist_path)
@@ -788,24 +870,33 @@ class CommandBase(object):
         plistlib.writePlist(plist_dict, plist_path)
 
     def process_mac_setting(self, app_loc, export_dest, uncompressed):
+        """Process the Mac settings
+
+        Args:
+            app_loc: the app's location
+            export_dest: the destination to export the app to
+            uncompressed: boolean -> app is compressed or not
+        """
+
         app_path = utils.path_join(export_dest,
                                    self.project_name()+'.app')
 
         try:
-            utils.move(utils.path_join(export_dest,
-                                       'nwjs.app'),
-                       app_path)
+            nw_path = utils.path_join(export_dest, 'nwjs.app')
+            utils.move(nw_path, app_path)
         except IOError:
-            utils.move(utils.path_join(export_dest,
-                                       'node-webkit.app'),
-                       app_path)
+            nw_path = utils.path_join(export_dest, 'node-webkit.app')
+            utils.move(nw_path, app_path)
 
         self.replace_plist(app_path)
 
-        app_nw_res = utils.path_join(app_path,
-                                     'Contents',
-                                     'Resources',
-                                     'app.nw')
+        resource_path = utils.path_join(
+            app_path,
+            'Contents',
+            'Resources'
+        )
+
+        app_nw_res = utils.path_join(resource_path, 'app.nw')
 
         if uncompressed:
             utils.copytree(app_loc, app_nw_res)
@@ -817,28 +908,66 @@ class CommandBase(object):
         versions = self.get_version_tuple()
         major_ver, minor_ver, _ = versions
 
+        # If newer version, use different files
         if minor_ver >= 13 or major_ver > 0:
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
+            self.create_icns_for_app(utils.path_join(resource_path,
                                                      'app.icns'))
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
+            self.create_icns_for_app(utils.path_join(resource_path,
                                                      'document.icns'))
             self.replace_localized_app_name(app_path)
 
         else:
-            self.create_icns_for_app(utils.path_join(app_path,
-                                                     'Contents',
-                                                     'Resources',
+            self.create_icns_for_app(utils.path_join(resource_path,
                                                      'nw.icns'))
 
         self.progress_text += '.'
 
 
+    def process_win_linux_setting(self, app_loc, export_dest,
+                                  ex_setting, uncompressed):
+        """Processes windows and linux settings
+
+        Creates executable, modifies exe icon, and copies to the destination
+
+        Args:
+            app_loc: the location of the app
+            export_dest: directory to copy app to
+            ex_setting: the export setting (eg: mac-x32)
+            uncompressed: boolean -> app is compressed or not
+
+        """
+
+        nw_path = utils.path_join(export_dest,
+                                  ex_setting.binary_location)
+
+        ext = ''
+        if 'windows' in ex_setting.name:
+            ext = '.exe'
+            self.replace_icon_in_exe(nw_path)
+
+        self.compress_nw(nw_path)
+
+        dest_binary_path = utils.path_join(export_dest,
+                                           self.project_name() +
+                                           ext)
+        if 'linux' in ex_setting.name:
+            self.make_desktop_file(dest_binary_path, export_dest)
+
+        self.copy_executable(export_dest, dest_binary_path,
+                             nw_path, app_loc, uncompressed)
+
+        self.set_executable(dest_binary_path)
+
+        self.progress_text += '.'
+
+        if os.path.exists(nw_path):
+            os.remove(nw_path)
+
+
+
     def process_export_setting(self, ex_setting, output_dir,
                                temp_dir, app_loc, uncompressed):
+        """Create the executable based on the export setting"""
         if ex_setting.value:
             self.progress_text = '\n'
 
@@ -855,35 +984,12 @@ class CommandBase(object):
             if 'mac' in ex_setting.name:
                 self.process_mac_setting(app_loc, export_dest, uncompressed)
             else:
-                nw_path = utils.path_join(export_dest,
-                                          ex_setting.binary_location)
-
-                ext = ''
-                if 'windows' in ex_setting.name:
-                    ext = '.exe'
-                    self.replace_icon_in_exe(nw_path)
-
-                self.compress_nw(nw_path)
-
-                dest_binary_path = utils.path_join(export_dest,
-                                                   self.project_name() +
-                                                   ext)
-                if 'linux' in ex_setting.name:
-                    self.make_desktop_file(dest_binary_path, export_dest)
-
-                self.copy_executable(export_dest, dest_binary_path,
-                                     nw_path, app_loc, uncompressed)
-
-                self.set_executable(dest_binary_path)
-
-                self.progress_text += '.'
-
-                if os.path.exists(nw_path):
-                    os.remove(nw_path)
-
+                self.process_win_linux_setting(app_loc, export_dest,
+                                               ex_setting, uncompressed)
 
 
     def make_output_dirs(self, write_json=True):
+        """Create the output directories for the application to be copied"""
         output_dir = utils.path_join(self.output_dir(), self.project_name())
         temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
 
@@ -907,6 +1013,7 @@ class CommandBase(object):
 
 
     def try_make_output_dirs(self):
+        """Try to create the output directories if they don't exist"""
         self.output_err = ''
         try:
             self.make_output_dirs()
@@ -921,6 +1028,7 @@ class CommandBase(object):
             utils.rmtree(temp_dir, onerror=self.remove_readonly)
 
     def get_app_nw_loc(self, temp_dir, output_dir):
+        """Copy the temporary app to the output_dir"""
         app_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
         uncomp_setting = self.get_setting('uncompressed_folder')
@@ -937,6 +1045,11 @@ class CommandBase(object):
             return app_file
 
     def get_version_tuple(self):
+        """Get the currently selected version's tuple of major, minor, release
+
+        Returns:
+            A 3-tuple of (major, minor, release)
+        """
         try:
             strs = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
         except IndexError:
@@ -945,6 +1058,9 @@ class CommandBase(object):
 
     def copy_executable(self, export_path, dest_path,
                         nw_path, app_loc, uncompressed):
+        """
+        Merge the zip file into the exe and copy it to the destination path
+        """
         versions = self.get_version_tuple()
         major_ver, minor_ver, _ = versions
 
@@ -960,6 +1076,7 @@ class CommandBase(object):
 
 
     def set_executable(self, path):
+        """Modify the path to be executable by the OS"""
         sevenfivefive = (stat.S_IRWXU |
                          stat.S_IRGRP |
                          stat.S_IXGRP |
@@ -968,51 +1085,65 @@ class CommandBase(object):
         os.chmod(path, sevenfivefive)
 
     def make_desktop_file(self, nw_path, export_dest):
+        """Make the linux desktop file for unity or other launchers"""
+
         icon_set = self.get_setting('icon')
         icon_path = utils.path_join(self.project_dir(), icon_set.value)
+
         if os.path.exists(icon_path) and icon_set.value:
             utils.copy(icon_path, export_dest)
             icon_path = utils.path_join(export_dest, os.path.basename(icon_path))
         else:
             icon_path = ''
+
         name = self.project_name()
         pdir = self.project_dir()
+
         version = self.get_setting('version')
         desc = self.get_setting('description')
+
         dfile_path = utils.path_join(export_dest, u'{}.desktop'.format(name))
+
         file_str = (
-                    u'[Desktop Entry]\n'
-                    u'Version={}\n'
-                    u'Name={}\n'
-                    u'Comment={}\n'
-                    u'Exec={}\n'
-                    u'Icon={}\n'
-                    u'Terminal=false\n'
-                    u'Type=Application\n'
-                    u'Categories=Utility;Application;\n'
-                    )
-        file_str = file_str.format(version.value,
-                                   name,
-                                   desc.value,
-                                   nw_path,
-                                   icon_path)
+            u'[Desktop Entry]\n'
+            u'Version={}\n'
+            u'Name={}\n'
+            u'Comment={}\n'
+            u'Exec={}\n'
+            u'Icon={}\n'
+            u'Terminal=false\n'
+            u'Type=Application\n'
+            u'Categories=Utility;Application;\n'
+        )
+
+        file_str = file_str.format(
+            version.value,
+            name,
+            desc.value,
+            nw_path,
+            icon_path
+        )
+
         with codecs.open(dfile_path, 'w+', encoding='utf-8') as f:
             f.write(file_str)
 
         os.chmod(dfile_path, 0o755)
 
     def compress_nw(self, nw_path):
+        """Compress the nw file using upx"""
         compression = self.get_setting('nw_compression_level')
+
         if compression.value == 0:
             return
 
-        comp_dict = {'Darwin64bit': get_file('files/compressors/upx-mac'),
-                     'Darwin32bit': get_file('files/compressors/upx-mac'),
-                     'Linux64bit':  get_file('files/compressors/upx-linux-x64'),
-                     'Linux32bit':  get_file('files/compressors/upx-linux-x32'),
-                     'Windows64bit':  get_file('files/compressors/upx-win.exe'),
-                     'Windows32bit':  get_file('files/compressors/upx-win.exe')
-                     }
+        comp_dict = {
+            'Darwin64bit': get_file('files/compressors/upx-mac'),
+            'Darwin32bit': get_file('files/compressors/upx-mac'),
+            'Linux64bit':  get_file('files/compressors/upx-linux-x64'),
+            'Linux32bit':  get_file('files/compressors/upx-linux-x32'),
+            'Windows64bit':  get_file('files/compressors/upx-win.exe'),
+            'Windows32bit':  get_file('files/compressors/upx-win.exe')
+        }
 
         if is_installed():
             comp_dict['Windows64bit'] = get_data_file_path('files/compressors/upx-win.exe')
@@ -1024,27 +1155,37 @@ class CommandBase(object):
         if upx_version is not None:
             upx_bin = upx_version
             os.chmod(upx_bin, 0o755)
+
             cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), nw_path]
+
             if platform.system() == 'Windows':
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        startupinfo=startupinfo)
+                proc = subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
+                    startupinfo=startupinfo
+                )
             else:
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    stdin=subprocess.PIPE)
+                proc = subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.PIPE
+                )
+
             self.progress_text = '\n\n'
             self.progress_text = 'Compressing files'
+
             while proc.poll() is None:
                 self.progress_text += '.'
                 time.sleep(2)
+
             output, err = proc.communicate()
 
     def remove_readonly(self, action, name, exc):
+        """Try to remove readonly files"""
         try:
             os.chmod(name, stat.S_IWRITE)
             os.remove(name)
@@ -1055,9 +1196,15 @@ class CommandBase(object):
             self.output_err += error
 
     def copy_files_to_project_folder(self):
+        """
+        Copy external files to the project folder
+        so that they are bundled with the exe
+        """
         old_dir = CWD
+
         os.chdir(self.project_dir())
         self.logger.info(u'Copying files to {}'.format(self.project_dir()))
+
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
                 if setting.copy and setting.type == 'file' and setting.value:
@@ -1074,12 +1221,99 @@ class CommandBase(object):
         os.chdir(old_dir)
 
     def convert_val_to_str(self, val):
+        """Convert a setting value to a string path"""
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
         return str(val).replace(self.project_dir()+os.path.sep, '')
 
+    def get_python_command(self, export_dict, export_dir, export_dirs, contents):
+        export_opts = self.get_export_options()
+        env_file = get_file('files/env_vars.py')
+        env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+
+        for i, ex_dir in enumerate(export_dirs):
+            opt = export_opts[i]
+            export_dict[opt+'_dir'] = ex_dir
+
+        env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                       proj_name=self.project_name(),
+                                       export_dir=export_dir,
+                                       export_dirs=str(export_dirs),
+                                       num_dirs=len(export_dirs),
+                                       **export_dict)
+        pycontents = '{}\n{}'.format(env_vars, contents)
+
+        command = ['python', '-c', pycontents]
+
+        return command
+
+    def get_bat_command(self, export_dict, export_dir, export_dirs, contents):
+        export_opts = self.get_export_options()
+        env_file = get_file('files/env_vars.bat')
+        env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+        ex_dir_vars = ''
+
+        for i, ex_dir in enumerate(export_dirs):
+            opt = export_opts[i]
+            export_dict[opt+'_dir'] = ex_dir
+            ex_dir_vars += 'set "EXPORT_DIRS[{}]={}"\n'.format(i, ex_dir)
+
+        env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                       proj_name=self.project_name(),
+                                       export_dir=export_dir,
+                                       num_dirs=len(export_dirs),
+                                       export_dirs=ex_dir_vars,
+                                       **export_dict)
+        batcontents = '{}\n{}'.format(env_vars, contents)
+
+        bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+
+        self.logger.debug(batcontents)
+
+        with open(bat_file, 'w+') as f:
+            f.write(batcontents)
+
+        command = [bat_file]
+
+        return command
+
+    def get_bash_command(self, export_dict, export_dir, export_dirs, contents):
+        export_opts = self.get_export_options()
+        env_file = get_file('files/env_vars.bat')
+        env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
+        ex_dir_vars = ''
+
+        for i, ex_dir in enumerate(export_dirs):
+            opt = export_opts[i]
+            export_dict[opt+'_dir'] = ex_dir
+            ex_dir_vars += 'set "EXPORT_DIRS[{}]={}"\n'.format(i, ex_dir)
+
+        env_vars = env_contents.format(proj_dir=self.project_dir(),
+                                       proj_name=self.project_name(),
+                                       export_dir=export_dir,
+                                       num_dirs=len(export_dirs),
+                                       export_dirs=ex_dir_vars,
+                                       **export_dict)
+        batcontents = '{}\n{}'.format(env_vars, contents)
+
+        bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+
+        self.logger.debug(batcontents)
+
+        with open(bat_file, 'w+') as f:
+            f.write(batcontents)
+
+        command = [bat_file]
+
+        return command
 
     def run_script(self, script):
+        """Run a script specified in the GUI after exporting
+
+        Args:
+            script: the path of the script to be ran
+        """
+
         if not script:
             return
 
@@ -1110,72 +1344,11 @@ class CommandBase(object):
                            'linux-x32_dir': ''}
 
             if ext == '.py':
-                env_file = get_file('files/env_vars.py')
-                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
-
-                for i, ex_dir in enumerate(export_dirs):
-                    opt = export_opts[i]
-                    export_dict[opt+'_dir'] = ex_dir
-
-                env_vars = env_contents.format(proj_dir=self.project_dir(),
-                                               proj_name=self.project_name(),
-                                               export_dir=export_dir,
-                                               export_dirs=str(export_dirs),
-                                               num_dirs=len(export_dirs),
-                                               **export_dict)
-                pycontents = '{}\n{}'.format(env_vars, contents)
-
-                command = ['python', '-c', pycontents]
-
-
+                command = self.get_python_command(export_dict, export_dir, export_dirs, contents)
             elif ext == '.bash':
-                env_file = get_file('files/env_vars.bash')
-                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
-                ex_dir_vars = ''
-
-                for i, ex_dir in enumerate(export_dirs):
-                    opt = export_opts[i]
-                    export_dict[opt+'_dir'] = ex_dir
-
-                for ex_dir in export_dirs:
-                    ex_dir_vars += "'{}' ".format(ex_dir)
-
-                env_vars = env_contents.format(proj_dir=self.project_dir(),
-                                               proj_name=self.project_name(),
-                                               export_dir=export_dir,
-                                               num_dirs=len(export_dirs),
-                                               export_dirs=ex_dir_vars,
-                                               **export_dict)
-                shcontents = '{}\n{}'.format(env_vars, contents)
-
-                command = ['bash', '-c', shcontents]
-
+                command = self.get_bash_command(export_dict, export_dir, export_dirs, contents)
             elif ext == '.bat':
-                env_file = get_file('files/env_vars.bat')
-                env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
-                ex_dir_vars = ''
-
-                for i, ex_dir in enumerate(export_dirs):
-                    opt = export_opts[i]
-                    export_dict[opt+'_dir'] = ex_dir
-                    ex_dir_vars += 'set "EXPORT_DIRS[{}]={}"\n'.format(i, ex_dir)
-
-                env_vars = env_contents.format(proj_dir=self.project_dir(),
-                                               proj_name=self.project_name(),
-                                               export_dir=export_dir,
-                                               num_dirs=len(export_dirs),
-                                               export_dirs=ex_dir_vars,
-                                               **export_dict)
-                batcontents = '{}\n{}'.format(env_vars, contents)
-
-                bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
-
-                self.logger.debug(batcontents)
-
-                with open(bat_file, 'w+') as f:
-                    f.write(batcontents)
-
-                command = [bat_file]
+                command = self.get_bat_command(export_dict, export_dir, export_dirs, contents)
 
             proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, error = proc.communicate()
@@ -1196,6 +1369,11 @@ class CommandBase(object):
 
 
     def export(self, write_json=True):
+        """Start the exporting process
+
+        Kwargs:
+            write_json: boolean -> write json output or not
+        """
         self.get_files_to_download()
         res = self.try_to_download_files()
         if res:
@@ -1209,6 +1387,7 @@ class CommandBase(object):
             self.delete_files()
 
     def get_export_options(self):
+        """Get all of the export options selected"""
         options = []
         for setting_name, setting in self.settings['export_settings'].items():
             if setting.value is True:
@@ -1216,6 +1395,7 @@ class CommandBase(object):
         return options
 
     def get_files_to_download(self):
+        """Get all the files needed for download based on export settings"""
         self.files_to_download = []
         for setting_name, setting in self.settings['export_settings'].items():
             if setting.value is True:
@@ -1227,6 +1407,7 @@ class CommandBase(object):
             return self.download_file_with_error_handling()
 
     def continue_downloading_or_extract(self):
+        """If there are more files to download, continue; otherwise extract"""
         if self.files_to_download:
             return self.download_file_with_error_handling()
         else:
@@ -1234,6 +1415,7 @@ class CommandBase(object):
             return self.extract_files()
 
     def download_file(self, path, setting):
+        """Download a file from the path and setting"""
         self.logger.info(u'Downloading file {}.'.format(path))
 
         location = self.get_setting('download_dir').value
@@ -1251,7 +1433,9 @@ class CommandBase(object):
             path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
         url = path
+
         file_name = setting.save_file_path(self.selected_version(), location, sdk_build)
+
         tmp_file = list(os.path.split(file_name))
         tmp_file[-1] = '.tmp.' + tmp_file[-1]
         tmp_file = os.sep.join(tmp_file)
@@ -1273,40 +1457,52 @@ class CommandBase(object):
             url = request.Request(url, headers=headers)
 
         web_file = request.urlopen(url)
+
         f = open(tmp_file, 'ab')
+
         meta = web_file.info()
         file_size = tmp_size + int(meta.get_all("Content-Length")[0])
 
         version = self.selected_version()
         version_file = self.settings['base_url'].format(version)
+
         short_name = path.replace(version_file, '')
+
         MB = file_size/1000000.0
+
         downloaded = ''
+
         if tmp_size:
             self.progress_text = 'Resuming previous download...\n'
             self.progress_text = u'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
+
         self.progress_text = (u'Downloading: {}, '
                               u'Size: {:.2f} MB {}\n'.format(short_name,
                                                          MB,
                                                          downloaded))
-
         file_size_dl = (tmp_size or 0)
         block_sz = 8192
+
         while True:
             buff = web_file.read(block_sz)
             if not buff:
                 break
 
             file_size_dl += len(buff)
+
             DL_MB = file_size_dl/1000000.0
             percent = file_size_dl*100.0/file_size
+
             f.write(buff)
+
             args = (DL_MB, MB, percent)
             status = "{:10.2f}/{:.2f} MB  [{:3.2f}%]".format(*args)
+
             self.progress_text = status
 
         self.progress_text = '\nDone downloading.\n'
         f.close()
+
         try:
             os.rename(tmp_file, file_name)
         except OSError:
@@ -1320,6 +1516,7 @@ class CommandBase(object):
         return self.continue_downloading_or_extract()
 
     def delete_files(self):
+        """Delete files left over in the data path from downloading"""
         for ex_setting in self.settings['export_settings'].values():
             f_path = get_data_file_path('files/{}/'.format(ex_setting.name))
             if os.path.exists(f_path):
@@ -1327,25 +1524,23 @@ class CommandBase(object):
 
 
 class ArgParser(argparse.ArgumentParser):
+    """Custom argparser that prints help if there is an error"""
     def error(self, message):
         sys.stderr.write('error: {}\n'.format(message))
         self.print_help()
         sys.exit(2)
 
-def unicode_arg(bytestring):
-    return bytestring
-
 def main():
+    """Main setup and argument parsing"""
     parser = ArgParser(description=('Command line interface '
                                     'to web2exe. {}'.format(__version__)),
                                      prog='web2execmd')
     command_base = CommandBase()
     command_base.init()
     parser.add_argument('project_dir', metavar='project_dir',
-                        help='The project directory.', type=unicode_arg)
+                        help='The project directory.')
     parser.add_argument('--output-dir', dest='output_dir',
-                        help='The output directory for exports.',
-                        type=unicode_arg)
+                        help='The output directory for exports.')
     parser.add_argument('--quiet', dest='quiet', action='store_true',
                         default=False,
                         help='Silences output messages')
@@ -1373,9 +1568,6 @@ def main():
                                'default': setting.default_value})
             action = 'store'
             option_name = setting_name.replace('_', '-')
-
-            if setting.type in ['file', 'string', 'strings']:
-                kwargs.update({'type': unicode_arg})
 
             if isinstance(setting.default_value, bool):
                 action = ('store_true' if setting.default_value is False
