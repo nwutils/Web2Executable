@@ -370,11 +370,18 @@ class CommandBase(object):
         Returns:
             A setting object or None
         """
+        # Check for alternate names in the settings
+        # due to nw.js changing some names in newer versions
+        name_no_underscores = name.replace('_', '-')
+
         for setting_group in (self.settings['setting_groups'] +
                               [self.settings['export_settings']] +
                               [self.settings['compression']]):
             if name in setting_group:
                 setting = setting_group[name]
+                return setting
+            elif name_no_underscores in setting_group:
+                setting = setting_group[name_no_underscores]
                 return setting
 
     def get_settings_type(self, type):
@@ -506,7 +513,7 @@ class CommandBase(object):
             p_json = [json_path]
         else:
             p_json = glob.glob(utils.path_join(self.project_dir(),
-                                            'package.json'))
+                                               'package.json'))
         setting_list = []
 
         if p_json:
