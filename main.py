@@ -645,6 +645,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if self.output_err:
             self.show_error(self.output_err)
             self.enable_ui_after_error()
+            self.output_err = ''
         else:
             self.progress_text = 'Running custom script...'
             self.ex_button.setEnabled(False)
