@@ -425,6 +425,18 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
+                if (setting.type == 'int' and setting.value != ''):
+                    try:
+                        int(setting.value)
+                    except ValueError:
+                        settings_valid = False
+                        widget = self.find_child_by_name(setting.name)
+                        if widget is not None:
+                            widget.setStyleSheet(red_border)
+                            widget.setToolTip(u'The value {} must be an integer.'.format(setting.value))
+                            tab = self.get_tab_index_for_setting_name(setting.name)
+                            self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
+
                 if (setting.type == 'file' and
                         setting.value):
                     setting_path_invalid = not os.path.exists(setting_path)
@@ -696,13 +708,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         location = self.get_setting('download_dir').value
 
-        versions = re.findall('v(\d+)\.(\d+)\.(\d+)', path)[0]
-
-        minor = int(versions[1])
-        if minor >= 12:
-            path = path.replace('node-webkit', 'nwjs')
-
-        if minor >= 13 and sdk_build:
+        if sdk_build:
             path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
         self.progress_text = u'Downloading {}'.format(path.replace(version_file, ''))
@@ -896,6 +902,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         name_input = self.find_child_by_name('name')
         name_setting = self.get_setting('name')
         title_input = self.find_child_by_name('title')
+        id_input = self.find_child_by_name('id')
 
         if not name_input.text():
             name_input.setText(name_setting.filter_name(proj_name))
@@ -905,6 +912,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         if not title_input.text():
             title_input.setText(proj_name)
+
+        if not id_input.text():
+            id_input.setText(proj_name)
 
         self.load_package_json(utils.get_data_file_path('files/global.json'))
         self.load_package_json()
@@ -983,7 +993,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_setting(self, name):
         setting = self.get_setting(name)
-        if setting.type == 'string':
+        if setting.type == 'string' or setting.type == 'int':
             return self.create_text_input_setting(name)
         elif setting.type == 'strings':
             return self.create_text_input_setting(name)
@@ -1183,7 +1193,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
                 if (setting.type == 'string' or
                     setting.type == 'file' or
-                        setting.type == 'folder'):
+                        setting.type == 'folder' or
+                        setting.type == 'int'):
                     old_val = ''
 
                     if setting.default_value is not None:
@@ -1217,13 +1228,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def set_kiosk_emulation_options(self, is_checked):
         if is_checked:
             width_field = self.find_child_by_name('width')
-            width_field.setText(self.desktop_width)
+            width_field.setText(str(self.desktop_width))
 
             height_field = self.find_child_by_name('height')
-            height_field.setText(self.desktop_height)
-
-            toolbar_field = self.find_child_by_name('toolbar')
-            toolbar_field.setChecked(not is_checked)
+            height_field.setText(str(self.desktop_height))
 
             frame_field = self.find_child_by_name('frame')
             frame_field.setChecked(not is_checked)
@@ -1237,32 +1245,21 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             fullscreen_field = self.find_child_by_name('fullscreen')
             fullscreen_field.setChecked(not is_checked)
 
-            always_on_top_field = self.find_child_by_name('always-on-top')
+            always_on_top_field = self.find_child_by_name('always_on_top')
             always_on_top_field.setChecked(is_checked)
 
             resizable_field = self.find_child_by_name('resizable')
             resizable_field.setChecked(not is_checked)
 
-    def refresh_export(self):
-        versions = self.get_version_tuple()
-        major_ver = versions[0]
-        minor_ver = versions[1]
-
-        mac = self.find_child_by_name('mac-x32')
-        if (major_ver > 0 or minor_ver >= 13):
-            if mac:
-                mac.setEnabled(False)
-        else:
-            if mac:
-                mac.setEnabled(True)
-
     def setting_changed(self, obj, setting, *args, **kwargs):
         if (setting.type == 'string' or
             setting.type == 'file' or
-                setting.type == 'folder'):
+                setting.type == 'folder' or
+                setting.type == 'int'):
             setting.value = args[0]
         elif setting.type == 'strings':
             setting.value = args[0].split(',')
+            setting.value = [x.strip() for x in setting.value if x]
         elif setting.type == 'check':
             setting.value = obj.isChecked()
             check_action = setting.check_action
@@ -1401,7 +1398,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             if setting_field:
                 if (setting.type == 'file' or
                     setting.type == 'string' or
-                        setting.type == 'folder'):
+                        setting.type == 'folder' or
+                        setting.type == 'int'):
                     val_str = self.convert_val_to_str(setting.value)
                     setting_field.setText(setting.filter_name(val_str))
                 if setting.type == 'strings':

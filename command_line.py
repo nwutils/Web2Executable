@@ -48,12 +48,6 @@ from configobj import ConfigObj
 
 COMMAND_LINE = True
 
-NWJS_13_RENAMES = ['always-on-top',
-                   'visible-on-all-workspaces',
-                   'new-instance',
-                   'inject-js-start',
-                   'inject-js-end']
-
 ### The following sections are code that needs to be run when importing
 ### from main.py.
 
@@ -192,15 +186,7 @@ class Setting(object):
 
             path = self.full_file_path.format(version)
 
-            versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
-
-            minor = int(versions[1])
-            major = int(versions[0])
-
-            if minor >= 12 or major > 0:
-                path = path.replace('node-webkit', 'nwjs')
-
-            if minor >= 13 and sdk_build:
+            if sdk_build:
                 path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
             return path
@@ -444,9 +430,14 @@ class CommandBase(object):
         versions = sorted(union_versions,
                           key=Version, reverse=True)
 
-        if len(versions) > 19:
-            #Cut off old versions
-            versions = versions[:-19]
+        filtered_vers = []
+
+        for v in versions:
+            ver = Version(v)
+            if ver.major > 0 or (ver.major == 0 and ver.minor >= 13):
+                filtered_vers.append(v)
+
+        versions = filtered_vers
 
         nw_version.values = versions
         f = None
@@ -474,18 +465,11 @@ class CommandBase(object):
         location = self.get_setting('download_dir').value
         version = self.selected_version()
         path = setting.url.format(version, version)
-        versions = re.findall('(\d+)\.(\d+)\.(\d+)', version)[0]
 
         sdk_build_setting = self.get_setting('sdk_build')
         sdk_build = sdk_build_setting.value
 
-        minor = int(versions[1])
-        major = int(versions[0])
-
-        if minor >= 12 or major > 0:
-            path = path.replace('node-webkit', 'nwjs')
-
-        if minor >= 13 and sdk_build:
+        if sdk_build:
             path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
         try:
@@ -533,14 +517,7 @@ class CommandBase(object):
 
     def process_app_settings(self, dic):
         """Process the app settings into the dic"""
-        versions = self.get_version_tuple()
-        major_ver = versions[0]
-        minor_ver = versions[1]
-
         for setting_name, setting in self.settings['app_settings'].items():
-            if (major_ver > 0 or minor_ver >= 13) and setting_name in NWJS_13_RENAMES:
-                dic.pop(setting_name, '')
-                setting_name = setting_name.replace('-', '_')
 
             if setting.value is not None and setting.value != '':
                 dic[setting_name] = setting.value
@@ -551,16 +528,9 @@ class CommandBase(object):
 
     def process_window_settings(self, dic):
         """Process the window settings into the dic"""
-        versions = self.get_version_tuple()
-        major_ver = versions[0]
-        minor_ver = versions[1]
-
         for setting_name, setting in self.settings['window_settings'].items():
-            if major_ver > 0 or minor_ver >= 13 and setting_name in NWJS_13_RENAMES:
-                dic['window'].pop(setting_name, '')
-                setting_name = setting_name.replace('-', '_')
             if setting.value is not None and setting.value != '':
-                if 'height' in setting.name or 'width' in setting.name:
+                if setting.type == 'int':
                     try:
                         dic['window'][setting_name] = int(setting.value)
                     except ValueError:
@@ -683,11 +653,13 @@ class CommandBase(object):
                     setting_list.append(setting)
                     if (setting.type == 'file' or
                         setting.type == 'string' or
-                            setting.type == 'folder'):
+                            setting.type == 'folder' or
+                            setting.type == 'int'):
                         val_str = self.convert_val_to_str(new_dic[item])
                         setting.value = val_str
                     if setting.type == 'strings':
                         strs = self.convert_val_to_str(new_dic[item]).split(',')
+                        strs = [x.strip() for x in strs if x]
                         setting.value = strs
                     if setting.type == 'check':
                         setting.value = new_dic[item]
@@ -811,12 +783,6 @@ class CommandBase(object):
         """
         export_dest = utils.path_join(output_dir, ex_setting.name)
 
-        versions = self.get_version_tuple()
-        major_ver, minor_ver, _ = versions
-
-        if minor_ver >= 12 or major_ver > 0:
-            export_dest = export_dest.replace('node-webkit', 'nwjs')
-
         return export_dest
 
     def copy_export_files(self, ex_setting, export_dest):
@@ -876,7 +842,7 @@ class CommandBase(object):
 
         plistlib.writePlist(plist_dict, plist_path)
 
-    def process_mac_setting(self, app_loc, export_dest, uncompressed):
+    def process_mac_setting(self, app_loc, export_dest, ex_setting, uncompressed):
         """Process the Mac settings
 
         Args:
@@ -888,12 +854,9 @@ class CommandBase(object):
         app_path = utils.path_join(export_dest,
                                    self.project_name()+'.app')
 
-        try:
-            nw_path = utils.path_join(export_dest, 'nwjs.app')
-            utils.move(nw_path, app_path)
-        except IOError:
-            nw_path = utils.path_join(export_dest, 'node-webkit.app')
-            utils.move(nw_path, app_path)
+        nw_path = utils.path_join(export_dest, 'nwjs.app')
+        self.compress_nw(nw_path, ex_setting)
+        utils.move(nw_path, app_path)
 
         self.replace_plist(app_path)
 
@@ -912,20 +875,11 @@ class CommandBase(object):
 
         self.progress_text += '.'
 
-        versions = self.get_version_tuple()
-        major_ver, minor_ver, _ = versions
-
-        # If newer version, use different files
-        if minor_ver >= 13 or major_ver > 0:
-            self.create_icns_for_app(utils.path_join(resource_path,
-                                                     'app.icns'))
-            self.create_icns_for_app(utils.path_join(resource_path,
-                                                     'document.icns'))
-            self.replace_localized_app_name(app_path)
-
-        else:
-            self.create_icns_for_app(utils.path_join(resource_path,
-                                                     'nw.icns'))
+        self.create_icns_for_app(utils.path_join(resource_path,
+                                                 'app.icns'))
+        self.create_icns_for_app(utils.path_join(resource_path,
+                                                 'document.icns'))
+        self.replace_localized_app_name(app_path)
 
         self.progress_text += '.'
 
@@ -952,7 +906,7 @@ class CommandBase(object):
             ext = '.exe'
             self.replace_icon_in_exe(nw_path)
 
-        self.compress_nw(nw_path)
+        self.compress_nw(nw_path, ex_setting)
 
         dest_binary_path = utils.path_join(export_dest,
                                            self.project_name() +
@@ -989,7 +943,8 @@ class CommandBase(object):
             self.progress_text += '.'
 
             if 'mac' in ex_setting.name:
-                self.process_mac_setting(app_loc, export_dest, uncompressed)
+                self.process_mac_setting(app_loc, export_dest, ex_setting,
+                                         uncompressed)
             else:
                 self.process_win_linux_setting(app_loc, export_dest,
                                                ex_setting, uncompressed)
@@ -1068,16 +1023,10 @@ class CommandBase(object):
         """
         Merge the zip file into the exe and copy it to the destination path
         """
-        versions = self.get_version_tuple()
-        major_ver, minor_ver, _ = versions
-
-        if minor_ver >= 13 or major_ver > 0:
-            package_loc = utils.path_join(export_path, 'package.nw')
-            if uncompressed:
-                utils.copytree(app_loc, package_loc)
-                utils.copy(nw_path, dest_path)
-            else:
-                join_files(dest_path, nw_path, app_loc)
+        package_loc = utils.path_join(export_path, 'package.nw')
+        if uncompressed:
+            utils.copytree(app_loc, package_loc)
+            utils.copy(nw_path, dest_path)
         else:
             join_files(dest_path, nw_path, app_loc)
 
@@ -1136,7 +1085,7 @@ class CommandBase(object):
 
         os.chmod(dfile_path, 0o755)
 
-    def compress_nw(self, nw_path):
+    def compress_nw(self, nw_path, ex_setting):
         """Compress the nw file using upx"""
         compression = self.get_setting('nw_compression_level')
 
@@ -1163,7 +1112,25 @@ class CommandBase(object):
             upx_bin = upx_version
             os.chmod(upx_bin, 0o755)
 
-            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value), nw_path]
+            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value)]
+
+            if 'windows' in ex_setting.name:
+                path = os.path.join(os.path.dirname(nw_path), '*.dll')
+                cmd.extend(glob.glob(path))
+            elif 'linux' in ex_setting.name:
+                path = os.path.join(os.path.dirname(nw_path), 'lib', '*.so')
+                cmd.extend(glob.glob(path))
+            elif 'mac' in ex_setting.name:
+                dylib_path = utils.path_join(
+                    nw_path,
+                    'Contents',
+                    'Versions',
+                    '**',
+                    'nwjs Framework.framework',
+                )
+                cmd.extend(glob.glob(os.path.join(dylib_path, 'nwjs Framework')))
+                path = os.path.join(dylib_path, '*.dylib')
+                cmd.extend(glob.glob(path))
 
             if platform.system() == 'Windows':
                 startupinfo = subprocess.STARTUPINFO()
@@ -1190,6 +1157,11 @@ class CommandBase(object):
                 time.sleep(2)
 
             output, err = proc.communicate()
+            if err:
+                args = ex_setting.name, platform.system(), ex_setting.name
+                self.output_err = (
+                    'Cannot compress files for {} on {}!\n'
+                    'Run Web2Exe on {} to compress successfully.').format(args)
 
     def remove_readonly(self, action, name, exc):
         """Try to remove readonly files"""
@@ -1430,13 +1402,7 @@ class CommandBase(object):
         sdk_build_setting = self.get_setting('sdk_build')
         sdk_build = sdk_build_setting.value
 
-        versions = self.get_version_tuple()
-        major, minor, _ = versions
-
-        if minor >= 12 or major > 0:
-            path = path.replace('node-webkit', 'nwjs')
-
-        if minor >= 13 and sdk_build:
+        if sdk_build:
             path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
 
         url = path
@@ -1655,6 +1621,9 @@ def main():
 
     if not args.title:
         args.title = command_base.project_name()
+
+    if not args.id:
+        args.id = command_base.project_name()
 
     for name, val in args._get_kwargs():
         if callable(val):
