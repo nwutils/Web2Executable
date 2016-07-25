@@ -8,7 +8,7 @@ except AttributeError:
     pass
 
 from utils import zip_files, join_files, log, get_temp_dir
-from pycns import save_icns
+from image_utils.pycns import save_icns
 from pepy.pe import PEFile
 
 import argparse

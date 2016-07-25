@@ -1,5 +1,5 @@
-from icns_info import ICNSHeader, icns_to_png
-from image_utils import Image
+from image_utils.icns_info import ICNSHeader, icns_to_png
+from image_utils.image_utils import Image
 import sys
 
 """This module takes any image that is readable by PIL and exports it to an icns file.

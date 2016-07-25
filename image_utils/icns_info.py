@@ -1,6 +1,6 @@
 import struct
-import image_utils
-import png
+import image_utils.image_utils as image_utils
+import image_utils.png as png
 from PIL import Image
 import os
 from io import BytesIO

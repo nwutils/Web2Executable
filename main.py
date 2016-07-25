@@ -14,7 +14,7 @@ from PySide.QtGui import QApplication, QHBoxLayout, QVBoxLayout
 from PySide.QtNetwork import QHttp
 from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
 
-from pycns import pngs_from_icns
+from image_utils.pycns import pngs_from_icns
 from command_line import CommandBase, logger, get_file
 from command_line import __version__ as __gui_version__
 
