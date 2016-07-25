@@ -16,7 +16,7 @@ call pyinstaller -w --onefile ^
  --hidden-import PIL.Jpeg2KImagePlugin ^
  --hidden-import pkg_resources ^
  --hidden-import configobj ^
- -i icon.ico ^
+ -i images\icon.ico ^
  --distpath Web2ExeWin -n Web2Exe main.py
 
 echo D | xcopy /s files Web2ExeWin\files

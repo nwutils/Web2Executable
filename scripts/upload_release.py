@@ -28,7 +28,7 @@ def main():
 
     password = getpass.getpass('Password:')
 
-    zip_files = glob('Web2ExeBuild/*.zip')
+    zip_files = glob('Web2ExeBuild/*.zip') + glob('*.zip')
     file_names = set([os.path.basename(zip_file) for zip_file in zip_files])
 
     if req.status_code == 200:

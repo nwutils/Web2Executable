@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Web2Exe"
-!define /file PRODUCT_VERSION "files\version.txt"
+!define /file PRODUCT_VERSION "..\files\version.txt"
 !define PRODUCT_PUBLISHER "SimplyPixelated"
 !define PRODUCT_WEB_SITE "http://www.simplypixelated.com"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"
@@ -23,7 +23,7 @@ SetCompressor lzma
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
 ; License page
-!insertmacro MUI_PAGE_LICENSE "license.rtf"
+!insertmacro MUI_PAGE_LICENSE "..\license.rtf"
 ; Components page
 !insertmacro MUI_PAGE_COMPONENTS
 ; Directory page
@@ -53,7 +53,7 @@ var ICONS_GROUP
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "Web2Exe-Setup.exe"
+OutFile "..\Web2Exe-Setup.exe"
 
 RequestExecutionLevel admin ;Require admin rights on NT6+ (When UAC is turned on)
 
@@ -78,11 +78,11 @@ Section "Web2Executable" SEC01
   SectionIn RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
-  File /r /x compressors "Web2ExeWin\"
+  File /r /x compressors "..\Web2ExeWin\"
   
   CreateDirectory "$LocalAppData\Web2Executable\Web2Executable\files\compressors"
   SetOutPath "$LocalAppData\Web2Executable\Web2Executable\files\compressors"
-  File "Web2ExeWin\files\compressors\upx-win.exe"
+  File "..\Web2ExeWin\files\compressors\upx-win.exe"
 
   ; Shortcuts
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
