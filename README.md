@@ -1,4 +1,4 @@
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/v0.4.11b/total.svg?maxAge=2592000)]()
+[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/v0.5.0b/total.svg?maxAge=2592000)]()
 
 [![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg?maxAge=2592000)]()
 
