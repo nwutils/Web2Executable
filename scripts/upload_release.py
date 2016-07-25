@@ -28,7 +28,7 @@ def main():
 
     password = getpass.getpass('Password:')
 
-    zip_files = glob('*.zip')
+    zip_files = glob('Web2ExeBuild/*.zip')
     file_names = set([os.path.basename(zip_file) for zip_file in zip_files])
 
     if req.status_code == 200:
@@ -63,7 +63,8 @@ def main():
                 'target_commitish': 'master',
                 'name': 'Web2Executable ' + version}
 
-        post_res = requests.post(base_url, data=json.dumps(data), auth=(github_user, password))
+        post_res = requests.post(base_url, data=json.dumps(data),
+                                 auth=(github_user, password))
 
         if post_res.status_code == 201:
             json_data = json.loads(post_res.text)
