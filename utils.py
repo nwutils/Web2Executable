@@ -1,17 +1,74 @@
 from __future__ import print_function
-import os, zipfile, io, platform
-import sys, tempfile
+import os
+import zipfile
+import io
+import platform
+import tempfile
+import codecs
+import shutil
 import subprocess
 from appdirs import AppDirs
-import shutil
+import validators
+
+from PySide import QtCore
 
 #try:
 #    import zlib
 #    ZIP_MODE = zipfile.ZIP_DEFLATED
 #except:
-ZIP_MODE = zipfile.ZIP_STORED
 
-DEBUG = False
+
+def url_exists(path):
+    if validators.url(path):
+        return True
+    return False
+
+def load_last_project_path():
+    proj_path = ''
+    proj_file = get_data_file_path('files/last_project_path.txt')
+    if os.path.exists(proj_file):
+        with codecs.open(proj_file, encoding='utf-8') as f:
+            proj_path = f.read().strip()
+
+    if not proj_path:
+        proj_path = QtCore.QDir.currentPath()
+
+    return proj_path
+
+def load_recent_projects():
+    files = []
+    history_file = get_data_file_path('files/recent_files.txt')
+    if not os.path.exists(history_file):
+        return files
+    with codecs.open(history_file, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and os.path.exists(line):
+                files.append(line)
+    files.reverse()
+    return files
+
+def save_project_path(path):
+    proj_file = get_data_file_path('files/last_project_path.txt')
+    with codecs.open(proj_file, 'w+', encoding='utf-8') as f:
+        f.write(path)
+
+def save_recent_project(proj):
+    recent_file_path = get_data_file_path('files/recent_files.txt')
+    max_length = config.MAX_RECENT
+    recent_files = []
+    if os.path.exists(recent_file_path):
+        recent_files = codecs.open(recent_file_path, encoding='utf-8').read().split(u'\n')
+    try:
+        recent_files.remove(proj)
+    except ValueError:
+        pass
+    recent_files.append(proj)
+    with codecs.open(recent_file_path, 'w+', encoding='utf-8') as f:
+        for recent_file in recent_files[-max_length:]:
+            if recent_file and os.path.exists(recent_file):
+                f.write(u'{}\n'.format(recent_file))
+
 
 def replace_right(source, target, replacement, replacements=None):
     return replacement.join(source.rsplit(target, replacements))
@@ -85,7 +142,7 @@ def copytree(src, dest, **kwargs):
     shutil.copytree(src, dest, **kwargs)
 
 def log(*args):
-    if DEBUG:
+    if config.DEBUG:
         print(*args)
     with open(get_data_file_path('files/error.log'), 'a+') as f:
         f.write(', '.join(args))
@@ -100,7 +157,7 @@ def open_folder_in_explorer(path):
         subprocess.Popen(["xdg-open", path])
 
 def zip_files(zip_file_name, *args, **kwargs):
-    zip_file = zipfile.ZipFile(zip_file_name, 'w', ZIP_MODE)
+    zip_file = zipfile.ZipFile(zip_file_name, 'w', config.ZIP_MODE)
     verbose = kwargs.pop('verbose', False)
     exclude_paths = kwargs.pop('exclude_paths', [])
     old_path = os.getcwd()
@@ -169,3 +226,7 @@ def join_files(destination, *args, **kwargs):
                         if len(bytes) == 0:
                             break
                         dest_file.write(bytes)
+
+
+import config
+

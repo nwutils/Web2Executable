@@ -1,16 +1,5 @@
 """Command line module for web2exe."""
 
-import ssl
-
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-
-from utils import zip_files, join_files, log, get_temp_dir
-from image_utils.pycns import save_icns
-from pepy.pe import PEFile
-
 import argparse
 import urllib.request as request
 import platform
@@ -26,226 +15,34 @@ import tarfile
 import zipfile
 import traceback
 import subprocess
-import logging
-import logging.handlers as lh
 import plistlib
 import codecs
-from pprint import pprint
-
-from utils import get_data_path, get_data_file_path
-import utils
-
-from semantic_version import Version
-
-from zipfile import ZipFile
-from tarfile import TarFile
+import ssl
 
 from io import StringIO
 
+import config
+import utils
+from utils import zip_files, join_files
+from utils import get_data_path, get_data_file_path
+from util_classes import Setting
+
+from image_utils.pycns import save_icns
+from pepy.pe import PEFile
+
+from semantic_version import Version
+
 from configobj import ConfigObj
+
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
 
 ## Constants --------------------------------------------
 
 COMMAND_LINE = True
-
-### The following sections are code that needs to be run when importing
-### from main.py.
-
-## CWD Computation --------------------------------------
-
-inside_packed_exe = getattr(sys, 'frozen', '')
-
-if inside_packed_exe:
-    # we are running in a |PyInstaller| bundle
-    CWD = os.path.dirname(sys.executable)
-else:
-    # we are running in a normal Python environment
-    CWD = os.path.dirname(os.path.realpath(__file__))
-
-## CMD Utility functions --------------------------------
-
-def get_file(path):
-    parts = path.split('/')
-    independent_path = utils.path_join(CWD, *parts)
-    return independent_path
-
-def is_installed():
-    uninst = get_file('uninst.exe')
-    return utils.is_windows() and os.path.exists(uninst)
-
-## Version Setting ----------------------------------------
-
-__version__ = "v0.0.0"
-
-with open(get_file('files/version.txt')) as f:
-    __version__ = f.read().strip()
-
-
-TEMP_DIR = get_temp_dir()
-DEFAULT_DOWNLOAD_PATH = get_data_path('files/downloads')
-
-## Logger setup ----------------------------------------------
-
-logger = logging.getLogger('W2E logger')
-LOG_FILENAME = get_data_file_path('files/error.log')
-if __name__ != '__main__':
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format=("%(levelname) -10s %(asctime)s %(module)s.py: "
-                "%(lineno)s %(funcName)s - %(message)s"),
-        level=logging.DEBUG
-    )
-    logger = logging.getLogger('W2E logger')
-
-handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
-logger.addHandler(handler)
-
-## Custom except hook to log all errors ----------------------
-
-def my_excepthook(type_, value, tback):
-    output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
-    logger.error(u'{}'.format(output_err))
-    sys.__excepthook__(type_, value, tback)
-
-sys.excepthook = my_excepthook
-
-
-# Ensure that the default download path exists
-try:
-    os.makedirs(DEFAULT_DOWNLOAD_PATH)
-except:
-    pass
-
-
-class Setting(object):
-    """Class that describes a setting from the setting.cfg file"""
-    def __init__(self, name='', display_name=None, value=None,
-                 required=False, type=None, file_types=None, *args, **kwargs):
-        self.name = name
-        self.display_name = (display_name
-                             if display_name
-                             else name.replace('_', ' ').capitalize())
-        self.value = value
-        self.last_value = None
-        self.required = required
-        self.type = type
-        self.copy = kwargs.pop('copy', True)
-        self.file_types = file_types
-        self.scope = kwargs.pop('scope', 'local')
-
-        self.default_value = kwargs.pop('default_value', None)
-        self.button = kwargs.pop('button', None)
-        self.button_callback = kwargs.pop('button_callback', None)
-        self.description = kwargs.pop('description', u'')
-        self.values = kwargs.pop('values', [])
-        self.filter = kwargs.pop('filter', '.*')
-        self.filter_action = kwargs.pop('filter_action', 'None')
-        self.check_action = kwargs.pop('check_action', 'None')
-        self.action = kwargs.pop('action', None)
-
-        self.set_extra_attributes_from_keyword_args(**kwargs)
-
-        if self.value is None:
-            self.value = self.default_value
-
-        self.save_path = kwargs.pop('save_path', u'')
-
-        self.get_file_information_from_url()
-
-    def filter_name(self, text):
-        """Use the filter action to filter out invalid text"""
-        if hasattr(self.filter_action, text):
-            action = getattr(self.filter_action, text)
-            return action(text)
-        return text
-
-    def get_file_information_from_url(self):
-        """Extract the file information from the setting url"""
-        if hasattr(self, 'url'):
-            self.file_name = self.url.split(u'/')[-1]
-            self.full_file_path = utils.path_join(self.save_path, self.file_name)
-            self.file_ext = os.path.splitext(self.file_name)[1]
-            if self.file_ext == '.zip':
-                self.extract_class = ZipFile
-                self.extract_args = ()
-            elif self.file_ext == '.gz':
-                self.extract_class = TarFile.open
-                self.extract_args = ('r:gz',)
-
-    def save_file_path(self, version, location=None, sdk_build=False):
-        """Get the save file path based on the version"""
-        if location:
-            self.save_path = location
-        else:
-            self.save_path = self.save_path or DEFAULT_DOWNLOAD_PATH
-
-
-        self.get_file_information_from_url()
-
-        if self.full_file_path:
-
-            path = self.full_file_path.format(version)
-
-            if sdk_build:
-                path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
-
-            return path
-
-        return ''
-
-    def set_extra_attributes_from_keyword_args(self, **kwargs):
-        for undefined_key, undefined_value in kwargs.items():
-            setattr(self, undefined_key, undefined_value)
-
-    def extract(self, ex_path, version, sdk_build=False):
-        if os.path.exists(ex_path):
-            utils.rmtree(ex_path, ignore_errors=True)
-
-        path = self.save_file_path(version, sdk_build=sdk_build)
-
-        file = self.extract_class(path,
-                                  *self.extract_args)
-        # currently, python's extracting mechanism for zipfile doesn't
-        # copy file permissions, resulting in a binary that
-        # that doesn't work. Copied from a patch here:
-        # http://bugs.python.org/file34873/issue15795_cleaned.patch
-        if path.endswith('.zip'):
-            members = file.namelist()
-            for zipinfo in members:
-                minfo = file.getinfo(zipinfo)
-                target = file.extract(zipinfo, ex_path)
-                mode = minfo.external_attr >> 16 & 0x1FF
-                os.chmod(target, mode)
-        else:
-            file.extractall(ex_path)
-
-        if path.endswith('.tar.gz'):
-            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.tar.gz',''))
-        else:
-            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.zip',''))
-
-        if os.path.exists(dir_name):
-            for p in os.listdir(dir_name):
-                abs_file = utils.path_join(dir_name, p)
-                utils.move(abs_file, ex_path)
-            utils.rmtree(dir_name, ignore_errors=True)
-
-    def __repr__(self):
-        url = ''
-        if hasattr(self, 'url'):
-            url = self.url
-        return (
-            u'Setting: (name={}, '
-            u'display_name={}, '
-            u'value={}, required={}, '
-            u'type={}, url={})'
-        ).format(self.name,
-                 self.display_name,
-                 self.value,
-                 self.required,
-                 self.type,
-                 url)
-
 
 class CommandBase(object):
     """The common class for the CMD and the GUI"""
@@ -263,7 +60,7 @@ class CommandBase(object):
         self.original_packagejson = {}
 
     def init(self):
-        self.logger = logging.getLogger('CMD logger')
+        self.logger = config.logger
         self.update_nw_versions(None)
         self.setup_nw_versions()
 
@@ -291,20 +88,20 @@ class CommandBase(object):
 
     def get_settings(self):
         """Load all of the settings from the settings config file"""
-        config_file = get_file('files/settings.cfg')
+        config_file = config.get_file('files/settings.cfg')
 
         contents = codecs.open(config_file, encoding='utf-8').read()
 
         contents = contents.replace(u'{DEFAULT_DOWNLOAD_PATH}',
-                                    DEFAULT_DOWNLOAD_PATH)
+                                    config.DEFAULT_DOWNLOAD_PATH)
 
         config_io = StringIO(contents)
-        config = ConfigObj(config_io, unrepr=True).dict()
+        config_obj = ConfigObj(config_io, unrepr=True).dict()
 
         settings = {'setting_groups': []}
-        setting_items = (list(config['setting_groups'].items()) +
-                         [('export_settings', config['export_settings'])] +
-                         [('compression', config['compression'])])
+        setting_items = (list(config_obj['setting_groups'].items()) +
+                         [('export_settings', config_obj['export_settings'])] +
+                         [('compression', config_obj['compression'])])
 
         for setting_group, setting_group_dict in setting_items:
             settings[setting_group] = {}
@@ -315,21 +112,21 @@ class CommandBase(object):
                 setting_obj = Setting(name=setting_name, **setting_dict)
                 settings[setting_group][setting_name] = setting_obj
 
-        sgroup_items = config['setting_groups'].items()
+        sgroup_items = config_obj['setting_groups'].items()
         for setting_group, setting_group_dict in sgroup_items:
             settings['setting_groups'].append(settings[setting_group])
 
-        self._setting_items = (list(config['setting_groups'].items()) +
-                         [('export_settings', config['export_settings'])] +
-                         [('compression', config['compression'])])
+        self._setting_items = (list(config_obj['setting_groups'].items()) +
+                         [('export_settings', config_obj['export_settings'])] +
+                         [('compression', config_obj['compression'])])
 
-        config.pop('setting_groups')
-        config.pop('export_settings')
-        config.pop('compression')
+        config_obj.pop('setting_groups')
+        config_obj.pop('export_settings')
+        config_obj.pop('compression')
 
-        self._setting_items += config.items()
+        self._setting_items += config_obj.items()
 
-        for key, val in config.items():
+        for key, val in config_obj.items():
             settings[key] = val
 
         return settings
@@ -953,7 +750,7 @@ class CommandBase(object):
     def make_output_dirs(self, write_json=True):
         """Create the output directories for the application to be copied"""
         output_dir = utils.path_join(self.output_dir(), self.project_name())
-        temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
+        temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
 
         self.progress_text = 'Making new directories...\n'
 
@@ -986,7 +783,7 @@ class CommandBase(object):
             self.logger.error(error)
             self.output_err += error
         finally:
-            temp_dir = utils.path_join(TEMP_DIR, 'webexectemp')
+            temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
             utils.rmtree(temp_dir, onerror=self.remove_readonly)
 
     def get_app_nw_loc(self, temp_dir, output_dir):
@@ -1093,15 +890,15 @@ class CommandBase(object):
             return
 
         comp_dict = {
-            'Darwin64bit': get_file('files/compressors/upx-mac'),
-            'Darwin32bit': get_file('files/compressors/upx-mac'),
-            'Linux64bit':  get_file('files/compressors/upx-linux-x64'),
-            'Linux32bit':  get_file('files/compressors/upx-linux-x32'),
-            'Windows64bit':  get_file('files/compressors/upx-win.exe'),
-            'Windows32bit':  get_file('files/compressors/upx-win.exe')
+            'Darwin64bit': config.get_file('files/compressors/upx-mac'),
+            'Darwin32bit': config.get_file('files/compressors/upx-mac'),
+            'Linux64bit':  config.get_file('files/compressors/upx-linux-x64'),
+            'Linux32bit':  config.get_file('files/compressors/upx-linux-x32'),
+            'Windows64bit':  config.get_file('files/compressors/upx-win.exe'),
+            'Windows32bit':  config.get_file('files/compressors/upx-win.exe')
         }
 
-        if is_installed():
+        if config.is_installed():
             comp_dict['Windows64bit'] = get_data_file_path('files/compressors/upx-win.exe')
             comp_dict['Windows32bit'] = get_data_file_path('files/compressors/upx-win.exe')
 
@@ -1161,7 +958,7 @@ class CommandBase(object):
                 args = ex_setting.name, platform.system(), ex_setting.name
                 self.output_err = (
                     'Cannot compress files for {} on {}!\n'
-                    'Run Web2Exe on {} to compress successfully.').format(args)
+                    'Run Web2Exe on {} to compress successfully.').format(*args)
 
     def remove_readonly(self, action, name, exc):
         """Try to remove readonly files"""
@@ -1179,7 +976,7 @@ class CommandBase(object):
         Copy external files to the project folder
         so that they are bundled with the exe
         """
-        old_dir = CWD
+        old_dir = config.CWD
 
         os.chdir(self.project_dir())
         self.logger.info(u'Copying files to {}'.format(self.project_dir()))
@@ -1207,7 +1004,7 @@ class CommandBase(object):
 
     def get_python_command(self, export_dict, export_dir, export_dirs, contents):
         export_opts = self.get_export_options()
-        env_file = get_file('files/env_vars.py')
+        env_file = config.get_file('files/env_vars.py')
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
 
         for i, ex_dir in enumerate(export_dirs):
@@ -1228,7 +1025,7 @@ class CommandBase(object):
 
     def get_bat_command(self, export_dict, export_dir, export_dirs, contents):
         export_opts = self.get_export_options()
-        env_file = get_file('files/env_vars.bat')
+        env_file = config.get_file('files/env_vars.bat')
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
         ex_dir_vars = ''
 
@@ -1245,7 +1042,7 @@ class CommandBase(object):
                                        **export_dict)
         batcontents = '{}\n{}'.format(env_vars, contents)
 
-        bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+        bat_file = utils.path_join(config.TEMP_DIR, '{}.bat'.format(self.project_name()))
 
         self.logger.debug(batcontents)
 
@@ -1258,7 +1055,7 @@ class CommandBase(object):
 
     def get_bash_command(self, export_dict, export_dir, export_dirs, contents):
         export_opts = self.get_export_options()
-        env_file = get_file('files/env_vars.bat')
+        env_file = config.get_file('files/env_vars.bat')
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
         ex_dir_vars = ''
 
@@ -1275,7 +1072,7 @@ class CommandBase(object):
                                        **export_dict)
         batcontents = '{}\n{}'.format(env_vars, contents)
 
-        bat_file = utils.path_join(TEMP_DIR, '{}.bat'.format(self.project_name()))
+        bat_file = utils.path_join(config.TEMP_DIR, '{}.bat'.format(self.project_name()))
 
         self.logger.debug(batcontents)
 
@@ -1337,7 +1134,7 @@ class CommandBase(object):
             if bat_file:
                 os.remove(bat_file)
 
-            with open(get_file('script-output.txt'), 'w+') as f:
+            with open(config.get_file('script-output.txt'), 'w+') as f:
                 f.write('Output:\n{}'.format(output))
                 if error:
                     f.write('\n\nErrors:\n{}\n'.format(error))
@@ -1506,7 +1303,7 @@ class ArgParser(argparse.ArgumentParser):
 def main():
     """Main setup and argument parsing"""
     parser = ArgParser(description=('Command line interface '
-                                    'to web2exe. {}'.format(__version__)),
+                                    'to web2exe. {}'.format(config.__version__)),
                                      prog='web2execmd')
     command_base = CommandBase()
     command_base.init()
@@ -1529,7 +1326,7 @@ def main():
                         help=('Loads the package.json '
                               'file in the project directory. '
                               'Ignores other command line arguments.'))
-    parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(config.__version__))
 
     for setting_group_dict in command_base.settings['setting_groups']+[command_base.settings['compression']]:
         for setting_name, setting in setting_group_dict.items():
@@ -1571,6 +1368,9 @@ def main():
 
     args = parser.parse_args()
 
+    import logging
+    import logging.handlers as lh
+
     if args.verbose:
         logging.basicConfig(
             stream=sys.stdout,
@@ -1580,27 +1380,24 @@ def main():
         )
     else:
         logging.basicConfig(
-            filename=LOG_FILENAME,
+            filename=config.LOG_FILENAME,
             format=("%(levelname) -10s %(asctime)s %(module)s.py: "
                     "%(lineno)s %(funcName)s - %(message)s"),
             level=logging.DEBUG
         )
 
-    global logger
-    global handler
-
-    logger = logging.getLogger('CMD Logger')
-    handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
-    logger.addHandler(handler)
+    config.logger = logging.getLogger('CMD Logger')
+    config.handler = lh.RotatingFileHandler(config.LOG_FILENAME, maxBytes=100000, backupCount=2)
+    config.logger.addHandler(config.handler)
 
     def my_excepthook(type_, value, tback):
         output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
-        logger.error(u'{}'.format(output_err))
+        config.logger.error(u'{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
     sys.excepthook = my_excepthook
 
-    command_base.logger = logger
+    command_base.logger = config.logger
 
     if args.quiet:
         command_base.quiet = True
