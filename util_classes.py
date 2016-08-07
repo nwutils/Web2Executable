@@ -237,3 +237,54 @@ class Setting(object):
                  self.required,
                  self.type,
                  url)
+
+class CompleterLineEdit(QtGui.QLineEdit):
+
+    def __init__(self, tag_dict, *args):
+        QtGui.QLineEdit.__init__(self, *args)
+
+        self.pref = ''
+        self.tag_dict = tag_dict
+
+    def text_changed(self, text):
+        all_text = str(text)
+        text = all_text[:self.cursorPosition()]
+        prefix = re.split('[^%a-zA-Z)(_-]', text)[-1].strip()
+        self.pref = prefix
+        if prefix.strip() != prefix:
+            self.pref = ''
+
+    def complete_text(self, text):
+        cursor_pos = self.cursorPosition()
+        before_text = str(self.text())[:cursor_pos]
+        after_text = str(self.text())[cursor_pos:]
+        prefix_len = len(re.split('[^%a-zA-Z)(_-]', before_text)[-1].strip())
+        tag_text = self.tag_dict.get(text)
+
+        if tag_text is None:
+            tag_text = text
+
+        new_text = '{}{}{}'.format(before_text[:cursor_pos - prefix_len],
+                                   tag_text,
+                                   after_text)
+        self.setText(new_text)
+        self.setCursorPosition(len(new_text))
+
+class TagsCompleter(QtGui.QCompleter):
+
+    def __init__(self, parent, all_tags):
+        self.keys = sorted(all_tags.keys())
+        self.vals = sorted([val for val in all_tags.values()])
+        self.tags = list(sorted(self.vals+self.keys))
+        QtGui.QCompleter.__init__(self, self.tags, parent)
+        self.editor = parent
+
+    def update(self, text):
+        obj = self.editor
+        completion_prefix = obj.pref
+        model = QtGui.QStringListModel(self.tags, self)
+        self.setModel(model)
+
+        self.setCompletionPrefix(completion_prefix)
+        if completion_prefix.strip() != '':
+            self.complete()

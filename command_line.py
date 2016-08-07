@@ -144,6 +144,83 @@ class CommandBase(object):
         return (self._project_name or
                 os.path.basename(os.path.abspath(self.project_dir())))
 
+    def sub_output_pattern(self, pattern):
+        """
+        Substitute patterns for setting values
+        """
+        byte_pattern = bytearray(pattern.encode())
+
+        val_dict = self.get_tag_value_dict()
+
+        start = 0
+        end = 0
+
+        in_sub = False
+
+        i = 0
+
+        while i < len(byte_pattern):
+            char = chr(byte_pattern[i])
+            next_char = None
+            if i != len(byte_pattern) - 1:
+                next_char = chr(byte_pattern[i+1])
+
+            if char == '%':
+                if next_char == '(':
+                    start = i
+                    in_sub = True
+
+            if in_sub:
+                end = i
+
+            if char == ')':
+                in_sub = False
+                old_string = str(byte_pattern[start:end+1], 'utf-8')
+                sub = val_dict.get(old_string)
+
+                if sub is not None:
+                    sub = str(sub)
+                    byte_pattern[start:end+1] = sub.encode()
+                    i = i + (len(sub)-len(old_string))
+
+            i += 1
+
+        return str(byte_pattern, 'utf-8').replace('/', '_').replace('\\', '_')
+
+
+    def get_tag_dict(self):
+        """
+        Gets the tag dictionary used to populate the
+        auto completion of the output name pattern field
+
+        Returns:
+            A dict object containing the mapping between friendly names
+            and setting names.
+        """
+        tag_dict = {}
+        for setting_group in (self.settings['setting_groups'] +
+                              [self.settings['export_settings']] +
+                              [self.settings['compression']]):
+            for key in setting_group.keys():
+                setting = setting_group[key]
+                tag_dict[setting.display_name] = '%('+key+')'
+
+        return tag_dict
+
+    def get_tag_value_dict(self):
+        """
+        Gets the tag to value dictionary to substitute values
+        """
+        tag_dict = {}
+        for setting_group in (self.settings['setting_groups'] +
+                              [self.settings['export_settings']] +
+                              [self.settings['compression']]):
+            for key in setting_group.keys():
+                setting = setting_group[key]
+                tag_dict['%('+key+')'] = setting.value
+
+        return tag_dict
+
     def get_setting(self, name):
         """Get a setting by name
 
@@ -153,18 +230,12 @@ class CommandBase(object):
         Returns:
             A setting object or None
         """
-        # Check for alternate names in the settings
-        # due to nw.js changing some names in newer versions
-        name_no_underscores = name.replace('_', '-')
 
         for setting_group in (self.settings['setting_groups'] +
                               [self.settings['export_settings']] +
                               [self.settings['compression']]):
             if name in setting_group:
                 setting = setting_group[name]
-                return setting
-            elif name_no_underscores in setting_group:
-                setting = setting_group[name_no_underscores]
                 return setting
 
     def get_settings_type(self, type):
@@ -749,7 +820,10 @@ class CommandBase(object):
 
     def make_output_dirs(self, write_json=True):
         """Create the output directories for the application to be copied"""
-        output_dir = utils.path_join(self.output_dir(), self.project_name())
+
+        output_name = self.sub_pattern() or self.project_name()
+
+        output_dir = utils.path_join(self.output_dir(), output_name)
         temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
 
         self.progress_text = 'Making new directories...\n'
@@ -770,6 +844,10 @@ class CommandBase(object):
             self.process_export_setting(ex_setting, output_dir, temp_dir,
                                         app_loc, uncompressed)
 
+    def sub_pattern(self):
+        """Returns the output pattern substitution or an empty string"""
+        setting = self.get_setting('output_pattern')
+        return self.sub_output_pattern(setting.value)
 
     def try_make_output_dirs(self):
         """Try to create the output directories if they don't exist"""

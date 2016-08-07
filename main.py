@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 import sys
 import codecs
 import platform
@@ -13,11 +14,12 @@ from config import __version__ as __gui_version__
 
 from util_classes import ExistingProjectDialog
 from util_classes import BackgroundThread, Validator
+from util_classes import CompleterLineEdit, TagsCompleter
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import (QApplication, QHBoxLayout, QVBoxLayout)
 from PySide.QtNetwork import QHttp
-from PySide.QtCore import QUrl, QFile, QIODevice, QCoreApplication
+from PySide.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
 
 from image_utils.pycns import pngs_from_icns
 
@@ -46,6 +48,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.script_line = None
         self.output_line = None
+        self.output_name_line = None
 
         self.download_bar_widget = None
         self.app_settings_widget = None
@@ -814,6 +817,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         script_setting = self.get_setting('custom_script')
         self.script_line.setText(script_setting.value)
 
+        output_name_setting = self.get_setting('output_pattern')
+        self.output_name_line.setText(output_name_setting.value)
+
+        self.output_name_line.textChanged.connect(self.output_name_line.text_changed)
+        self.output_name_line.textChanged.connect(self.completer.update)
+
         self.set_window_icon()
         self.open_export_button.setEnabled(True)
         self.update_json = True
@@ -906,25 +915,62 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_window_settings(self):
         group_box = QtGui.QWidget()
-        vlayout = self.create_layout(self.settings['order']['window_setting_order'], cols=3)
+        win_setting_order = self.settings['order']['window_setting_order']
+        vlayout = self.create_layout(win_setting_order, cols=3)
 
         group_box.setLayout(vlayout)
         return group_box
 
     def create_export_settings(self):
         group_box = QtGui.QWidget()
-        vlayout = self.create_layout(self.settings['order']['export_setting_order'], cols=4)
+
+        ex_setting_order = self.settings['order']['export_setting_order']
+
+        vlayout = self.create_layout(ex_setting_order, cols=4)
+
+
+        output_name_layout = QtGui.QHBoxLayout()
+
+        output_name_setting = self.get_setting('output_pattern')
+        output_name_label = QtGui.QLabel(output_name_setting.display_name+':')
+        output_name_label.setMinimumWidth(155)
+
+        tag_dict = self.get_tag_dict()
+        self.output_name_line = CompleterLineEdit(tag_dict)
+
+        completer = TagsCompleter(self.output_name_line, tag_dict)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+
+        completer.activated.connect(self.output_name_line.complete_text)
+        self.completer = completer
+        self.completer.setWidget(self.output_name_line)
+
+        self.output_name_line.textChanged.connect(
+            self.call_with_object('setting_changed',
+                                  self.output_name_line,
+                                  output_name_setting)
+        )
+
+        self.output_name_line.setStatusTip(output_name_setting.description)
+
+        output_name_layout.addWidget(output_name_label)
+        output_name_layout.addWidget(self.output_name_line)
 
         output_layout = QtGui.QHBoxLayout()
 
-        output_label = QtGui.QLabel('Output Directory:')
-        output_label.setMinimumWidth(150)
+        ex_dir_setting = self.get_setting('export_dir')
+        output_label = QtGui.QLabel(ex_dir_setting.display_name+':')
+        output_label.setMinimumWidth(155)
         self.output_line = QtGui.QLineEdit()
-        self.output_line.textChanged.connect(self.call_with_object('setting_changed',
-                                                                   self.output_line,
-                                                                   self.get_setting('export_dir')))
+
+        self.output_line.textChanged.connect(
+            self.call_with_object('setting_changed',
+                                  self.output_line,
+                                  ex_dir_setting)
+        )
+
         self.output_line.textChanged.connect(self.project_path_changed)
-        self.output_line.setStatusTip('The output directory relative to the project directory.')
+        self.output_line.setStatusTip(ex_dir_setting.description)
         output_button = QtGui.QPushButton('...')
         output_button.clicked.connect(self.browse_out_dir)
 
@@ -934,19 +980,20 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         script_layout = QtGui.QHBoxLayout()
 
-        script_label = QtGui.QLabel('Execute Script:')
-        script_label.setMinimumWidth(150)
+        script_setting = self.get_setting('custom_script')
+        script_label = QtGui.QLabel(script_setting.display_name+':')
+        script_label.setMinimumWidth(155)
 
         self.script_line = QtGui.QLineEdit()
 
-        script_setting = self.get_setting('custom_script')
         self.script_line.setObjectName(script_setting.name)
 
-        self.script_line.textChanged.connect(self.call_with_object('setting_changed',
-                                                                   self.script_line,
-                                                                   script_setting))
-        self.script_line.setStatusTip('The script to execute after a '
-                                      'project was successfully exported.')
+        self.script_line.textChanged.connect(
+            self.call_with_object('setting_changed',
+                                  self.script_line,
+                                  script_setting)
+        )
+        self.script_line.setStatusTip(script_setting.description)
         script_button = QtGui.QPushButton('...')
 
         file_types = ['*.py']
@@ -956,15 +1003,20 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         else:
             file_types.append('*.bash')
 
-        script_button.clicked.connect(self.call_with_object('get_file_reg',
-                                                            self.script_line, script_setting,
-                                                            ' '.join(file_types)))
+        script_button.clicked.connect(
+            self.call_with_object('get_file_reg',
+                                  self.script_line,
+                                  script_setting,
+                                  ' '.join(file_types))
+        )
+
         script_layout.addWidget(script_label)
         script_layout.addWidget(self.script_line)
         script_layout.addWidget(script_button)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(vlayout)
+        vbox.addLayout(output_name_layout)
         vbox.addLayout(output_layout)
         vbox.addLayout(script_layout)
 
@@ -1321,7 +1373,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.existing_dialog.raise_()
 
 
-if __name__ == '__main__':
+def main():
     app = QApplication(sys.argv)
 
     QCoreApplication.setApplicationName("Web2Executable")
@@ -1333,3 +1385,6 @@ if __name__ == '__main__':
     frame.show_and_raise()
 
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
