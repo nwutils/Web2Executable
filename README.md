@@ -1,4 +1,8 @@
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/v0.5.0b/total.svg)]()
+Latest Release:
+
+[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
+
+All Releases:
 
 [![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]()
 
