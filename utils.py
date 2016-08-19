@@ -123,7 +123,7 @@ def copy(src, dest, **kwargs):
             src = '\\\\?\\'+src.replace('/', '\\')
         if os.path.isabs(dest):
             dest = '\\\\?\\'+dest.replace('/', '\\')
-    shutil.copy(src, dest, **kwargs)
+    shutil.copy2(src, dest, **kwargs)
 
 def move(src, dest, **kwargs):
     if is_windows():
