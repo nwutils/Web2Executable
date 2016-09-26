@@ -282,7 +282,8 @@ class CommandBase(object):
 
         current_branch = self.get_default_nwjs_branch()
 
-        for url in self.settings['version_info']['urls']:
+        for urlTuple in self.settings['version_info']['urls']:
+            url, regex = urlTuple
             url = url.format(current_branch)
             response = request.urlopen(url)
             html = response.read().decode('utf-8')
@@ -291,7 +292,7 @@ class CommandBase(object):
 
             old_versions = set(nw_version.values)
             old_versions = old_versions.union(union_versions)
-            new_versions = set(re.findall('(\S+) / \d{2}-\d{2}-\d{4}', html))
+            new_versions = set(re.findall(regex, html))
 
             union_versions = old_versions.union(new_versions)
 
