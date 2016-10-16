@@ -9,10 +9,10 @@ Run Example:
 
         $ python3.4 command_line.py --help
 
-    for more information on all of the available options and usage instructions. An full
+    for more information on all of the available options and usage instructions. A full
     example might be:
 
-        $ python3.4 command_line.py 
+        $ python3.4 command_line.py --main index.html --export-to=mac-x64 ~/Projects/MyProject/
 
 """
 
@@ -1469,7 +1469,8 @@ def generate_setting_args(command_base, parser):
             parser.add_argument(
                 '--{}'.format(option_name),
                 dest=setting_name,
-                help=setting.description,
+                # Ignore any percent signs in the description.
+                help=setting.description.replace('%', '%%'),
                 **kwargs
             )
 
