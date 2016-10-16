@@ -1,4 +1,20 @@
-"""Command line module for web2exe."""
+"""Command-line module for Web2Executable
+
+This module implements all of the functionality for Web2Executable that does
+not require a GUI. This module can be run as a standalone script that will act
+as a command-line interface for Web2Executable.
+
+Run Example:
+    Once the requirements have been installed and `SETUP.md` has been followed, execute
+
+        $ python3.4 command_line.py --help
+
+    for more information on all of the available options and usage instructions. An full
+    example might be:
+
+        $ python3.4 command_line.py 
+
+"""
 
 import argparse
 import urllib.request as request
@@ -34,20 +50,10 @@ from semantic_version import Version
 
 from configobj import ConfigObj
 
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-
-
-## Constants --------------------------------------------
-
-COMMAND_LINE = True
-
 class CommandBase(object):
     """The common class for the CMD and the GUI"""
-    def __init__(self):
-        self.quiet = False
+    def __init__(self, quiet=False):
+        self.quiet = quiet
         self.logger = None
         self.output_package_json = True
         self.settings = self.get_settings()
@@ -92,7 +98,7 @@ class CommandBase(object):
 
         contents = codecs.open(config_file, encoding='utf-8').read()
 
-        contents = contents.replace(u'{DEFAULT_DOWNLOAD_PATH}',
+        contents = contents.replace('{DEFAULT_DOWNLOAD_PATH}',
                                     config.DEFAULT_DOWNLOAD_PATH)
 
         config_io = StringIO(contents)
@@ -267,7 +273,7 @@ class CommandBase(object):
         """
         github_url = self.settings['version_info']['github_api_url']
 
-        resp = request.urlopen(github_url)
+        resp = utils.urlopen(github_url)
         json_string = resp.read().decode('utf-8')
         data = json.loads(json_string)
 
@@ -285,7 +291,7 @@ class CommandBase(object):
         for urlTuple in self.settings['version_info']['urls']:
             url, regex = urlTuple
             url = url.format(current_branch)
-            response = request.urlopen(url)
+            response = utils.urlopen(url)
             html = response.read().decode('utf-8')
 
             nw_version = self.get_setting('nw_version')
@@ -316,7 +322,7 @@ class CommandBase(object):
                 f.write(v+os.linesep)
             f.close()
         except IOError:
-            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
+            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                              sys.exc_info()[1],
                                                                              sys.exc_info()[2])])
             self.show_error(error)
@@ -348,7 +354,7 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
+            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                              sys.exc_info()[1],
                                                                              sys.exc_info()[2])])
             self.show_error(error)
@@ -381,7 +387,7 @@ class CommandBase(object):
                 setting_list = self.load_from_json(json_str)
             except ValueError as e:  # Json file is invalid
                 self.logger.warning('Warning: Json file invalid.')
-                self.progress_text = u'{}\n'.format(e)
+                self.progress_text = '{}\n'.format(e)
         return setting_list
 
     def process_app_settings(self, dic):
@@ -466,9 +472,9 @@ class CommandBase(object):
     @extract_error.setter
     def extract_error(self, value):
         """Write the extract error to the terminal"""
-        if value is not None and not self.quiet and COMMAND_LINE:
+        if value is not None and not self.quiet:
             self._extract_error = value
-            sys.stderr.write(u'\r{}'.format(self._extract_error))
+            sys.stderr.write('\r{}'.format(self._extract_error))
             sys.stderr.flush()
 
     @property
@@ -479,9 +485,9 @@ class CommandBase(object):
     @output_err.setter
     def output_err(self, value):
         """Write an error to the terminal"""
-        if value is not None and not self.quiet and COMMAND_LINE:
+        if value is not None and not self.quiet:
             self._output_err = value
-            sys.stderr.write(u'\r{}'.format(self._output_err))
+            sys.stderr.write('\r{}'.format(self._output_err))
             sys.stderr.flush()
 
     @property
@@ -496,9 +502,9 @@ class CommandBase(object):
         Args:
             value: The value to write to the terminal
         """
-        if value is not None and not self.quiet and COMMAND_LINE:
+        if value is not None and not self.quiet:
             self._progress_text = value
-            sys.stdout.write(u'\r{}'.format(self._progress_text))
+            sys.stdout.write('\r{}'.format(self._progress_text))
             sys.stdout.flush()
 
     def load_from_json(self, json_str):
@@ -803,7 +809,7 @@ class CommandBase(object):
 
             name = ex_setting.display_name
 
-            self.progress_text = u'Making files for {}...'.format(name)
+            self.progress_text = 'Making files for {}...'.format(name)
 
             export_dest = self.get_export_dest(ex_setting, output_dir)
 
@@ -856,7 +862,7 @@ class CommandBase(object):
         try:
             self.make_output_dirs()
         except Exception:
-            error = u''.join([x for x in traceback.format_exception(sys.exc_info()[0],
+            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
                                                                     sys.exc_info()[1],
                                                                     sys.exc_info()[2])])
             self.logger.error(error)
@@ -934,18 +940,18 @@ class CommandBase(object):
         version = self.get_setting('version')
         desc = self.get_setting('description')
 
-        dfile_path = utils.path_join(export_dest, u'{}.desktop'.format(name))
+        dfile_path = utils.path_join(export_dest, '{}.desktop'.format(name))
 
         file_str = (
-            u'[Desktop Entry]\n'
-            u'Version={}\n'
-            u'Name={}\n'
-            u'Comment={}\n'
-            u'Exec={}\n'
-            u'Icon={}\n'
-            u'Terminal=false\n'
-            u'Type=Application\n'
-            u'Categories=Utility;Application;\n'
+            '[Desktop Entry]\n'
+            'Version={}\n'
+            'Name={}\n'
+            'Comment={}\n'
+            'Exec={}\n'
+            'Icon={}\n'
+            'Terminal=false\n'
+            'Type=Application\n'
+            'Categories=Utility;Application;\n'
         )
 
         file_str = file_str.format(
@@ -988,7 +994,7 @@ class CommandBase(object):
             upx_bin = upx_version
             os.chmod(upx_bin, 0o755)
 
-            cmd = [upx_bin, '--lzma', u'-{}'.format(compression.value)]
+            cmd = [upx_bin, '--lzma', '-{}'.format(compression.value)]
 
             if 'windows' in ex_setting.name:
                 path = os.path.join(os.path.dirname(nw_path), '*.dll')
@@ -1045,7 +1051,7 @@ class CommandBase(object):
             os.chmod(name, stat.S_IWRITE)
             os.remove(name)
         except Exception as e:
-            error = u'Failed to remove file: {}.'.format(name)
+            error = 'Failed to remove file: {}.'.format(name)
             error += '\nError recieved: {}'.format(e)
             self.logger.error(error)
             self.output_err += error
@@ -1058,7 +1064,7 @@ class CommandBase(object):
         old_dir = config.CWD
 
         os.chdir(self.project_dir())
-        self.logger.info(u'Copying files to {}'.format(self.project_dir()))
+        self.logger.info('Copying files to {}'.format(self.project_dir()))
 
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
@@ -1067,9 +1073,9 @@ class CommandBase(object):
                     if os.path.isabs(f_path):
                         try:
                             utils.copy(setting.value, self.project_dir())
-                            self.logger.info(u'Copying file {} to {}'.format(setting.value, self.project_dir()))
+                            self.logger.info('Copying file {} to {}'.format(setting.value, self.project_dir()))
                         except shutil.Error as e:  # same file warning
-                            self.logger.warning(u'Warning: {}'.format(e))
+                            self.logger.warning('Warning: {}'.format(e))
                         finally:
                             setting.value = os.path.basename(setting.value)
 
@@ -1236,7 +1242,7 @@ class CommandBase(object):
             script = self.get_setting('custom_script').value
             self.run_script(script)
             self.progress_text = '\nDone!\n'
-            self.progress_text = u'Output directory is {}{}{}.\n'.format(self.output_dir(),
+            self.progress_text = 'Output directory is {}{}{}.\n'.format(self.output_dir(),
                                                                          os.path.sep,
                                                                          self.project_name())
             self.delete_files()
@@ -1271,7 +1277,7 @@ class CommandBase(object):
 
     def download_file(self, path, setting):
         """Download a file from the path and setting"""
-        self.logger.info(u'Downloading file {}.'.format(path))
+        self.logger.info('Downloading file {}.'.format(path))
 
         location = self.get_setting('download_dir').value
 
@@ -1298,14 +1304,14 @@ class CommandBase(object):
         forced = self.get_setting('force_download').value
 
         if (archive_exists or dest_files_exist) and not forced:
-            self.logger.info(u'File {} already downloaded. Continuing...'.format(path))
+            self.logger.info('File {} already downloaded. Continuing...'.format(path))
             return self.continue_downloading_or_extract()
         elif tmp_exists and (os.stat(tmp_file).st_size > 0):
             tmp_size = os.stat(tmp_file).st_size
             headers = {'Range': 'bytes={}-'.format(tmp_size)}
             url = request.Request(url, headers=headers)
 
-        web_file = request.urlopen(url)
+        web_file = utils.urlopen(url)
 
         f = open(tmp_file, 'ab')
 
@@ -1323,10 +1329,10 @@ class CommandBase(object):
 
         if tmp_size:
             self.progress_text = 'Resuming previous download...\n'
-            self.progress_text = u'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
+            self.progress_text = 'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
 
-        self.progress_text = (u'Downloading: {}, '
-                              u'Size: {:.2f} MB {}\n'.format(short_name,
+        self.progress_text = ('Downloading: {}, '
+                              'Size: {:.2f} MB {}\n'.format(short_name,
                                                          MB,
                                                          downloaded))
         file_size_dl = (tmp_size or 0)
@@ -1379,13 +1385,13 @@ class ArgParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
-def main():
-    """Main setup and argument parsing"""
+def get_arguments(command_base):
+    """Retrieves arguments from the command line"""
+
     parser = ArgParser(description=('Command line interface '
                                     'to web2exe. {}'.format(config.__version__)),
                                      prog='web2execmd')
-    command_base = CommandBase()
-    command_base.init()
+
     parser.add_argument('project_dir', metavar='project_dir',
                         help='The project directory.')
     parser.add_argument('--output-dir', dest='output_dir',
@@ -1407,9 +1413,34 @@ def main():
                               'Ignores other command line arguments.'))
     parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(config.__version__))
 
+    generate_setting_args(command_base, parser)
+
+    export_args = [arg for arg in command_base.settings['export_settings']]
+    parser.add_argument('--export-to', dest='export_options',
+                        nargs='+', required=True,
+                        choices=export_args,
+                        help=('Choose at least one system '
+                              'to export to.'))
+
+    return parser.parse_args()
+
+def generate_setting_args(command_base, parser):
+    """
+    Generate arguments based on the contents of settings.cfg
+
+    Args:
+        command_base (CommandBase): An instance of the CommandBase class
+                                    that has been initialized
+        parser (ArgParser): An instance of the ArgParser class that will hold
+                            the generated arguments
+    """
+
     for setting_group_dict in command_base.settings['setting_groups']+[command_base.settings['compression']]:
         for setting_name, setting in setting_group_dict.items():
             kwargs = {}
+
+            # Set the default values and required values
+            # Special case when handling project name
             if setting_name == 'name':
                 kwargs.update({'default': command_base.project_name})
             else:
@@ -1423,30 +1454,27 @@ def main():
                           else 'store_false')
                 kwargs.update({'action': action})
                 if setting.default_value is True:
-                    option_name = u'disable-{}'.format(option_name)
+                    option_name = 'disable-{}'.format(option_name)
             else:
                 if setting.values:
                     kwargs.update({'choices': setting.values})
-                    setting.description += u' Possible values: {{{}}}'.format(', '.join([str(x) for x in setting.values]))
+                    possible_vals = ', '.join([str(x) for x in setting.values])
+                    val_desc = ' Possible values: {{{}}}'.format(possible_vals)
+                    setting.description += val_desc
                     kwargs.update({'metavar': ''})
                 else:
-                    kwargs.update({'metavar': '<{}>'.format(setting.display_name)})
+                    kwargs.update({'metavar':
+                                        '<{}>'.format(setting.display_name)})
 
-            parser.add_argument(u'--{}'.format(option_name),
-                                dest=setting_name,
-                                help=setting.description,
-                                **kwargs
-                                )
+            parser.add_argument(
+                '--{}'.format(option_name),
+                dest=setting_name,
+                help=setting.description,
+                **kwargs
+            )
 
-    export_args = [arg for arg in command_base.settings['export_settings']]
-    parser.add_argument('--export-to', dest='export_options',
-                        nargs='+', required=True,
-                        choices=export_args,
-                        help=('Choose at least one system '
-                              'to export to.'))
-
-    args = parser.parse_args()
-
+def setup_logging(args, command_base):
+    """Setup debug logging for CMD"""
     import logging
     import logging.handlers as lh
 
@@ -1458,6 +1486,7 @@ def main():
             level=logging.DEBUG
         )
     else:
+        # Log to the logfile in config.py
         logging.basicConfig(
             filename=config.LOG_FILENAME,
             format=("%(levelname) -10s %(asctime)s %(module)s.py: "
@@ -1470,8 +1499,8 @@ def main():
     config.logger.addHandler(config.handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
-        config.logger.error(u'{}'.format(output_err))
+        output_err = ''.join([x for x in traceback.format_exception(type_, value, tback)])
+        config.logger.error('{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
     sys.excepthook = my_excepthook
@@ -1481,11 +1510,8 @@ def main():
     if args.quiet:
         command_base.quiet = True
 
-    command_base._project_dir = args.project_dir
-
-    command_base._output_dir = (args.output_dir or
-                                utils.path_join(command_base._project_dir, 'output'))
-
+def setup_project_name(args, command_base):
+    """Set the project name and app name from args"""
     if args.app_name is None:
         args.app_name = command_base.project_name()
 
@@ -1501,6 +1527,41 @@ def main():
     if not args.id:
         args.id = command_base.project_name()
 
+def setup_directories(args, command_base):
+    """Setup the project and output directories from args"""
+    command_base._project_dir = args.project_dir
+
+    command_base._output_dir = (args.output_dir or
+                                utils.path_join(command_base._project_dir, 'output'))
+
+def read_package_json_file(args, command_base):
+    """Either load project json or load custom json from file"""
+    if args.load_json is True:
+        command_base.load_package_json()
+    elif args.load_json:
+        # Load json is a path, so load JSON from the specified file
+        command_base.load_package_json(args.load_json)
+
+def write_package_json_file(args, command_base):
+    """Determine whether or not to write the package json file."""
+    write_json = False
+
+    if args.load_json is not True and args.load_json:
+        # Load json is a path, so check if the default package json
+        # exists before writing it. If it exists, don't overwrite it
+        # so that people's changes to the file are preserved
+        project_dir = command_base.project_dir()
+        json_path = os.path.abspath(os.path.expanduser(args.load_json))
+        left_over_path = json_path.replace(project_dir, '')
+
+        # Write package.json if it's not already in the root
+        # of the project
+        if left_over_path != 'package.json':
+            write_json = True
+
+    command_base.export(write_json)
+
+def initialize_setting_values(args, command_base):
     for name, val in args._get_kwargs():
         if callable(val):
             val = val()
@@ -1514,23 +1575,21 @@ def main():
             if setting is not None:
                 setting.value = val
 
-    write_json = False
+def main():
+    """Main setup and argument parsing"""
+    command_base = CommandBase()
+    command_base.init()
 
-    if args.load_json is True:
-        command_base.load_package_json()
-    elif args.load_json:
-        command_base.load_package_json(args.load_json)
+    args = get_arguments(command_base)
 
-        project_dir = command_base.project_dir()
-        json_path = os.path.abspath(os.path.expanduser(args.load_json))
-        left_over_path = json_path.replace(project_dir, '')
+    setup_logging(args, command_base)
+    setup_directories(args, command_base)
+    setup_project_name(args, command_base)
 
-        # Write package.json if it's not already in the root
-        # of the project
-        if left_over_path != 'package.json':
-            write_json = True
+    initialize_setting_values(args, command_base)
 
-    command_base.export(write_json)
+    read_package_json_file(args, command_base)
+    write_package_json_file(args, command_base)
 
 if __name__ == '__main__':
     main()

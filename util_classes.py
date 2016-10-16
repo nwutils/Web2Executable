@@ -1,3 +1,5 @@
+"""Utility classes that are used both in the GUI and the CMD."""
+
 import os
 import re
 import zipfile
@@ -27,7 +29,7 @@ class ExistingProjectDialog(QtGui.QDialog):
         self.projects = recent_projects
 
         for project in recent_projects:
-            text = u'{} - {}'.format(os.path.basename(project), project)
+            text = '{} - {}'.format(os.path.basename(project), project)
             self.project_list.addItem(text)
 
         self.project_list.itemClicked.connect(self.project_clicked)
@@ -128,7 +130,7 @@ class Setting(object):
         self.default_value = kwargs.pop('default_value', None)
         self.button = kwargs.pop('button', None)
         self.button_callback = kwargs.pop('button_callback', None)
-        self.description = kwargs.pop('description', u'')
+        self.description = kwargs.pop('description', '')
         self.values = kwargs.pop('values', [])
         self.filter = kwargs.pop('filter', '.*')
         self.filter_action = kwargs.pop('filter_action', 'None')
@@ -140,7 +142,7 @@ class Setting(object):
         if self.value is None:
             self.value = self.default_value
 
-        self.save_path = kwargs.pop('save_path', u'')
+        self.save_path = kwargs.pop('save_path', '')
 
         self.get_file_information_from_url()
 
@@ -154,7 +156,7 @@ class Setting(object):
     def get_file_information_from_url(self):
         """Extract the file information from the setting url"""
         if hasattr(self, 'url'):
-            self.file_name = self.url.split(u'/')[-1]
+            self.file_name = self.url.split('/')[-1]
             self.full_file_path = utils.path_join(self.save_path, self.file_name)
             self.file_ext = os.path.splitext(self.file_name)[1]
             if self.file_ext == '.zip':
@@ -227,10 +229,10 @@ class Setting(object):
         if hasattr(self, 'url'):
             url = self.url
         return (
-            u'Setting: (name={}, '
-            u'display_name={}, '
-            u'value={}, required={}, '
-            u'type={}, url={})'
+            'Setting: (name={}, '
+            'display_name={}, '
+            'value={}, required={}, '
+            'type={}, url={})'
         ).format(self.name,
                  self.display_name,
                  self.value,

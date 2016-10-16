@@ -1,3 +1,8 @@
+"""
+Configuration module that holds some configuration options for
+Web2Executable.
+"""
+
 from __future__ import print_function
 import os
 import logging
@@ -5,15 +10,17 @@ import logging.handlers as lh
 import traceback
 import sys
 import zipfile
+import ssl
 
 import utils
-
 
 ZIP_MODE = zipfile.ZIP_STORED
 
 MAX_RECENT = 10
 
 DEBUG = False
+
+SSL_CONTEXT = ssl._create_unverified_context()
 
 ### The following sections are code that needs to be run when importing
 ### from main.py.
@@ -70,8 +77,8 @@ logger.addHandler(handler)
 ## Custom except hook to log all errors ----------------------
 
 def my_excepthook(type_, value, tback):
-    output_err = u''.join([x for x in traceback.format_exception(type_, value, tback)])
-    logger.error(u'{}'.format(output_err))
+    output_err = ''.join([x for x in traceback.format_exception(type_, value, tback)])
+    logger.error('{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
 sys.excepthook = my_excepthook

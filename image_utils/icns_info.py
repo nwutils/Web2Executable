@@ -1,3 +1,5 @@
+"""A module to parse the contents of an ICNS file."""
+
 import struct
 import image_utils.image_utils as image_utils
 import image_utils.png as png
@@ -619,16 +621,16 @@ class Printable(object):
         vals = []
         for key, val in self._dict_items():
             try:
-                vals.append(u'{}={}'.format(key, val))
+                vals.append('{}={}'.format(key, val))
             except UnicodeDecodeError:
-                vals.append(u'{}=<not printable>'.format(key))
-        return u', '.join(vals)
+                vals.append('{}=<not printable>'.format(key))
+        return ', '.join(vals)
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return u'{} [{}]'.format(self.__class__.__name__, self._dict_string())
+        return '{} [{}]'.format(self.__class__.__name__, self._dict_string())
 
 
 #---------------------------CLASSES-------------------------------------------#
@@ -1412,6 +1414,7 @@ def extract_icons(all_icns_data):
 
 
 def icns_to_png(icns_file, out_file=None):
+    """Convert an icns file to a list of png file data"""
 
     if not os.path.exists(icns_file):
         return
@@ -1424,10 +1427,4 @@ def icns_to_png(icns_file, out_file=None):
     new_data = icns_parse_family_data(icns_data)
 
     icons = extract_icons(new_data)
-    #for image in icons:
-    #    fname = 'test{}.png'.format(image.iconSize.width)
-    #    print fname
-    #    f = open(fname, 'wb+')
-    #    f.write(image.data)
-    #    f.close()
     return icons

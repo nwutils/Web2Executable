@@ -1,8 +1,14 @@
+"""Utility functions for Web2Executable
+
+This module holds utility functions that are useful to both the command line
+and GUI modules, but aren't related to either module.
+"""
 from __future__ import print_function
 import os
 import zipfile
 import io
 import platform
+import urllib.request as request
 import tempfile
 import codecs
 import shutil
@@ -12,18 +18,17 @@ import validators
 
 from PySide import QtCore
 
-#try:
-#    import zlib
-#    ZIP_MODE = zipfile.ZIP_DEFLATED
-#except:
-
-
 def url_exists(path):
     if validators.url(path):
         return True
     return False
 
 def load_last_project_path():
+    """Load the last open project.
+
+    Returns:
+        string: the last opened project path
+    """
     proj_path = ''
     proj_file = get_data_file_path('files/last_project_path.txt')
     if os.path.exists(proj_file):
@@ -36,6 +41,11 @@ def load_last_project_path():
     return proj_path
 
 def load_recent_projects():
+    """Load the most recent projects opened.
+
+    Returns:
+        list: project files sorted by most recent
+    """
     files = []
     history_file = get_data_file_path('files/recent_files.txt')
     if not os.path.exists(history_file):
@@ -49,16 +59,19 @@ def load_recent_projects():
     return files
 
 def save_project_path(path):
+    """Save the last open project path."""
     proj_file = get_data_file_path('files/last_project_path.txt')
     with codecs.open(proj_file, 'w+', encoding='utf-8') as f:
         f.write(path)
 
 def save_recent_project(proj):
+    """Save the most recent projects to a text file."""
     recent_file_path = get_data_file_path('files/recent_files.txt')
     max_length = config.MAX_RECENT
     recent_files = []
     if os.path.exists(recent_file_path):
-        recent_files = codecs.open(recent_file_path, encoding='utf-8').read().split(u'\n')
+        file_contents = codecs.open(recent_file_path, encoding='utf-8').read()
+        recent_files = file_contents.split('\n')
     try:
         recent_files.remove(proj)
     except ValueError:
@@ -67,10 +80,20 @@ def save_recent_project(proj):
     with codecs.open(recent_file_path, 'w+', encoding='utf-8') as f:
         for recent_file in recent_files[-max_length:]:
             if recent_file and os.path.exists(recent_file):
-                f.write(u'{}\n'.format(recent_file))
+                f.write('{}\n'.format(recent_file))
 
 
 def replace_right(source, target, replacement, replacements=None):
+    """
+    String replace rightmost instance of a string.
+
+    Args:
+        source (string): the source to perform the replacement on
+        target (string): the string to search for
+        replacement (string): the replacement string
+        replacements (int or None): if an integer, only replaces N occurrences
+                                    otherwise only one occurrence is replaced
+    """
     return replacement.join(source.rsplit(target, replacements))
 
 def is_windows():
@@ -79,15 +102,19 @@ def is_windows():
 def get_temp_dir():
     return tempfile.gettempdir()
 
+## File operations ------------------------------------------------------
+# These are overridden because shutil gets Windows directories confused
+# and cannot write to them even if they are valid in cmd.exe
+
 def path_join(base, *rest):
     new_rest = []
     for i in range(len(rest)):
         new_rest.append(str(rest[i]))
 
-    rpath = u'/'.join(new_rest)
+    rpath = '/'.join(new_rest)
 
     if not os.path.isabs(rpath):
-        rpath = base + u'/' + rpath
+        rpath = base + '/' + rpath
 
     if is_windows():
         rpath = rpath.replace('/', '\\')
@@ -99,7 +126,7 @@ def get_data_path(dir_path):
     data_path = path_join(dirs.user_data_dir, *parts)
 
     if is_windows():
-        data_path = data_path.replace(u'\\', u'/')
+        data_path = data_path.replace('\\', '/')
 
     if not os.path.exists(data_path):
         os.makedirs(data_path)
@@ -141,7 +168,10 @@ def copytree(src, dest, **kwargs):
             dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copytree(src, dest, **kwargs)
 
+## ------------------------------------------------------------
+
 def log(*args):
+    """Print logging information or log it to a file."""
     if config.DEBUG:
         print(*args)
     with open(get_data_file_path('files/error.log'), 'a+') as f:
@@ -149,6 +179,7 @@ def log(*args):
         f.write('\n')
 
 def open_folder_in_explorer(path):
+    """Cross platform open folder window."""
     if platform.system() == "Windows":
         os.startfile(path)
     elif platform.system() == "Darwin":
@@ -157,6 +188,16 @@ def open_folder_in_explorer(path):
         subprocess.Popen(["xdg-open", path])
 
 def zip_files(zip_file_name, *args, **kwargs):
+    """
+    Zip files into an archive programmatically.
+
+    Args:
+        zip_file_name (string): the name of the resulting zip file
+        args: the files to zip
+        kwargs: Options
+            verbose (bool): if True, gives verbose output
+            exclude_paths (list): a list of paths to exclude
+    """
     zip_file = zipfile.ZipFile(zip_file_name, 'w', config.ZIP_MODE)
     verbose = kwargs.pop('verbose', False)
     exclude_paths = kwargs.pop('exclude_paths', [])
@@ -217,6 +258,16 @@ def zip_files(zip_file_name, *args, **kwargs):
     zip_file.close()
 
 def join_files(destination, *args, **kwargs):
+    """
+    Join any number of files together by stitching bytes together.
+
+    This is used to take advantage of NW.js's ability to execute a zip file
+    contained at the end of the exe file.
+
+    Args:
+        destination (string): the name of the resulting file
+        args: the files to stitch together
+    """
     with io.open(destination, 'wb') as dest_file:
         for arg in args:
             if os.path.exists(arg):
@@ -227,6 +278,14 @@ def join_files(destination, *args, **kwargs):
                             break
                         dest_file.write(bytes)
 
+def urlopen(url):
+    """
+    Call urllib.request.urlopen with a modified SSL context to prevent
+    "SSL: CERTIFICATE_VERIFY_FAILED” errors when no verification is
+    actually needed.
+    """
+    return request.urlopen(url, context=config.SSL_CONTEXT)
 
+# To avoid a circular import, we import config at the bottom of the file
+# and reference it on the module level from within the functions
 import config
-
