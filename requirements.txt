@@ -5,3 +5,4 @@ semantic_version
 appdirs
 validators
 requests
+https://github.com/pyinstaller/pyinstaller/archive/develop.zip
