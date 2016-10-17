@@ -1155,17 +1155,17 @@ class CommandBase(object):
                                        num_dirs=len(export_dirs),
                                        export_dirs=ex_dir_vars,
                                        **export_dict)
-        bashcontents = '{}\n{}'.format(env_vars, contents)
+        batcontents = '{}\n{}'.format(env_vars, contents)
 
-        bash_file = utils.path_join(config.TEMP_DIR,
-                                    '{}.bash'.format(self.project_name()))
+        bat_file = utils.path_join(config.TEMP_DIR,
+                                   '{}.bat'.format(self.project_name()))
 
-        self.logger.debug(bashcontents)
+        self.logger.debug(batcontents)
 
-        with open(bash_file, 'w+') as f:
-            f.write(bashcontents)
+        with open(bat_file, 'w+') as f:
+            f.write(batcontents)
 
-        command = [bash_file]
+        command = [bat_file]
 
         return command
 
@@ -1192,17 +1192,17 @@ class CommandBase(object):
                                        num_dirs=len(export_dirs),
                                        export_dirs=ex_dir_vars,
                                        **export_dict)
-        batcontents = '{}\n{}'.format(env_vars, contents)
+        bashcontents = '{}\n{}'.format(env_vars, contents)
 
-        bat_file = utils.path_join(config.TEMP_DIR,
-                                   '{}.bat'.format(self.project_name()))
+        bash_file = utils.path_join(config.TEMP_DIR,
+                                    '{}.bash'.format(self.project_name()))
 
-        self.logger.debug(batcontents)
+        self.logger.debug(bashcontents)
 
-        with open(bat_file, 'w+') as f:
-            f.write(batcontents)
+        with open(bash_file, 'w+') as f:
+            f.write(bashcontents)
 
-        command = [bat_file]
+        command = [bash_file]
 
         return command
 
