@@ -5,14 +5,16 @@ not require a GUI. This module can be run as a standalone script that will act
 as a command-line interface for Web2Executable.
 
 Run Example:
-    Once the requirements have been installed and `SETUP.md` has been followed, execute
+    Once the requirements have been installed and `SETUP.md`
+    has been followed, execute
 
         $ python3.4 command_line.py --help
 
-    for more information on all of the available options and usage instructions. A full
-    example might be:
+    for more information on all of the available options and usage
+    instructions. A full example might be:
 
-        $ python3.4 command_line.py --main index.html --export-to=mac-x64 ~/Projects/MyProject/
+        $ python3.4 command_line.py --main index.html \
+            --export-to=mac-x64 ~/Projects/MyProject/
 
 """
 
@@ -80,10 +82,10 @@ class CommandBase(object):
         nw_version = self.get_setting('nw_version')
         nw_version.values = []
         try:
-            f = codecs.open(get_data_file_path('files/nw-versions.txt'), encoding='utf-8')
-            for line in f:
-                nw_version.values.append(line.strip())
-            f.close()
+            ver_file = get_data_file_path(config.VER_FILE)
+            with codecs.open(ver_file, encoding='utf-8') as f:
+                for line in f:
+                    nw_version.values.append(line.strip())
         except IOError:
             nw_version.values.append(nw_version.default_value)
 
@@ -94,7 +96,7 @@ class CommandBase(object):
 
     def get_settings(self):
         """Load all of the settings from the settings config file"""
-        config_file = config.get_file('files/settings.cfg')
+        config_file = config.get_file(config.SETTINGS_FILE)
 
         contents = codecs.open(config_file, encoding='utf-8').read()
 
@@ -244,17 +246,6 @@ class CommandBase(object):
                 setting = setting_group[name]
                 return setting
 
-    def get_settings_type(self, type):
-        """Get all settings with a specific type"""
-        settings = []
-        for setting_group in (self.settings['setting_groups'] +
-                              [self.settings['export_settings']] +
-                              [self.settings['compression']]):
-            for name, setting in setting_group.items():
-                if setting.type == type:
-                    settings.append(setting)
-        return settings
-
     def show_error(self, error):
         """Show an error using the logger"""
         if self.logger is not None:
@@ -317,14 +308,12 @@ class CommandBase(object):
         nw_version.values = versions
         f = None
         try:
-            f = codecs.open(get_data_file_path('files/nw-versions.txt'), 'w', encoding='utf-8')
-            for v in nw_version.values:
-                f.write(v+os.linesep)
-            f.close()
+            ver_path = get_data_file_path(config.VER_FILE)
+            with codecs.open(ver_path, 'w', encoding='utf-8') as f:
+                for v in nw_version.values:
+                    f.write(v+os.linesep)
         except IOError:
-            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
-                                                                             sys.exc_info()[1],
-                                                                             sys.exc_info()[2])])
+            exc_format = utils.format_exc_info(sys.exc_info)
             self.show_error(error)
             self.enable_ui_after_error()
         finally:
@@ -354,9 +343,7 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
-                                                                             sys.exc_info()[1],
-                                                                             sys.exc_info()[2])])
+            exc_format = utils.format_exc_info(sys.exc_info)
             self.show_error(error)
             self.enable_ui_after_error()
 
@@ -533,7 +520,8 @@ class CommandBase(object):
                         val_str = self.convert_val_to_str(new_dic[item])
                         setting.value = val_str
                     if setting.type == 'strings':
-                        strs = self.convert_val_to_str(new_dic[item]).split(',')
+                        ditem = new_dic[item]
+                        strs = self.convert_val_to_str(ditem).split(',')
                         strs = [x.strip() for x in strs if x]
                         setting.value = strs
                     if setting.type == 'check':
@@ -622,7 +610,7 @@ class CommandBase(object):
         """Collects filled options and writes corresponding json files"""
         json_file = utils.path_join(self.project_dir(), 'package.json')
 
-        global_json = utils.get_data_file_path('files/global.json')
+        global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
 
         # Write package json
         if self.output_package_json:
@@ -635,7 +623,9 @@ class CommandBase(object):
             f.write(self.generate_json(global_json=True))
 
     def clean_dirs(self, *dirs):
-        """Delete directory trees with :py:func:`utils.rmtree` and recreate them
+        """
+        Delete directory trees with :py:func:`utils.rmtree` and recreate
+        them
 
         Args:
             *dirs: directories to be cleaned
@@ -717,7 +707,8 @@ class CommandBase(object):
 
         plistlib.writePlist(plist_dict, plist_path)
 
-    def process_mac_setting(self, app_loc, export_dest, ex_setting, uncompressed):
+    def process_mac_setting(self, app_loc, export_dest,
+                            ex_setting, uncompressed):
         """Process the Mac settings
 
         Args:
@@ -862,9 +853,7 @@ class CommandBase(object):
         try:
             self.make_output_dirs()
         except Exception:
-            error = ''.join([x for x in traceback.format_exception(sys.exc_info()[0],
-                                                                    sys.exc_info()[1],
-                                                                    sys.exc_info()[2])])
+            exc_format = utils.format_exc_info(sys.exc_info)
             self.logger.error(error)
             self.output_err += error
         finally:
@@ -879,7 +868,8 @@ class CommandBase(object):
         uncompressed = uncomp_setting.value
 
         if uncompressed:
-            app_nw_folder = utils.path_join(temp_dir, self.project_name()+'.nwf')
+            app_nw_folder = utils.path_join(temp_dir,
+                                            self.project_name()+'.nwf')
 
             utils.copytree(self.project_dir(), app_nw_folder,
                            ignore=shutil.ignore_patterns(output_dir))
@@ -895,7 +885,8 @@ class CommandBase(object):
             A 3-tuple of (major, minor, release)
         """
         try:
-            strs = re.findall('(\d+)\.(\d+)\.(\d+)', self.selected_version())[0]
+            strs = re.findall('(\d+)\.(\d+)\.(\d+)',
+                              self.selected_version())[0]
         except IndexError:
             strs = ['0','0','0']
         return [int(s) for s in strs]
@@ -930,7 +921,8 @@ class CommandBase(object):
 
         if os.path.exists(icon_path) and icon_set.value:
             utils.copy(icon_path, export_dest)
-            icon_path = utils.path_join(export_dest, os.path.basename(icon_path))
+            icon_path = utils.path_join(export_dest,
+                                        os.path.basename(icon_path))
         else:
             icon_path = ''
 
@@ -975,17 +967,17 @@ class CommandBase(object):
             return
 
         comp_dict = {
-            'Darwin64bit': config.get_file('files/compressors/upx-mac'),
-            'Darwin32bit': config.get_file('files/compressors/upx-mac'),
-            'Linux64bit':  config.get_file('files/compressors/upx-linux-x64'),
-            'Linux32bit':  config.get_file('files/compressors/upx-linux-x32'),
-            'Windows64bit':  config.get_file('files/compressors/upx-win.exe'),
-            'Windows32bit':  config.get_file('files/compressors/upx-win.exe')
+            'Darwin64bit': config.get_file(config.UPX_MAC_PATH),
+            'Darwin32bit': config.get_file(config.UPX_MAC_PATH),
+            'Linux64bit':  config.get_file(config.UPX_LIN64_PATH),
+            'Linux32bit':  config.get_file(config.UPX_LIN32_PATH),
+            'Windows64bit':  config.get_file(config.UPX_WIN_PATH),
+            'Windows32bit':  config.get_file(config.UPX_WIN_PATH)
         }
 
         if config.is_installed():
-            comp_dict['Windows64bit'] = get_data_file_path('files/compressors/upx-win.exe')
-            comp_dict['Windows32bit'] = get_data_file_path('files/compressors/upx-win.exe')
+            comp_dict['Windows64bit'] = get_data_file_path(config.UPX_WIN_PATH)
+            comp_dict['Windows32bit'] = get_data_file_path(config.UPX_WIN_PATH)
 
         plat = platform.system()+platform.architecture()[0]
         upx_version = comp_dict.get(plat, None)
@@ -1010,7 +1002,8 @@ class CommandBase(object):
                     '**',
                     'nwjs Framework.framework',
                 )
-                cmd.extend(glob.glob(os.path.join(dylib_path, 'nwjs Framework')))
+                framework_path = os.path.join(dylib_path, 'nwjs Framework')
+                cmd.extend(glob.glob(framework_path))
                 path = os.path.join(dylib_path, '*.dylib')
                 cmd.extend(glob.glob(path))
 
@@ -1041,9 +1034,9 @@ class CommandBase(object):
             output, err = proc.communicate()
             if err:
                 args = ex_setting.name, platform.system(), ex_setting.name
-                self.output_err = (
-                    'Cannot compress files for {} on {}!\n'
-                    'Run Web2Exe on {} to compress successfully.').format(*args)
+                self.output_err = ('Cannot compress files for {} on {}!\n'
+                                   'Run Web2Exe on {} to '
+                                   'compress successfully.').format(*args)
 
     def remove_readonly(self, action, name, exc):
         """Try to remove readonly files"""
@@ -1071,9 +1064,12 @@ class CommandBase(object):
                 if setting.copy and setting.type == 'file' and setting.value:
                     f_path = setting.value.replace(self.project_dir(), '')
                     if os.path.isabs(f_path):
+                        message = ('Copying file {} '
+                                   'to {}'.format(setting.value,
+                                                  self.project_dir()))
                         try:
                             utils.copy(setting.value, self.project_dir())
-                            self.logger.info('Copying file {} to {}'.format(setting.value, self.project_dir()))
+                            self.logger.info(message)
                         except shutil.Error as e:  # same file warning
                             self.logger.warning('Warning: {}'.format(e))
                         finally:
@@ -1087,9 +1083,14 @@ class CommandBase(object):
             return ', '.join(val)
         return str(val).replace(self.project_dir()+os.path.sep, '')
 
-    def get_python_command(self, export_dict, export_dir, export_dirs, contents):
+    def get_python_command(self, export_dict, export_dir,
+                           export_dirs, contents):
+        """
+        Inject arguments into python script and then execute it in a temp
+        directory.
+        """
         export_opts = self.get_export_options()
-        env_file = config.get_file('files/env_vars.py')
+        env_file = config.get_file(config.ENV_VARS_PY_PATH)
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
 
         for i, ex_dir in enumerate(export_dirs):
@@ -1109,8 +1110,12 @@ class CommandBase(object):
         return command
 
     def get_bat_command(self, export_dict, export_dir, export_dirs, contents):
+        """
+        Inject arguments into bat script and then execute it in a temp
+        directory.
+        """
         export_opts = self.get_export_options()
-        env_file = config.get_file('files/env_vars.bat')
+        env_file = config.get_file(config.ENV_VARS_BAT_PATH)
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
         ex_dir_vars = ''
 
@@ -1125,29 +1130,36 @@ class CommandBase(object):
                                        num_dirs=len(export_dirs),
                                        export_dirs=ex_dir_vars,
                                        **export_dict)
-        batcontents = '{}\n{}'.format(env_vars, contents)
+        bashcontents = '{}\n{}'.format(env_vars, contents)
 
-        bat_file = utils.path_join(config.TEMP_DIR, '{}.bat'.format(self.project_name()))
+        bash_file = utils.path_join(config.TEMP_DIR,
+                                    '{}.bash'.format(self.project_name()))
 
-        self.logger.debug(batcontents)
+        self.logger.debug(bashcontents)
 
-        with open(bat_file, 'w+') as f:
-            f.write(batcontents)
+        with open(bash_file, 'w+') as f:
+            f.write(bashcontents)
 
-        command = [bat_file]
+        command = [bash_file]
 
         return command
 
     def get_bash_command(self, export_dict, export_dir, export_dirs, contents):
+        """
+        Inject arguments into bash script and then execute it in a temp
+        directory.
+        """
         export_opts = self.get_export_options()
-        env_file = config.get_file('files/env_vars.bat')
+        env_file = config.get_file(config.ENV_VARS_BASH_PATH)
         env_contents = codecs.open(env_file, 'r', encoding='utf-8').read()
         ex_dir_vars = ''
 
         for i, ex_dir in enumerate(export_dirs):
             opt = export_opts[i]
             export_dict[opt+'_dir'] = ex_dir
-            ex_dir_vars += 'set "EXPORT_DIRS[{}]={}"\n'.format(i, ex_dir)
+            ex_dir_vars += ex_dir
+            if i != (len(export_dirs)-1):
+                ex_dir_vars += ' '
 
         env_vars = env_contents.format(proj_dir=self.project_dir(),
                                        proj_name=self.project_name(),
@@ -1157,7 +1169,8 @@ class CommandBase(object):
                                        **export_dict)
         batcontents = '{}\n{}'.format(env_vars, contents)
 
-        bat_file = utils.path_join(config.TEMP_DIR, '{}.bat'.format(self.project_name()))
+        bat_file = utils.path_join(config.TEMP_DIR,
+                                   '{}.bat'.format(self.project_name()))
 
         self.logger.debug(batcontents)
 
@@ -1192,7 +1205,9 @@ class CommandBase(object):
                                          self.project_name())
             export_dirs = []
             for opt in export_opts:
-                export_dirs.append('{}{}{}'.format(export_dir, os.path.sep, opt))
+                export_dirs.append('{}{}{}'.format(export_dir,
+                                                   os.path.sep,
+                                                   opt))
 
             command = None
             bat_file = None
@@ -1205,13 +1220,17 @@ class CommandBase(object):
                            'linux-x32_dir': ''}
 
             if ext == '.py':
-                command = self.get_python_command(export_dict, export_dir, export_dirs, contents)
+                command = self.get_python_command(export_dict, export_dir,
+                                                  export_dirs, contents)
             elif ext == '.bash':
-                command = self.get_bash_command(export_dict, export_dir, export_dirs, contents)
+                command = self.get_bash_command(export_dict, export_dir,
+                                                export_dirs, contents)
             elif ext == '.bat':
-                command = self.get_bat_command(export_dict, export_dir, export_dirs, contents)
+                command = self.get_bat_command(export_dict, export_dir,
+                                               export_dirs, contents)
 
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
             output, error = proc.communicate()
             output = output.strip()
             error = error.strip()
@@ -1226,7 +1245,8 @@ class CommandBase(object):
 
             self.progress_text = 'Done executing script.'
         else:
-            self.progress_text = '\nThe script {} does not exist. Not running.'.format(script)
+            self.progress_text = ('\nThe script {} does not exist. '
+                                  'Not running.'.format(script))
 
 
     def export(self, write_json=True):
@@ -1242,9 +1262,10 @@ class CommandBase(object):
             script = self.get_setting('custom_script').value
             self.run_script(script)
             self.progress_text = '\nDone!\n'
-            self.progress_text = 'Output directory is {}{}{}.\n'.format(self.output_dir(),
-                                                                         os.path.sep,
-                                                                         self.project_name())
+            out_dir = '{}{}{}'.format(self.output_dir(),
+                                      os.path.sep,
+                                      self.project_name())
+            self.progress_text = 'Output directory is {}.\n'.format(out_dir)
             self.delete_files()
 
     def get_export_options(self):
@@ -1289,7 +1310,8 @@ class CommandBase(object):
 
         url = path
 
-        file_name = setting.save_file_path(self.selected_version(), location, sdk_build)
+        file_name = setting.save_file_path(self.selected_version(),
+                                           location, sdk_build)
 
         tmp_file = list(os.path.split(file_name))
         tmp_file[-1] = '.tmp.' + tmp_file[-1]
@@ -1304,7 +1326,8 @@ class CommandBase(object):
         forced = self.get_setting('force_download').value
 
         if (archive_exists or dest_files_exist) and not forced:
-            self.logger.info('File {} already downloaded. Continuing...'.format(path))
+            self.logger.info('File {} already downloaded. '
+                             'Continuing...'.format(path))
             return self.continue_downloading_or_extract()
         elif tmp_exists and (os.stat(tmp_file).st_size > 0):
             tmp_size = os.stat(tmp_file).st_size
@@ -1329,7 +1352,8 @@ class CommandBase(object):
 
         if tmp_size:
             self.progress_text = 'Resuming previous download...\n'
-            self.progress_text = 'Already downloaded {:.2f} MB\n'.format(tmp_size/1000000.0)
+            size = tmp_size/1000000.0
+            self.progress_text = 'Already downloaded {:.2f} MB\n'.format(size)
 
         self.progress_text = ('Downloading: {}, '
                               'Size: {:.2f} MB {}\n'.format(short_name,
@@ -1361,7 +1385,8 @@ class CommandBase(object):
         try:
             os.rename(tmp_file, file_name)
         except OSError:
-            if sys.platform.startswith('win32') and not(os.path.isdir(file_name)):
+            is_dir = os.path.isdir(file_name)
+            if sys.platform.startswith('win32') and not is_dir:
                 os.remove(file_name)
                 os.rename(tmp_file, file_name)
             else:
@@ -1389,7 +1414,8 @@ def get_arguments(command_base):
     """Retrieves arguments from the command line"""
 
     parser = ArgParser(description=('Command line interface '
-                                    'to web2exe. {}'.format(config.__version__)),
+                                    'to web2exe. '
+                                    '{}'.format(config.__version__)),
                                      prog='web2execmd')
 
     parser.add_argument('project_dir', metavar='project_dir',
@@ -1411,7 +1437,8 @@ def get_arguments(command_base):
                         help=('Loads the package.json '
                               'file in the project directory. '
                               'Ignores other command line arguments.'))
-    parser.add_argument('--cmd-version', action='version', version='%(prog)s {}'.format(config.__version__))
+    parser.add_argument('--cmd-version', action='version',
+                        version='%(prog)s {}'.format(config.__version__))
 
     generate_setting_args(command_base, parser)
 
@@ -1434,8 +1461,9 @@ def generate_setting_args(command_base, parser):
         parser (ArgParser): An instance of the ArgParser class that will hold
                             the generated arguments
     """
-
-    for setting_group_dict in command_base.settings['setting_groups']+[command_base.settings['compression']]:
+    setting_dicts = (command_base.settings['setting_groups'] +
+                     [command_base.settings['compression']])
+    for setting_group_dict in setting_dicts:
         for setting_name, setting in setting_group_dict.items():
             kwargs = {}
 
@@ -1496,11 +1524,14 @@ def setup_logging(args, command_base):
         )
 
     config.logger = logging.getLogger('CMD Logger')
-    config.handler = lh.RotatingFileHandler(config.LOG_FILENAME, maxBytes=100000, backupCount=2)
+    config.handler = lh.RotatingFileHandler(config.LOG_FILENAME,
+                                            maxBytes=100000,
+                                            backupCount=2)
     config.logger.addHandler(config.handler)
 
     def my_excepthook(type_, value, tback):
-        output_err = ''.join([x for x in traceback.format_exception(type_, value, tback)])
+        exc_format = traceback.format_exception(type_, value, tback)
+        output_err = ''.join([x for x in exc_format])
         config.logger.error('{}'.format(output_err))
         sys.__excepthook__(type_, value, tback)
 
@@ -1518,9 +1549,11 @@ def setup_project_name(args, command_base):
 
     if args.name is not None:
         setting = command_base.get_setting('name')
-        args.name = setting.filter_name(args.name if not callable(args.name) else args.name())
+        args.name = setting.filter_name(args.name if not callable(args.name)
+                                        else args.name())
 
-    command_base._project_name = args.app_name if not callable(args.app_name) else args.app_name()
+    command_base._project_name = (args.app_name if not callable(args.app_name)
+                                  else args.app_name())
 
     if not args.title:
         args.title = command_base.project_name()
@@ -1533,7 +1566,8 @@ def setup_directories(args, command_base):
     command_base._project_dir = args.project_dir
 
     command_base._output_dir = (args.output_dir or
-                                utils.path_join(command_base._project_dir, 'output'))
+                                utils.path_join(command_base._project_dir,
+                                                'output'))
 
 def read_package_json_file(args, command_base):
     """Either load project json or load custom json from file"""

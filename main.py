@@ -149,7 +149,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.desktop_width = app.desktop().screenGeometry().width()
         self.desktop_height = app.desktop().screenGeometry().height()
 
-        self.setWindowIcon(QtGui.QIcon(get_file('files/images/icon.png')))
+        self.setWindowIcon(QtGui.QIcon(get_file(config.ICON_PATH)))
 
         self.setup_nw_versions()
 
@@ -203,7 +203,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         """Loads stored versions that were previously retrieved."""
         nw_version = self.get_setting('nw_version')
         try:
-            f = codecs.open(utils.get_data_file_path('files/nw-versions.txt'),
+            f = codecs.open(utils.get_data_file_path(config.VER_FILE),
                             encoding='utf-8')
             for line in f:
                 nw_version.values.append(line.strip())
@@ -238,12 +238,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def add_widgets_to_main_layout(self):
         """Add all of the widgets and icons to the main layout."""
-        self.warning_settings_icon = QtGui.QIcon(get_file('files/images/warning.png'))
-        self.app_settings_icon = QtGui.QIcon(get_file('files/images/app_settings.png'))
-        self.win_settings_icon = QtGui.QIcon(get_file('files/images/window_settings.png'))
-        self.ex_settings_icon = QtGui.QIcon(get_file('files/images/export_settings.png'))
-        self.comp_settings_icon = QtGui.QIcon(get_file('files/images/compress_settings.png'))
-        self.download_settings_icon = QtGui.QIcon(get_file('files/images/download_settings.png'))
+        self.warning_settings_icon = QtGui.QIcon(get_file(config.WARNING_ICON))
+        self.app_settings_icon = QtGui.QIcon(get_file(config.APP_SETTINGS_ICON))
+        self.win_settings_icon = QtGui.QIcon(get_file(config.WINDOW_SETTINGS_ICON))
+        self.ex_settings_icon = QtGui.QIcon(get_file(config.EXPORT_SETTINGS_ICON))
+        self.comp_settings_icon = QtGui.QIcon(get_file(config.COMPRESS_SETTINGS_ICON))
+        self.download_settings_icon = QtGui.QIcon(get_file(config.DOWNLOAD_SETTINGS_ICON))
 
         self.tab_icons = [self.app_settings_icon,
                           self.win_settings_icon,
@@ -513,7 +513,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         open_export_button = QtGui.QPushButton()
         open_export_button.setEnabled(False)
-        open_export_button.setIcon(QtGui.QIcon(get_file('files/images/folder_open.png')))
+        open_export_button.setIcon(QtGui.QIcon(get_file(config.FOLDER_OPEN_ICON)))
         open_export_button.setToolTip('Open Export Folder')
         open_export_button.setStatusTip('Open Export Folder')
         open_export_button.setMaximumWidth(30)
@@ -946,7 +946,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         # Load the global json and then overwrite the settings with user
         # chosen values
-        self.load_package_json(utils.get_data_file_path('files/global.json'))
+        self.load_package_json(utils.get_data_file_path(config.GLOBAL_JSON_FILE))
         self.load_package_json()
 
         default_dir = 'output'
@@ -1476,7 +1476,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         # Generate json file
         if self.update_json:
             json_file = utils.path_join(self.project_dir(), 'package.json')
-            global_json = utils.get_data_file_path('files/global.json')
+            global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
 
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
                 f.write(self.generate_json())

@@ -23,6 +23,14 @@ def url_exists(path):
         return True
     return False
 
+def format_exc_info(exc_info):
+    """Return exception string with traceback"""
+    exc_format = traceback.format_exception(exc_info[0],
+                                            exc_info[1],
+                                            exc_info[2])
+    error = ''.join([x for x in exc_format])
+    return error
+
 def load_last_project_path():
     """Load the last open project.
 
@@ -30,7 +38,7 @@ def load_last_project_path():
         string: the last opened project path
     """
     proj_path = ''
-    proj_file = get_data_file_path('files/last_project_path.txt')
+    proj_file = get_data_file_path(config.LAST_PROJECT_FILE)
     if os.path.exists(proj_file):
         with codecs.open(proj_file, encoding='utf-8') as f:
             proj_path = f.read().strip()
@@ -47,7 +55,7 @@ def load_recent_projects():
         list: project files sorted by most recent
     """
     files = []
-    history_file = get_data_file_path('files/recent_files.txt')
+    history_file = get_data_file_path(config.RECENT_FILES_FILE)
     if not os.path.exists(history_file):
         return files
     with codecs.open(history_file, encoding='utf-8') as f:
@@ -60,13 +68,13 @@ def load_recent_projects():
 
 def save_project_path(path):
     """Save the last open project path."""
-    proj_file = get_data_file_path('files/last_project_path.txt')
+    proj_file = get_data_file_path(config.LAST_PROJECT_FILE)
     with codecs.open(proj_file, 'w+', encoding='utf-8') as f:
         f.write(path)
 
 def save_recent_project(proj):
     """Save the most recent projects to a text file."""
-    recent_file_path = get_data_file_path('files/recent_files.txt')
+    recent_file_path = get_data_file_path(config.RECENT_FILES_FILE)
     max_length = config.MAX_RECENT
     recent_files = []
     if os.path.exists(recent_file_path):
@@ -174,7 +182,7 @@ def log(*args):
     """Print logging information or log it to a file."""
     if config.DEBUG:
         print(*args)
-    with open(get_data_file_path('files/error.log'), 'a+') as f:
+    with open(get_data_file_path(config.ERROR_LOG_FILE), 'a+') as f:
         f.write(', '.join(args))
         f.write('\n')
 

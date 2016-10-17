@@ -54,14 +54,43 @@ __version__ = "v0.0.0"
 with open(get_file('files/version.txt')) as f:
     __version__ = f.read().strip()
 
+ICON_PATH = 'files/images/icon.png'
+WARNING_ICON = 'files/images/warning.png'
+APP_SETTINGS_ICON = 'files/images/app_settings.png'
+WINDOW_SETTINGS_ICON = 'files/images/window_settings.png'
+EXPORT_SETTINGS_ICON = 'files/images/export_settings.png'
+COMPRESS_SETTINGS_ICON = 'files/images/compress_settings.png'
+DOWNLOAD_SETTINGS_ICON = 'files/images/download_settings.png'
+FOLDER_OPEN_ICON = 'files/images/folder_open.png'
+
+W2E_VER_FILE = 'files/version.txt'
 
 TEMP_DIR = utils.get_temp_dir()
 DEFAULT_DOWNLOAD_PATH = utils.get_data_path('files/downloads')
 
+ERROR_LOG_FILE = 'files/error.log'
+VER_FILE = 'files/nw-versions.txt'
+SETTINGS_FILE = 'files/settings.cfg'
+GLOBAL_JSON_FILE = 'files/global.json'
+
+LAST_PROJECT_FILE = 'files/last_project_path.txt'
+RECENT_FILES_FILE = 'files/recent_files.txt'
+
+NW_BRANCH_FILE = 'files/nw-branch.txt'
+
+UPX_WIN_PATH = 'files/compressors/upx-win.exe'
+UPX_MAC_PATH = 'files/compressors/upx-mac'
+UPX_LIN32_PATH = 'files/compressors/upx-linux-x32'
+UPX_LIN64_PATH = 'files/compressors/upx-linux-x64'
+
+ENV_VARS_PY_PATH = 'files/env_vars.py'
+ENV_VARS_BAT_FILE = 'files/env_vars.bat'
+ENV_VARS_BASH_PATH = 'files/env_vars.bash'
+
 ## Logger setup ----------------------------------------------
 
 logger = logging.getLogger('W2E logger')
-LOG_FILENAME = utils.get_data_file_path('files/error.log')
+LOG_FILENAME = utils.get_data_file_path(ERROR_LOG_FILE)
 if __name__ != '__main__':
     logging.basicConfig(
         filename=LOG_FILENAME,
