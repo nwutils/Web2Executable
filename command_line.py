@@ -36,6 +36,7 @@ import subprocess
 import plistlib
 import codecs
 import ssl
+from datetime import datetime, timedelta
 
 from io import StringIO
 
@@ -262,13 +263,37 @@ class CommandBase(object):
         Get the default nwjs branch to search for
         the changelog from github.
         """
-        github_url = self.settings['version_info']['github_api_url']
+        query_api = False
+        nwjs_branch_path = get_data_file_path(config.NW_BRANCH_FILE)
 
-        resp = utils.urlopen(github_url)
-        json_string = resp.read().decode('utf-8')
-        data = json.loads(json_string)
+        if os.path.exists(nwjs_branch_path):
+            mod_time = os.path.getmtime(nwjs_branch_path)
+            mod_time = datetime.fromtimestamp(mod_time)
+            hour_ago = datetime.now() - timedelta(hours=1)
 
-        return data['default_branch']
+            if mod_time <= hour_ago:
+                query_api = True
+        else:
+            query_api = True
+
+        branch = None
+
+        if query_api:
+            github_url = self.settings['version_info']['github_api_url']
+
+            resp = utils.urlopen(github_url)
+            json_string = resp.read().decode('utf-8')
+            data = json.loads(json_string)
+            branch = data['default_branch']
+
+            with codecs.open(nwjs_branch_path, 'w', encoding='utf-8') as f:
+                f.write(branch)
+
+        else:
+            with codecs.open(nwjs_branch_path, 'r', encoding='utf-8') as f:
+                branch = f.read().strip()
+
+        return branch
 
     def get_versions(self):
         """Get the versions from the NW.js Github changelog"""
