@@ -815,8 +815,6 @@ class CommandBase(object):
         if os.path.exists(nw_path):
             os.remove(nw_path)
 
-
-
     def process_export_setting(self, ex_setting, output_dir,
                                temp_dir, app_loc, uncompressed):
         """Create the executable based on the export setting"""
