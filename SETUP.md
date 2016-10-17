@@ -47,3 +47,14 @@ Once all of the above are installed, simply run:
 ```
 python3.4 main.py
 ```
+
+##Tests
+
+Tests are located in the tests directory and were created with pytest.
+They can be run with:
+
+```
+pytest
+```
+
+in the root directory.

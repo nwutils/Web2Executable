@@ -1,8 +1,9 @@
+appdirs
+configobj
+https://github.com/pyinstaller/pyinstaller/archive/develop.zip
 pillow
 pyside
-configobj
-semantic_version
-appdirs
-validators
+pytest
 requests
-https://github.com/pyinstaller/pyinstaller/archive/develop.zip
+semantic_version
+validators
