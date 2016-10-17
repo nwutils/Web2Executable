@@ -72,6 +72,8 @@ rm -rf $PROJ_DIR/build $PROJ_DIR/dist
 
 ################# Zip and Upload to Github ###################
 
+rm -rf Web2ExeMac*.zip
+
 /Applications/Keka.app/Contents/Resources/keka7z a -r \
     Web2ExeMac-CMD.zip $BUILD_DIR/Web2ExeMac-CMD
 
