@@ -72,6 +72,7 @@ ERROR_LOG_FILE = 'files/error.log'
 VER_FILE = 'files/nw-versions.txt'
 SETTINGS_FILE = 'files/settings.cfg'
 GLOBAL_JSON_FILE = 'files/global.json'
+WEB2EXE_JSON_FILE = 'web2exe.json'
 
 LAST_PROJECT_FILE = 'files/last_project_path.txt'
 RECENT_FILES_FILE = 'files/recent_files.txt'

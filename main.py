@@ -946,8 +946,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         # Load the global json and then overwrite the settings with user
         # chosen values
-        self.load_package_json(utils.get_data_file_path(config.GLOBAL_JSON_FILE))
         self.load_package_json()
+        self.load_package_json(utils.get_data_file_path(config.GLOBAL_JSON_FILE))
+        self.load_package_json(utils.path_join(self.project_dir(),
+                                               config.WEB2EXE_JSON_FILE))
 
         default_dir = 'output'
         export_dir_setting = self.get_setting('export_dir')
@@ -1482,13 +1484,18 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         # Generate json file
         if self.update_json:
             json_file = utils.path_join(self.project_dir(), 'package.json')
+            w2e_json_file = utils.path_join(self.project_dir(), config.WEB2EXE_JSON_FILE)
             global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
 
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_json())
+                f.write(self.generate_project_json())
+
+            with codecs.open(w2e_json_file,
+                             'w+', encoding='utf-8') as f:
+                f.write(self.generate_web2exe_json())
 
             with codecs.open(global_json, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_json(global_json=True))
+                f.write(self.generate_web2exe_json(global_json=True))
 
         self.ex_button.setEnabled(self.required_settings_filled())
 

@@ -456,26 +456,30 @@ class CommandBase(object):
             if setting.value is not None:
                 dic['webexe_settings'][setting_name] = setting.value
 
+    def generate_web2exe_json(self, global_json=False):
+        """Generates web2exe's settings json"""
+        self.logger.info('Generating web2exe json file...')
 
-    def generate_json(self, global_json=False):
+        web2exe_dic = {'webexe_settings': {}}
+
+        self.process_webexe_settings(web2exe_dic, global_json)
+
+        return json.dumps(web2exe_dic, indent=4, sort_keys=True)
+
+    def generate_project_json(self):
         """Generates the json config files for the exported app"""
         self.logger.info('Generating package.json...')
 
-        dic = {'webexe_settings': {}}
+        dic = {}
 
-        if not global_json:
-            dic.update({'webkit': {}, 'window': {}})
-            dic.update(self.original_packagejson)
+        dic.update({'webkit': {}, 'window': {}})
+        dic.update(self.original_packagejson)
 
-            self.process_app_settings(dic)
-            self.process_window_settings(dic)
-            self.process_webkit_settings(dic)
+        self.process_app_settings(dic)
+        self.process_window_settings(dic)
+        self.process_webkit_settings(dic)
 
-        self.process_webexe_settings(dic, global_json)
-
-        s = json.dumps(dic, indent=4, sort_keys=True)
-
-        return s
+        return json.dumps(dic, indent=4, sort_keys=True)
 
     @property
     def extract_error(self):
@@ -636,18 +640,23 @@ class CommandBase(object):
     def write_package_json(self):
         """Collects filled options and writes corresponding json files"""
         json_file = utils.path_join(self.project_dir(), 'package.json')
+        w2e_json_file = utils.path_join(self.project_dir(),
+                                        config.WEB2EXE_JSON_FILE)
 
         global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
 
         # Write package json
         if self.output_package_json:
             with codecs.open(json_file, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_json())
+                f.write(self.generate_project_json())
+            with codecs.open(w2e_json_file,
+                             'w+', encoding='utf-8') as f:
+                f.write(self.generate_web2exe_json())
 
         # Write global settings that are kept when installing new
         # versions
         with codecs.open(global_json, 'w+', encoding='utf-8') as f:
-            f.write(self.generate_json(global_json=True))
+            f.write(self.generate_web2exe_json(global_json=True))
 
     def clean_dirs(self, *dirs):
         """
@@ -1603,25 +1612,6 @@ def read_package_json_file(args, command_base):
         # Load json is a path, so load JSON from the specified file
         command_base.load_package_json(args.load_json)
 
-def write_package_json_file(args, command_base):
-    """Determine whether or not to write the package json file."""
-    write_json = False
-
-    if args.load_json is not True and args.load_json:
-        # Load json is a path, so check if the default package json
-        # exists before writing it. If it exists, don't overwrite it
-        # so that people's changes to the file are preserved
-        project_dir = command_base.project_dir()
-        json_path = os.path.abspath(os.path.expanduser(args.load_json))
-        left_over_path = json_path.replace(project_dir, '')
-
-        # Write package.json if it's not already in the root
-        # of the project
-        if left_over_path != 'package.json':
-            write_json = True
-
-    command_base.export(write_json)
-
 def initialize_setting_values(args, command_base):
     for name, val in args._get_kwargs():
         if callable(val):
@@ -1650,7 +1640,9 @@ def main():
     initialize_setting_values(args, command_base)
 
     read_package_json_file(args, command_base)
-    write_package_json_file(args, command_base)
+
+    # Never write package.json on command line. Only load it.
+    command_base.export(write_json=False)
 
 if __name__ == '__main__':
     main()
