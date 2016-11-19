@@ -23,7 +23,6 @@ Run Example:
 """
 import os
 import glob
-import re
 import sys
 import codecs
 import platform
@@ -407,11 +406,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         settings_valid = True
         for sgroup in self.settings['setting_groups']+[self.settings['web2exe_settings']]:
             for _, setting in sgroup.items():
-                if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
-                    setting_path = setting.value
-                else:
-                    setting_path = utils.path_join(self.project_dir(),
-                                                   setting.value)
+                if setting.value:
+                    if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
+                        setting_path = setting.value
+                    else:
+                        setting_path = utils.path_join(self.project_dir(),
+                                                       setting.value)
 
                 if setting.required and not setting.value:
                     settings_valid = False
@@ -424,7 +424,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
                 if setting.type == 'int' and setting.value != '':
                     try:
-                        int(setting.value)
+                        int(setting.value or '0')
                     except ValueError:
                         settings_valid = False
                         widget = self.find_child_by_name(setting.name)
@@ -1379,7 +1379,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         for sgroup in self.settings['setting_groups']:
             for setting in sgroup.values():
                 widget = self.find_child_by_name(setting.name)
-                if widget is None:
+                if widget is None or setting.value is None:
                     continue
 
                 if (setting.type == 'string' or
@@ -1455,9 +1455,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 setting.type == 'folder' or
                 setting.type == 'int'):
             setting.value = args[0]
+            if not setting.value:
+                setting.value = setting.default_value
         elif setting.type == 'strings':
             setting.value = args[0].split(',')
             setting.value = [x.strip() for x in setting.value if x]
+            if not setting.value:
+                setting.value = setting.default_value
         elif setting.type == 'check':
             setting.value = obj.isChecked()
             check_action = setting.check_action
@@ -1465,6 +1469,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 getattr(self, check_action)(obj.isChecked())
         elif setting.type == 'list':
             setting.value = obj.currentText()
+            if not setting.value:
+                setting.value = setting.default_value
         elif setting.type == 'range':
             setting.value = obj.value()
 
@@ -1509,7 +1515,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         check.clicked.connect(self.call_with_object('setting_changed',
                                                     check, setting))
-        check.setChecked(setting.value)
+        check.setChecked(setting.value or False)
         check.setStatusTip(setting.description)
         check.setToolTip(setting.description)
 
@@ -1573,7 +1579,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                           slider, setting))
 
         slider.setObjectName(setting.name)
-        slider.setValue(setting.default_value)
+        slider.setValue(setting.default_value or 0)
         slider.setStatusTip(setting.description)
         slider.setToolTip(setting.description)
 

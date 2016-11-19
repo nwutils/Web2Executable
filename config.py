@@ -84,7 +84,7 @@ UPX_LIN32_PATH = 'files/compressors/upx-linux-x32'
 UPX_LIN64_PATH = 'files/compressors/upx-linux-x64'
 
 ENV_VARS_PY_PATH = 'files/env_vars.py'
-ENV_VARS_BAT_FILE = 'files/env_vars.bat'
+ENV_VARS_BAT_PATH = 'files/env_vars.bat'
 ENV_VARS_BASH_PATH = 'files/env_vars.bash'
 
 ## Logger setup ----------------------------------------------

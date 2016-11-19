@@ -35,7 +35,6 @@ import traceback
 import subprocess
 import plistlib
 import codecs
-import ssl
 from datetime import datetime, timedelta
 
 from io import StringIO
@@ -125,9 +124,11 @@ class CommandBase(object):
         for setting_group, setting_group_dict in sgroup_items:
             settings['setting_groups'].append(settings[setting_group])
 
-        self._setting_items = (list(config_obj['setting_groups'].items()) +
-                         [('export_settings', config_obj['export_settings'])] +
-                         [('compression', config_obj['compression'])])
+        self._setting_items = (
+            list(config_obj['setting_groups'].items()) +
+            [('export_settings', config_obj['export_settings'])] +
+            [('compression', config_obj['compression'])]
+        )
 
         config_obj.pop('setting_groups')
         config_obj.pop('export_settings')
@@ -339,7 +340,7 @@ class CommandBase(object):
                     f.write(v+os.linesep)
         except IOError:
             exc_format = utils.format_exc_info(sys.exc_info)
-            self.show_error(error)
+            self.show_error(exc_format)
             self.enable_ui_after_error()
         finally:
             if f:
@@ -369,7 +370,7 @@ class CommandBase(object):
                 os.remove(setting.save_file_path(version, location))
 
             exc_format = utils.format_exc_info(sys.exc_info)
-            self.show_error(error)
+            self.show_error(exc_format)
             self.enable_ui_after_error()
 
     def load_package_json(self, json_path=None):
@@ -472,7 +473,7 @@ class CommandBase(object):
 
         self.process_webexe_settings(dic, global_json)
 
-        s = json.dumps(dic, indent=4)
+        s = json.dumps(dic, indent=4, sort_keys=True)
 
         return s
 
@@ -537,7 +538,6 @@ class CommandBase(object):
             for item in new_dic:
                 setting = self.get_setting(item)
                 if setting:
-                    setting_list.append(setting)
                     if (setting.type == 'file' or
                         setting.type == 'string' or
                             setting.type == 'folder' or
@@ -556,6 +556,8 @@ class CommandBase(object):
                         setting.value = val_str
                     if setting.type == 'range':
                         setting.value = new_dic[item]
+
+                    setting_list.append(setting)
                 if isinstance(new_dic[item], dict):
                     stack.append((item, new_dic[item]))
         return setting_list
@@ -877,8 +879,8 @@ class CommandBase(object):
             self.make_output_dirs()
         except Exception:
             exc_format = utils.format_exc_info(sys.exc_info)
-            self.logger.error(error)
-            self.output_err += error
+            self.logger.error(exc_format)
+            self.output_err += exc_format
         finally:
             temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
             utils.rmtree(temp_dir, onerror=self.remove_readonly)
@@ -1101,6 +1103,8 @@ class CommandBase(object):
 
     def convert_val_to_str(self, val):
         """Convert a setting value to a string path"""
+        if val is None:
+            return None
         if isinstance(val, (list, tuple)):
             return ', '.join(val)
         return str(val).replace(self.project_dir()+os.path.sep, '')
