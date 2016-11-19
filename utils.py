@@ -126,6 +126,9 @@ def path_join(base, *rest):
 
     if is_windows():
         rpath = rpath.replace('/', '\\')
+
+    rpath = os.path.normpath(rpath)
+
     return rpath
 
 def get_data_path(dir_path):
