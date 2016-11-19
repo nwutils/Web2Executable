@@ -106,6 +106,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.original_packagejson = {}
 
         self.thread = None
+        self.readonly = False
 
         self.recent_file_actions = []
         self.project_path = ''
@@ -164,10 +165,19 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def setup_project_menu(self):
         """Set up the project menu bar with actions."""
         self.project_menu = self.menuBar().addMenu('File')
+        self.edit_menu = self.menuBar().addMenu('Edit')
+
         browse_action = QtGui.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
                                       statusTip='Open an existing or new project.',
                                       triggered=self.browse_dir)
+
+        toggle_readonly_action = QtGui.QAction('Toggle Readonly', self.edit_menu,
+                                               shortcut="Ctrl+R",
+                                               statusTip='Toggle Readonly',
+                                               triggered=self.toggle_readonly)
+
+        self.edit_menu.addAction(toggle_readonly_action)
         self.project_menu.addAction(browse_action)
         self.project_menu.addSeparator()
 
@@ -269,6 +279,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.download_bar_widget)
 
+    def toggle_readonly(self):
+        self.readonly = not self.readonly
+
+        self.app_settings_widget.setEnabled(not self.readonly)
+        self.win_settings_widget.setEnabled(not self.readonly)
+
     def option_settings_enabled(self, is_enabled):
         """
         Set all settings widgets to either be enabled or disabled.
@@ -279,6 +295,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.ex_button.setEnabled(is_enabled)
         self.app_settings_widget.setEnabled(is_enabled)
         self.win_settings_widget.setEnabled(is_enabled)
+        if self.readonly:
+            self.app_settings_widget.setEnabled(False)
+            self.win_settings_widget.setEnabled(False)
         self.ex_settings_widget.setEnabled(is_enabled)
         self.comp_settings_widget.setEnabled(is_enabled)
         self.dl_settings_widget.setEnabled(is_enabled)
@@ -926,9 +945,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if directory:
             self.load_project(directory)
 
-    def load_project(self, directory):
+    def load_project(self, directory, readonly=False):
         """Load a new project from a directory."""
         self.update_json = False
+        self.readonly = readonly
         self.project_path = directory
 
         utils.save_recent_project(directory)
@@ -1481,21 +1501,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             if callable(action):
                 action()
 
-        # Generate json file
-        if self.update_json:
-            json_file = utils.path_join(self.project_dir(), 'package.json')
-            w2e_json_file = utils.path_join(self.project_dir(), config.WEB2EXE_JSON_FILE)
-            global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
-
-            with codecs.open(json_file, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_project_json())
-
-            with codecs.open(w2e_json_file,
-                             'w+', encoding='utf-8') as f:
-                f.write(self.generate_web2exe_json())
-
-            with codecs.open(global_json, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_web2exe_json(global_json=True))
+        self.write_package_json()
 
         self.ex_button.setEnabled(self.required_settings_filled())
 

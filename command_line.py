@@ -66,6 +66,8 @@ class CommandBase(object):
         self._extract_error = ''
         self._project_name = None
         self.original_packagejson = {}
+        self.readonly = True
+        self.update_json = True
 
     def init(self):
         self.logger = config.logger
@@ -645,18 +647,21 @@ class CommandBase(object):
 
         global_json = utils.get_data_file_path(config.GLOBAL_JSON_FILE)
 
-        # Write package json
-        if self.output_package_json:
-            with codecs.open(json_file, 'w+', encoding='utf-8') as f:
-                f.write(self.generate_project_json())
+        if not self.readonly and self.update_json:
+            # Write package json
+            if self.output_package_json:
+                with codecs.open(json_file, 'w+', encoding='utf-8') as f:
+                    f.write(self.generate_project_json())
+
+        if self.update_json:
             with codecs.open(w2e_json_file,
                              'w+', encoding='utf-8') as f:
                 f.write(self.generate_web2exe_json())
 
-        # Write global settings that are kept when installing new
-        # versions
-        with codecs.open(global_json, 'w+', encoding='utf-8') as f:
-            f.write(self.generate_web2exe_json(global_json=True))
+            # Write global settings that are kept when installing new
+            # versions
+            with codecs.open(global_json, 'w+', encoding='utf-8') as f:
+                f.write(self.generate_web2exe_json(global_json=True))
 
     def clean_dirs(self, *dirs):
         """

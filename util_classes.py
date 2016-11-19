@@ -36,10 +36,14 @@ class ExistingProjectDialog(QtGui.QDialog):
 
         self.cancel = QtGui.QPushButton('Cancel')
         self.open = QtGui.QPushButton('Open Selected')
+        self.open_readonly = QtGui.QPushButton('Open Read-only')
         self.browse = QtGui.QPushButton('Browse...')
 
         self.open.setEnabled(False)
         self.open.clicked.connect(self.open_clicked)
+
+        self.open_readonly.setEnabled(False)
+        self.open_readonly.clicked.connect(self.open_readonly_clicked)
 
         self.browse.clicked.connect(self.browse_clicked)
 
@@ -49,6 +53,7 @@ class ExistingProjectDialog(QtGui.QDialog):
         button_layout.addWidget(self.cancel)
         button_layout.addWidget(QtGui.QWidget())
         button_layout.addWidget(self.browse)
+        button_layout.addWidget(self.open_readonly)
         button_layout.addWidget(self.open)
 
         buttons.setLayout(button_layout)
@@ -76,8 +81,14 @@ class ExistingProjectDialog(QtGui.QDialog):
         self.callback(self.projects[pos])
         self.close()
 
+    def open_readonly_clicked(self):
+        pos = self.project_list.currentRow()
+        self.callback(self.projects[pos], readonly=True)
+        self.close()
+
     def project_clicked(self, _):
         self.open.setEnabled(True)
+        self.open_readonly.setEnabled(True)
 
     def cancelled(self):
         self.close()
