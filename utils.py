@@ -116,8 +116,8 @@ def get_temp_dir():
 
 def path_join(base, *rest):
     new_rest = []
-    for i in range(len(rest)):
-        new_rest.append(str(rest[i]))
+    for r in rest:
+        new_rest.append(str(r))
 
     rpath = '/'.join(new_rest)
 
@@ -140,6 +140,14 @@ def get_data_path(dir_path):
         os.makedirs(data_path)
 
     return data_path
+
+def abs_path(file_path):
+    path = os.path.abspath(file_path)
+
+    if is_windows():
+        path = path.replace('/', '\\')
+
+    return path
 
 def get_data_file_path(file_path):
     parts = file_path.split('/')
@@ -170,9 +178,9 @@ def move(src, dest, **kwargs):
 
 def copytree(src, dest, **kwargs):
     if is_windows():
-        if os.path.isabs(src):
+        if os.path.isabs(src) and not src.startswith('\\\\'):
             src = '\\\\?\\'+src.replace('/', '\\')
-        if os.path.isabs(dest):
+        if os.path.isabs(dest) and not dest.startswith('\\\\'):
             dest = '\\\\?\\'+dest.replace('/', '\\')
     shutil.copytree(src, dest, **kwargs)
 

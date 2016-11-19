@@ -479,8 +479,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             if os.path.isabs(self.output_line.text()):
                 return self.output_line.text()
             else:
-                return utils.path_join(self.project_dir(),
-                                       self.output_line.text())
+                return utils.abs_path(self.output_line.text())
         return ''
 
     def create_download_bar(self):
