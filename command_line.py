@@ -950,7 +950,6 @@ class CommandBase(object):
             icon_path = ''
 
         name = self.project_name()
-        pdir = self.project_dir()
 
         version = self.get_setting('version')
         desc = self.get_setting('description')
@@ -962,7 +961,7 @@ class CommandBase(object):
             'Version={}\n'
             'Name={}\n'
             'Comment={}\n'
-            'Exec={}\n'
+            'Exec=bash -c \'"$(dirname "$1")"/{}\' x %k\n'
             'Icon={}\n'
             'Terminal=false\n'
             'Type=Application\n'
@@ -973,7 +972,7 @@ class CommandBase(object):
             version.value,
             name,
             desc.value,
-            nw_path,
+            name,
             icon_path
         )
 
