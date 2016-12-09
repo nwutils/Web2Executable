@@ -172,8 +172,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                       statusTip='Open an existing or new project.',
                                       triggered=self.browse_dir)
 
-        toggle_readonly_action = QtGui.QAction('Toggle Readonly', self.edit_menu,
-                                               shortcut="Ctrl+R",
+        toggle_readonly_action = QtGui.QAction('Toggle Readonly',
+                                               self.edit_menu,
+                                               shortcut='Ctrl+R',
                                                statusTip='Toggle Readonly',
                                                triggered=self.toggle_readonly)
 
