@@ -262,7 +262,7 @@ class CompleterLineEdit(QtGui.QLineEdit):
     def text_changed(self, text):
         all_text = str(text)
         text = all_text[:self.cursorPosition()]
-        prefix = re.split('[^%a-zA-Z)(_-]', text)[-1].strip()
+        prefix = re.split(r'(?<=\))(.*)(?=%\()', text)[-1].strip()
         self.pref = prefix
         if prefix.strip() != prefix:
             self.pref = ''
@@ -271,7 +271,7 @@ class CompleterLineEdit(QtGui.QLineEdit):
         cursor_pos = self.cursorPosition()
         before_text = str(self.text())[:cursor_pos]
         after_text = str(self.text())[cursor_pos:]
-        prefix_len = len(re.split('[^%a-zA-Z)(_-]', before_text)[-1].strip())
+        prefix_len = len(re.split(r'(?<=\))(.*)(?=%\()', before_text)[-1].strip())
         tag_text = self.tag_dict.get(text)
 
         if tag_text is None:
