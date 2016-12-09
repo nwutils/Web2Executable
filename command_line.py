@@ -156,13 +156,13 @@ class CommandBase(object):
         return (self._project_name or
                 os.path.basename(os.path.abspath(self.project_dir())))
 
-    def sub_output_pattern(self, pattern):
+    def sub_output_pattern(self, pattern, tag_dict=None):
         """
         Substitute patterns for setting values
         """
         byte_pattern = bytearray(pattern.encode())
 
-        val_dict = self.get_tag_value_dict()
+        val_dict = tag_dict or self.get_tag_value_dict()
 
         start = 0
         end = 0
@@ -197,8 +197,7 @@ class CommandBase(object):
 
             i += 1
 
-        return str(byte_pattern, 'utf-8').replace('/', '_').replace('\\', '_')
-
+        return str(byte_pattern, 'utf-8')
 
     def get_tag_dict(self):
         """
@@ -216,6 +215,10 @@ class CommandBase(object):
             for key in setting_group.keys():
                 setting = setting_group[key]
                 tag_dict[setting.display_name] = '%('+key+')'
+
+        tag_dict['System'] = '%(system)'
+        tag_dict['Architecture'] = '%(arch)'
+        tag_dict['Short System'] = '%(sys)'
 
         return tag_dict
 
@@ -677,7 +680,7 @@ class CommandBase(object):
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-    def get_export_dest(self, ex_setting, output_dir):
+    def get_export_path(self, ex_setting, name_pattern):
         """Get the export destination path using the export setting
 
         Args:
@@ -687,9 +690,20 @@ class CommandBase(object):
         Returns:
             A path to store the output files
         """
-        export_dest = utils.path_join(output_dir, ex_setting.name)
 
-        return export_dest
+        tag_dict = {
+            '%(system)': ex_setting.system,
+            '%(sys)': ex_setting.short_system,
+            '%(arch)': ex_setting.arch,
+            '%(platform)': ex_setting.name
+        }
+
+        dest = self.sub_output_pattern(name_pattern, tag_dict)
+
+        if dest == name_pattern:
+            dest = utils.path_join(name_pattern, ex_setting.name)
+
+        return dest
 
     def copy_export_files(self, ex_setting, export_dest):
         """Copy the export files to the destination path
@@ -749,13 +763,12 @@ class CommandBase(object):
         plistlib.writePlist(plist_dict, plist_path)
 
     def process_mac_setting(self, app_loc, export_dest,
-                            ex_setting, uncompressed):
+                            ex_setting):
         """Process the Mac settings
 
         Args:
             app_loc: the app's location
             export_dest: the destination to export the app to
-            uncompressed: boolean -> app is compressed or not
         """
 
         app_path = utils.path_join(export_dest,
@@ -775,7 +788,7 @@ class CommandBase(object):
 
         app_nw_res = utils.path_join(resource_path, 'app.nw')
 
-        if uncompressed:
+        if self.uncompressed:
             utils.copytree(app_loc, app_nw_res)
         else:
             utils.copy(app_loc, app_nw_res)
@@ -792,7 +805,7 @@ class CommandBase(object):
 
 
     def process_win_linux_setting(self, app_loc, export_dest,
-                                  ex_setting, uncompressed):
+                                  ex_setting):
         """Processes windows and linux settings
 
         Creates executable, modifies exe icon, and copies to the destination
@@ -801,7 +814,6 @@ class CommandBase(object):
             app_loc: the location of the app
             export_dest: directory to copy app to
             ex_setting: the export setting (eg: mac-x32)
-            uncompressed: boolean -> app is compressed or not
 
         """
 
@@ -822,7 +834,7 @@ class CommandBase(object):
             self.make_desktop_file(dest_binary_path, export_dest)
 
         self.copy_executable(export_dest, dest_binary_path,
-                             nw_path, app_loc, uncompressed)
+                             nw_path, app_loc)
 
         self.set_executable(dest_binary_path)
 
@@ -831,8 +843,7 @@ class CommandBase(object):
         if os.path.exists(nw_path):
             os.remove(nw_path)
 
-    def process_export_setting(self, ex_setting, output_dir,
-                               temp_dir, app_loc, uncompressed):
+    def process_export_setting(self, ex_setting, output_name):
         """Create the executable based on the export setting"""
         if ex_setting.value:
             self.progress_text = '\n'
@@ -841,18 +852,22 @@ class CommandBase(object):
 
             self.progress_text = 'Making files for {}...'.format(name)
 
-            export_dest = self.get_export_dest(ex_setting, output_dir)
+            temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
 
-            self.copy_export_files(ex_setting, export_dest)
+            name_path = self.get_export_path(ex_setting, output_name)
+            output_dir = utils.path_join(self.output_dir(), name_path)
+            self.clean_dirs(temp_dir, output_dir)
+            app_loc = self.get_app_nw_loc(temp_dir, output_dir)
+
+            self.copy_export_files(ex_setting, output_dir)
 
             self.progress_text += '.'
 
             if 'mac' in ex_setting.name:
-                self.process_mac_setting(app_loc, export_dest, ex_setting,
-                                         uncompressed)
+                self.process_mac_setting(app_loc, output_dir, ex_setting)
             else:
-                self.process_win_linux_setting(app_loc, export_dest,
-                                               ex_setting, uncompressed)
+                self.process_win_linux_setting(app_loc, output_dir,
+                                               ex_setting)
 
 
     def make_output_dirs(self, write_json=True):
@@ -860,26 +875,21 @@ class CommandBase(object):
 
         output_name = self.sub_pattern() or self.project_name()
 
-        output_dir = utils.path_join(self.output_dir(), output_name)
-        temp_dir = utils.path_join(config.TEMP_DIR, 'webexectemp')
-
         self.progress_text = 'Making new directories...\n'
-
-        self.clean_dirs(temp_dir, output_dir)
 
         self.copy_files_to_project_folder()
 
         if write_json:
             self.write_package_json()
 
-        app_loc = self.get_app_nw_loc(temp_dir, output_dir)
-
-        uncomp_setting = self.get_setting('uncompressed_folder')
-        uncompressed = uncomp_setting.value
-
         for ex_setting in self.settings['export_settings'].values():
-            self.process_export_setting(ex_setting, output_dir, temp_dir,
-                                        app_loc, uncompressed)
+            self.process_export_setting(ex_setting, output_name)
+
+    @property
+    def uncompressed(self):
+        """Returns true if the exported app is to be uncompressed"""
+        uncomp_setting = self.get_setting('uncompressed_folder')
+        return uncomp_setting.value
 
     def sub_pattern(self):
         """Returns the output pattern substitution or an empty string"""
@@ -903,10 +913,7 @@ class CommandBase(object):
         """Copy the temporary app to the output_dir"""
         app_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
-        uncomp_setting = self.get_setting('uncompressed_folder')
-        uncompressed = uncomp_setting.value
-
-        if uncompressed:
+        if self.uncompressed:
             app_nw_folder = utils.path_join(temp_dir,
                                             self.project_name()+'.nwf')
 
@@ -931,12 +938,12 @@ class CommandBase(object):
         return [int(s) for s in strs]
 
     def copy_executable(self, export_path, dest_path,
-                        nw_path, app_loc, uncompressed):
+                        nw_path, app_loc):
         """
         Merge the zip file into the exe and copy it to the destination path
         """
         package_loc = utils.path_join(export_path, 'package.nw')
-        if uncompressed:
+        if self.uncompressed:
             utils.copytree(app_loc, package_loc)
             utils.copy(nw_path, dest_path)
         else:
