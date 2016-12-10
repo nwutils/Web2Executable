@@ -58,7 +58,7 @@ pyinstaller -w --hidden-import PIL.Jpeg2KImagePlugin \
 FILES_DIR=$BUILD_DIR/Web2Executable.app/Contents/MacOS/files
 
 cp $PROJ_DIR/images/icon.icns $BUILD_DIR/Web2Executable.app/Contents/Resources/icon-windowed.icns
-cp -rf files $FILES_DIR
+cp -rf $PROJ_DIR/files $FILES_DIR
 
 rm -rf $FILES_DIR/downloads/*
 rm $FILES_DIR/error.log \
@@ -73,6 +73,8 @@ rm -rf $PROJ_DIR/build $PROJ_DIR/dist
 ################# Zip and Upload to Github ###################
 
 rm -rf Web2ExeMac*.zip
+
+cp $PROJ_DIR/scripts/Info.plist $BUILD_DIR/Web2Executable.app/Contents/
 
 /Applications/Keka.app/Contents/Resources/keka7z a -r \
     Web2ExeMac-CMD.zip $BUILD_DIR/Web2ExeMac-CMD
