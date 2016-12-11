@@ -219,6 +219,7 @@ class CommandBase(object):
         tag_dict['System'] = '%(system)'
         tag_dict['Architecture'] = '%(arch)'
         tag_dict['Short System'] = '%(sys)'
+        tag_dict['Platform'] = '%(platform)'
 
         return tag_dict
 
