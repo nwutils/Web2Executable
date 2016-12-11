@@ -37,6 +37,7 @@ from config import __version__ as __gui_version__
 from util_classes import ExistingProjectDialog
 from util_classes import BackgroundThread, Validator
 from util_classes import CompleterLineEdit, TagsCompleter
+from util_classes import TreeBrowser
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import (QApplication, QHBoxLayout, QVBoxLayout)
@@ -989,6 +990,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.set_window_icon()
         self.open_export_button.setEnabled(True)
+
+        self.tree_browser.init(directory, ['.*'])
+
         self.update_json = True
 
     def init_main_field(self, directory):
@@ -1159,7 +1163,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         ex_setting_order = self.settings['order']['export_setting_order']
 
-        vlayout = self.create_layout(ex_setting_order, cols=4)
+        vlayout = self.create_layout(ex_setting_order, cols=1)
 
         output_name_layout = self.create_output_name_pattern_line()
 
@@ -1167,14 +1171,39 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         script_layout = self.create_script_layout()
 
+        hlayout = QtGui.QHBoxLayout()
+
+        platform_group = QtGui.QGroupBox('Platforms')
+        playout = QtGui.QVBoxLayout()
+        playout.addLayout(vlayout)
+        platform_group.setLayout(playout)
+
+        hlayout.addWidget(platform_group)
+
+        tree_layout = self.create_blacklist_layout()
+
+        tree_group = QtGui.QGroupBox('Files')
+        tree_group.setLayout(tree_layout)
+
+        hlayout.addWidget(tree_group)
+
         vbox = QtGui.QVBoxLayout()
-        vbox.addLayout(vlayout)
+        vbox.addLayout(hlayout)
         vbox.addLayout(output_name_layout)
         vbox.addLayout(output_layout)
         vbox.addLayout(script_layout)
 
         group_box.setLayout(vbox)
         return group_box
+
+    def create_blacklist_layout(self):
+        blacklist_layout = QtGui.QVBoxLayout()
+
+        self.tree_browser = TreeBrowser()
+
+        blacklist_layout.addWidget(self.tree_browser)
+
+        return blacklist_layout
 
     def create_output_name_pattern_line(self):
         output_name_layout = QtGui.QHBoxLayout()

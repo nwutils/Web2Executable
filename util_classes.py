@@ -9,6 +9,129 @@ import config
 import utils
 
 from PySide import QtGui, QtCore
+from PySide.QtCore import Qt
+
+class FileItem(QtGui.QTreeWidgetItem):
+    def __init__(self, parent=None, path=None):
+        super(FileItem, self).__init__(parent)
+        self.path = path
+
+class TreeBrowser(QtGui.QWidget):
+    def __init__(self, directory=None, checked_files=None,
+                 whitelist=None, blacklist=None, parent=None):
+        super(TreeBrowser, self).__init__(parent=parent)
+        self.root = QtGui.QTreeWidget()
+        self.root.setHeaderLabel('Included files')
+        self.root.itemChanged.connect(self.item_changed)
+        self.files = {}
+
+        self.paths = []
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.root)
+        self.setLayout(layout)
+
+        self.watcher = QtCore.QFileSystemWatcher()
+        self.watcher.directoryChanged.connect(self.directory_changed)
+        self.watcher.fileChanged.connect(self.file_changed)
+
+        self.directoryChanged = self.watcher.directoryChanged
+        self.fileChanged = self.watcher.fileChanged
+
+        self.init(directory, checked_files, whitelist, blacklist)
+
+    def init(self, directory=None, checked_files=None,
+             whitelist=None, blacklist=None):
+
+        if directory:
+            self.directory = directory + os.sep
+        else:
+            self.directory = directory
+
+        self.checked_files = checked_files or []
+
+        self.whitelist = whitelist or []
+        self.blacklist = blacklist or []
+
+        self.watcher.removePaths(self.watcher.files())
+
+        self.files = {}
+
+        self.root.clear()
+
+        self.generate_directory_widget()
+
+    def file_changed(self, path):
+        print(path)
+        pass
+
+    def directory_changed(self, path):
+        print(path)
+        pass
+
+    def get_abs_file_list(self):
+        return [os.path.join(self.directory, path) for path in self.files.keys()]
+
+    def get_checked_files(self):
+        pass
+
+    def item_changed(self, item, column):
+        self.files[item.path] = item.checkState(column)
+
+    def generate_directory_widget(self):
+        if self.directory is None:
+            return
+
+        parent_map = {'': self.root}
+
+        for root, dirs, files in os.walk(self.directory):
+            for directory in dirs:
+
+                proj_path = root.replace(self.directory, '')
+
+                parent = parent_map[proj_path]
+
+                path = os.path.join(proj_path, directory)
+
+                checked = Qt.Unchecked
+
+                for checked_file in self.checked_files:
+                    match = re.match('^'+checked_file, path)
+                    if match:
+                        checked = Qt.Checked
+
+                child = FileItem(parent, path)
+                child.setFlags(child.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+                child.setText(0, directory)
+                child.setCheckState(0, checked)
+
+                self.files[path] = checked
+
+                parent_map[path] = child
+
+            for file in files:
+                proj_path = root.replace(self.directory, '')
+
+                parent = parent_map[proj_path]
+
+                path = os.path.join(proj_path, file)
+
+                checked = Qt.Unchecked
+
+                for checked_file in self.checked_files:
+                    match = re.match(checked_file, path)
+                    if match:
+                        checked = Qt.Checked
+
+                child = FileItem(parent, path)
+                child.setFlags(child.flags() | Qt.ItemIsUserCheckable)
+                child.setText(0, file)
+                child.setCheckState(0, checked)
+
+                self.files[path] = checked
+
+        self.watcher.addPaths(self.get_abs_file_list())
+
 
 class ExistingProjectDialog(QtGui.QDialog):
     def __init__(self, recent_projects, directory_callback, parent=None):
@@ -92,6 +215,7 @@ class ExistingProjectDialog(QtGui.QDialog):
 
     def cancelled(self):
         self.close()
+
 
 class Validator(QtGui.QRegExpValidator):
     def __init__(self, regex, action, parent=None):
