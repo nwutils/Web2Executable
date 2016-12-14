@@ -210,18 +210,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if action:
             self.load_project(action.data())
 
-    def setup_nw_versions(self):
-        """Loads stored versions that were previously retrieved."""
-        nw_version = self.get_setting('nw_version')
-        try:
-            f = codecs.open(utils.get_data_file_path(config.VER_FILE),
-                            encoding='utf-8')
-            for line in f:
-                nw_version.values.append(line.strip())
-            f.close()
-        except IOError:
-            nw_version.values.append(nw_version.default_value)
-
     def create_application_layout(self):
         """Create all widgets and set the central widget."""
         self.main_layout = QtGui.QVBoxLayout()

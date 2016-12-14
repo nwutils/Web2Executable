@@ -89,7 +89,7 @@ class CommandBase(object):
                 for line in f:
                     nw_version.values.append(line.strip())
         except IOError:
-            nw_version.values.append(nw_version.default_value)
+            pass
 
     def get_nw_versions(self):
         """Get the already downloaded nw versions from the settings"""
