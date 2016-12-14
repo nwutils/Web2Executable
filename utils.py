@@ -15,6 +15,7 @@ import shutil
 import subprocess
 from appdirs import AppDirs
 import validators
+import traceback
 
 from PySide import QtCore
 
@@ -206,7 +207,7 @@ def open_folder_in_explorer(path):
     else:
         subprocess.Popen(["xdg-open", path])
 
-def zip_files(zip_file_name, *args, **kwargs):
+def zip_files(zip_file_name, project_dir, *args, **kwargs):
     """
     Zip files into an archive programmatically.
 
@@ -222,14 +223,13 @@ def zip_files(zip_file_name, *args, **kwargs):
     exclude_paths = kwargs.pop('exclude_paths', [])
     old_path = os.getcwd()
 
+    os.chdir(project_dir)
+
     for arg in args:
         if is_windows():
             arg = '\\\\?\\'+os.path.abspath(arg).replace('/', '\\')
         if os.path.exists(arg):
             if os.path.isdir(arg):
-                directory = os.path.abspath(arg)
-                os.chdir(directory)
-
                 for root, dirs, files in os.walk(directory):
                     excluded = False
                     for exclude_path in exclude_paths:
@@ -260,10 +260,7 @@ def zip_files(zip_file_name, *args, **kwargs):
                                 pass
 
             else:
-                file = os.path.abspath(arg)
-                directory = os.path.abspath(path_join(file, '..'))
-                os.chdir(directory)
-                file_loc = os.path.relpath(arg, directory)
+                file_loc = arg
                 if verbose:
                     log(file_loc)
                 try:
