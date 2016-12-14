@@ -979,7 +979,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.set_window_icon()
         self.open_export_button.setEnabled(True)
 
-        self.tree_browser.init(directory, ['.*'])
+        blacklist_setting = self.get_setting('blacklist')
+
+        output_blacklist = os.path.basename(self.output_dir())
+
+        self.tree_browser.init(directory,
+                               blacklist=(blacklist_setting.value.split('\n') +
+                                          ['*'+output_blacklist+'*']))
 
         self.update_json = True
 
@@ -1152,6 +1158,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         ex_setting_order = self.settings['order']['export_setting_order']
 
         vlayout = self.create_layout(ex_setting_order, cols=1)
+        vlayout.setContentsMargins(0, 10, 0, 0)
 
         output_name_layout = self.create_output_name_pattern_line()
 
@@ -1162,18 +1169,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         hlayout = QtGui.QHBoxLayout()
 
         platform_group = QtGui.QGroupBox('Platforms')
+        platform_group.setContentsMargins(0, 10, 0, 0)
         playout = QtGui.QVBoxLayout()
         playout.addLayout(vlayout)
         platform_group.setLayout(playout)
 
         hlayout.addWidget(platform_group)
 
-        tree_layout = self.create_blacklist_layout()
-
-        tree_group = QtGui.QGroupBox('Files')
-        tree_group.setLayout(tree_layout)
-
-        hlayout.addWidget(tree_group)
+        tree_layout = self.create_blacklist_layout(hlayout)
+        tree_layout.setContentsMargins(0, 10, 0, 0)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(hlayout)
@@ -1184,14 +1188,84 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         group_box.setLayout(vbox)
         return group_box
 
-    def create_blacklist_layout(self):
-        blacklist_layout = QtGui.QVBoxLayout()
+    def create_blacklist_layout(self, blacklist_layout):
 
         self.tree_browser = TreeBrowser()
+        self.tree_browser.setContentsMargins(0, 0, 0, 0)
 
+        self.blacklist_text = QtGui.QPlainTextEdit()
+        self.whitelist_text = QtGui.QPlainTextEdit()
+
+        hlayout = QtGui.QHBoxLayout()
+
+        blacklayout = QtGui.QVBoxLayout()
+        whitelayout = QtGui.QHBoxLayout()
+
+        blacklayout.addWidget(self.blacklist_text)
+        whitelayout.addWidget(self.whitelist_text)
+
+        whitelist_setting = self.get_setting('whitelist')
+        blacklist_setting = self.get_setting('blacklist')
+
+        self.blacklist_text.setStatusTip(blacklist_setting.description)
+        self.whitelist_text.setStatusTip(whitelist_setting.description)
+
+        self.blacklist_text.setObjectName(blacklist_setting.name)
+        self.whitelist_text.setObjectName(whitelist_setting.name)
+
+        blackgroup = QtGui.QGroupBox(blacklist_setting.display_name)
+        whitegroup = QtGui.QGroupBox(whitelist_setting.display_name)
+
+        blackgroup.setLayout(blacklayout)
+        whitegroup.setLayout(whitelayout)
+
+        blacklist_layout.addWidget(blackgroup)
+        blacklist_layout.addWidget(whitegroup)
         blacklist_layout.addWidget(self.tree_browser)
 
+        self.blacklist_text.textChanged.connect(
+            self.call_with_object('setting_changed',
+                                  self.blacklist_text,
+                                  blacklist_setting)
+        )
+
+        self.whitelist_text.textChanged.connect(
+            self.call_with_object('setting_changed',
+                                  self.whitelist_text,
+                                  whitelist_setting)
+        )
+
+        self.blacklist_text.textChanged.connect(
+            self.call_with_object('blacklist_changed',
+                                  self.blacklist_text,
+                                  blacklist_setting)
+        )
+
+        self.whitelist_text.textChanged.connect(
+            self.call_with_object('whitelist_changed',
+                                  self.whitelist_text,
+                                  whitelist_setting)
+        )
+
         return blacklist_layout
+
+    def blacklist_changed(self, text, blacklist_setting):
+        new_val = text.toPlainText()
+        output_blacklist = os.path.basename(self.output_dir())
+        self.tree_browser.refresh(blacklist=(new_val.split('\n') +
+                                            ['*'+output_blacklist+'*']))
+
+    def whitelist_changed(self, text, whitelist_setting):
+        new_val = text.toPlainText()
+        self.tree_browser.refresh(whitelist=new_val.split('\n'))
+
+    @property
+    def used_project_files(self):
+        return self.tree_browser.files
+
+    @property
+    def used_project_dirs(self):
+        return self.tree_browser.dirs
 
     def create_output_name_pattern_line(self):
         output_name_layout = QtGui.QHBoxLayout()
@@ -1432,7 +1506,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         old_val = setting.default_value
 
                     setting.value = old_val.replace('\\', '\\\\')
-                    widget.setText(old_val)
+                    if hasattr(widget, 'setText'):
+                        widget.setText(old_val)
+                    elif hasattr(widget, 'setPlainText'):
+                        widget.setPlainText(old_val)
                 elif setting.type == 'strings':
                     old_val = []
                     if setting.default_value is not None:
@@ -1494,7 +1571,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 setting.type == 'file' or
                 setting.type == 'folder' or
                 setting.type == 'int'):
-            setting.value = args[0]
+            if args:
+                setting.value = args[0]
+            else:
+                setting.value = obj.toPlainText()
+
             if not setting.value:
                 setting.value = setting.default_value
         elif setting.type == 'strings':
@@ -1646,7 +1727,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                         setting.type == 'folder' or
                         setting.type == 'int'):
                     val_str = self.convert_val_to_str(setting.value)
-                    setting_field.setText(setting.filter_name(val_str))
+                    if hasattr(setting_field, 'setText'):
+                        setting_field.setText(setting.filter_name(val_str))
+                    elif hasattr(setting_field, 'setPlainText'):
+                        setting_field.setPlainText(setting.filter_name(val_str))
                 if setting.type == 'strings':
                     vals = [self.convert_val_to_str(v) for v in setting.value]
                     setting_field.setText(','.join(vals))

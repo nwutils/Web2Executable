@@ -43,7 +43,7 @@ import config
 import utils
 from utils import zip_files, join_files
 from utils import get_data_path, get_data_file_path
-from util_classes import Setting
+from util_classes import Setting, FileTree
 
 from image_utils.pycns import save_icns
 from pepy.pe import PEFile
@@ -68,6 +68,8 @@ class CommandBase(object):
         self.original_packagejson = {}
         self.readonly = True
         self.update_json = True
+
+        self.file_tree = FileTree()
 
     def init(self):
         self.logger = config.logger
@@ -320,6 +322,7 @@ class CommandBase(object):
             nw_version = self.get_setting('nw_version')
 
             old_versions = set(nw_version.values)
+
             old_versions = old_versions.union(union_versions)
             new_versions = set(re.findall(regex, html))
 
@@ -375,7 +378,7 @@ class CommandBase(object):
             if os.path.exists(setting.save_file_path(version, location)):
                 os.remove(setting.save_file_path(version, location))
 
-            exc_format = utils.format_exc_info(sys.exc_info)
+            exc_format = utils.format_exc_info(sys.exc_info())
             self.show_error(exc_format)
             self.enable_ui_after_error()
 
@@ -758,8 +761,12 @@ class CommandBase(object):
         plist_dict['CFBundleDisplayName'] = self.project_name()
         plist_dict['CFBundleName'] = self.project_name()
         version_setting = self.get_setting('version')
-        plist_dict['CFBundleShortVersionString'] = version_setting.value
-        plist_dict['CFBundleVersion'] = version_setting.value
+        if version_setting.value is not None:
+            plist_dict['CFBundleShortVersionString'] = version_setting.value
+            plist_dict['CFBundleVersion'] = version_setting.value
+        else:
+            plist_dict['CFBundleShortVersionString'] = '0.0.0'
+            plist_dict['CFBundleVersion'] = '0.0.0'
 
         plistlib.writePlist(plist_dict, plist_path)
 
@@ -870,6 +877,13 @@ class CommandBase(object):
                 self.process_win_linux_setting(app_loc, output_dir,
                                                ex_setting)
 
+    @property
+    def used_project_files(self):
+        return self.file_tree.files
+
+    @property
+    def used_project_dirs(self):
+        return self.file_tree.dirs
 
     def make_output_dirs(self, write_json=True):
         """Create the output directories for the application to be copied"""
@@ -877,6 +891,17 @@ class CommandBase(object):
         output_name = self.sub_pattern() or self.project_name()
 
         self.progress_text = 'Making new directories...\n'
+
+
+        whitelist_setting = self.get_setting('whitelist')
+        blacklist_setting = self.get_setting('blacklist')
+
+        output_blacklist = os.path.basename(self.output_dir())
+
+        self.file_tree.init(self.project_dir(),
+                            blacklist=(blacklist_setting.value.split(',') +
+                                       ['*'+output_blacklist+'*']),
+                            whitelist=whitelist_setting.value.split(','))
 
         self.copy_files_to_project_folder()
 
@@ -914,15 +939,28 @@ class CommandBase(object):
         """Copy the temporary app to the output_dir"""
         app_file = utils.path_join(temp_dir, self.project_name()+'.nw')
 
+        proj_dir = self.project_dir()
+
         if self.uncompressed:
             app_nw_folder = utils.path_join(temp_dir,
                                             self.project_name()+'.nwf')
+            for dir in self.used_project_dirs:
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
 
-            utils.copytree(self.project_dir(), app_nw_folder,
-                           ignore=shutil.ignore_patterns(output_dir))
+            for file in self.used_project_files:
+                src = utils.path_join(proj_dir, file)
+                dest = utils.path_join(app_nw_folder, file)
+
+                base, _ = os.path.split(dest)
+
+                if not os.path.exists(base):
+                    os.makedirs(base)
+
+                utils.copy(src, dest)
             return app_nw_folder
         else:
-            zip_files(app_file, self.project_dir(), exclude_paths=[output_dir])
+            zip_files(app_file, proj_dir, *self.used_project_files)
             return app_file
 
     def get_version_tuple(self):
@@ -1455,7 +1493,6 @@ class ArgParser(argparse.ArgumentParser):
     """Custom argparser that prints help if there is an error"""
     def error(self, message):
         sys.stderr.write('error: {}\n'.format(message))
-        self.print_help()
         sys.exit(2)
 
 def get_arguments(command_base):
@@ -1520,8 +1557,9 @@ def generate_setting_args(command_base, parser):
             if setting_name == 'name':
                 kwargs.update({'default': command_base.project_name})
             else:
-                kwargs.update({'required': setting.required,
-                               'default': setting.default_value})
+                kwargs.update({'required': setting.required})
+                if setting.default_value is not None:
+                    kwargs.update({'default': setting.default_value})
             action = 'store'
             option_name = setting_name.replace('_', '-')
 

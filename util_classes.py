@@ -2,8 +2,10 @@
 
 import os
 import re
+from fnmatch import fnmatch
 import zipfile
 import tarfile
+import time
 
 import config
 import utils
@@ -11,36 +13,31 @@ import utils
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
+
 class FileItem(QtGui.QTreeWidgetItem):
     def __init__(self, parent=None, path=None):
         super(FileItem, self).__init__(parent)
         self.path = path
 
-class TreeBrowser(QtGui.QWidget):
-    def __init__(self, directory=None, checked_files=None,
-                 whitelist=None, blacklist=None, parent=None):
-        super(TreeBrowser, self).__init__(parent=parent)
-        self.root = QtGui.QTreeWidget()
-        self.root.setHeaderLabel('Included files')
-        self.root.itemChanged.connect(self.item_changed)
-        self.files = {}
+
+class FileTree(object):
+    def __init__(self, directory=None,
+                 whitelist=None, blacklist=None):
+
+        self.whitelist = None
+        self.blacklist = None
 
         self.paths = []
+        self.walkcache = {}
+        self.cache = True
+        self.time = time.time()
 
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.root)
-        self.setLayout(layout)
+        self.files = []
+        self.dirs = []
 
-        self.watcher = QtCore.QFileSystemWatcher()
-        self.watcher.directoryChanged.connect(self.directory_changed)
-        self.watcher.fileChanged.connect(self.file_changed)
+        self.init(directory, whitelist, blacklist)
 
-        self.directoryChanged = self.watcher.directoryChanged
-        self.fileChanged = self.watcher.fileChanged
-
-        self.init(directory, checked_files, whitelist, blacklist)
-
-    def init(self, directory=None, checked_files=None,
+    def init(self, directory=None,
              whitelist=None, blacklist=None):
 
         if directory:
@@ -48,89 +45,215 @@ class TreeBrowser(QtGui.QWidget):
         else:
             self.directory = directory
 
-        self.checked_files = checked_files or []
+        self.refresh(whitelist, blacklist)
 
-        self.whitelist = whitelist or []
-        self.blacklist = blacklist or []
-
-        self.watcher.removePaths(self.watcher.files())
-
-        self.files = {}
-
-        self.root.clear()
-
-        self.generate_directory_widget()
-
-    def file_changed(self, path):
-        print(path)
+    def clear(self):
         pass
 
-    def directory_changed(self, path):
-        print(path)
-        pass
+    def refresh(self, whitelist=None,
+                blacklist=None):
+        self.whitelist = whitelist or self.whitelist or []
+        self.blacklist = blacklist or self.blacklist or []
 
-    def get_abs_file_list(self):
-        return [os.path.join(self.directory, path) for path in self.files.keys()]
+        self.files = []
+        self.dirs = []
 
-    def get_checked_files(self):
-        pass
+        self.clear()
 
-    def item_changed(self, item, column):
-        self.files[item.path] = item.checkState(column)
+        self.generate_files()
 
-    def generate_directory_widget(self):
+    def walk(self, directory):
+        refresh = False
+
+        if (time.time() - self.time) > 10:
+            refresh = True
+            self.time = time.time()
+
+        if not self.walkcache.get(directory) or refresh:
+            self.walkcache[directory] = []
+            return os.walk(directory)
+
+        return self.walkcache[directory]
+
+    def determine_skip(self, path):
+        skip = False
+
+        for blacklist in self.blacklist:
+            match = fnmatch(path, blacklist)
+            if match:
+                skip = True
+                break
+
+        for whitelist in self.whitelist:
+            match = fnmatch(path, whitelist)
+            if match:
+                skip = False
+                break
+
+        return skip
+
+    def init_cache(self):
+        if self.walkcache.get(self.directory) is None:
+            self.walkcache[self.directory] = []
+
+        self.cache = False
+        if not self.walkcache[self.directory]:
+            self.cache = True
+
+    def add_to_cache(self, *args):
+        if self.cache:
+            self.walkcache[self.directory].append(args)
+
+    def generate_files(self):
         if self.directory is None:
             return
 
-        parent_map = {'': self.root}
+        self.init_cache()
 
-        for root, dirs, files in os.walk(self.directory):
+        for root, dirs, files in self.walk(self.directory):
+            self.add_to_cache(root, dirs, files)
+
+            proj_path = root.replace(self.directory, '')
+
             for directory in dirs:
+                path = os.path.join(proj_path, directory)
 
-                proj_path = root.replace(self.directory, '')
+                if self.determine_skip(path):
+                    continue
 
-                parent = parent_map[proj_path]
+                self.dirs.append(path)
+
+            for file in files:
+                path = os.path.join(proj_path, file)
+
+                if self.determine_skip(path):
+                    continue
+
+                self.files.append(path)
+
+
+class TreeBrowser(QtGui.QWidget, FileTree):
+    def __init__(self, directory=None,
+                 whitelist=None, blacklist=None, parent=None):
+        QtGui.QWidget.__init__(self, parent=parent)
+        self.root = QtGui.QTreeWidget()
+        self.root.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.root.header().setStretchLastSection(False)
+        self.root.setHeaderLabel('Included files')
+
+        self.parent_map = {}
+
+        layout = QtGui.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.root)
+        self.setLayout(layout)
+
+        FileTree.__init__(self, directory, whitelist, blacklist)
+
+    def clear(self):
+        self.root.clear()
+
+    def fix_tree(self, path, parent):
+        temp = parent
+        tree = []
+        root = None
+        base, direc = os.path.split(path)
+        new_path = os.path.join(base, direc)
+
+        while new_path and root is None:
+            temp = self.parent_map.get(os.path.join(base, direc))
+            if temp is not None:
+                root = temp
+                break
+
+            child = FileItem(None, os.path.join(base, direc))
+            child.setText(0, direc)
+
+            tree.insert(0, child)
+            base, direc = os.path.split(base)
+            new_path = os.path.join(base, direc)
+
+            self.parent_map[child.path] = child
+
+        # if we reached the top of the directory chain
+        if root is None:
+            # if the path is still valid, that means we need to create
+            # a new top level item
+            if new_path:
+                root = FileItem(None, new_path)
+                root.setText(0, direc)
+                self.parent_map[root.path] = root
+            else:
+                # otherwise, the if the path is empty, we already
+                # have a top level item, so use that
+                root = tree.pop(0)
+
+            self.root.addTopLevelItem(root)
+
+        # add all the children to the root node
+        temp = root
+        for child in tree:
+            temp.addChild(child)
+            temp = child
+
+    def determine_skip(self, path, parent):
+        skip = False
+
+        for blacklist in self.blacklist:
+            match = fnmatch(path, blacklist)
+            if match:
+                skip = True
+                break
+
+        for whitelist in self.whitelist:
+            match = fnmatch(path, whitelist)
+            if match:
+                skip = False
+                if parent is None:
+                    self.fix_tree(path, parent)
+                break
+
+        return skip
+
+    def generate_files(self):
+        if self.directory is None:
+            return
+
+        self.parent_map = {'': self.root}
+
+        self.init_cache()
+
+        for root, dirs, files in self.walk(self.directory):
+            self.add_to_cache(root, dirs, files)
+
+            proj_path = root.replace(self.directory, '')
+
+            for directory in dirs:
+                parent = self.parent_map.get(proj_path)
 
                 path = os.path.join(proj_path, directory)
 
-                checked = Qt.Unchecked
-
-                for checked_file in self.checked_files:
-                    match = re.match('^'+checked_file, path)
-                    if match:
-                        checked = Qt.Checked
+                if self.determine_skip(path, parent) or parent is None:
+                    continue
 
                 child = FileItem(parent, path)
-                child.setFlags(child.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
                 child.setText(0, directory)
-                child.setCheckState(0, checked)
-
-                self.files[path] = checked
-
-                parent_map[path] = child
+                self.parent_map[path] = child
+                self.dirs.append(path)
 
             for file in files:
-                proj_path = root.replace(self.directory, '')
-
-                parent = parent_map[proj_path]
+                parent = self.parent_map.get(proj_path)
 
                 path = os.path.join(proj_path, file)
 
-                checked = Qt.Unchecked
-
-                for checked_file in self.checked_files:
-                    match = re.match(checked_file, path)
-                    if match:
-                        checked = Qt.Checked
+                if self.determine_skip(path, parent) or parent is None:
+                    continue
 
                 child = FileItem(parent, path)
-                child.setFlags(child.flags() | Qt.ItemIsUserCheckable)
                 child.setText(0, file)
-                child.setCheckState(0, checked)
+                self.files.append(path)
 
-                self.files[path] = checked
-
-        self.watcher.addPaths(self.get_abs_file_list())
+        self.root.sortItems(0, Qt.AscendingOrder)
 
 
 class ExistingProjectDialog(QtGui.QDialog):
