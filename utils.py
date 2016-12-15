@@ -221,54 +221,20 @@ def zip_files(zip_file_name, project_dir, *args, **kwargs):
     """
     zip_file = zipfile.ZipFile(zip_file_name, 'w', config.ZIP_MODE)
     verbose = kwargs.pop('verbose', False)
-    exclude_paths = kwargs.pop('exclude_paths', [])
     old_path = os.getcwd()
 
     os.chdir(project_dir)
 
     for arg in args:
-        if is_windows():
-            arg = '\\\\?\\'+os.path.abspath(arg).replace('/', '\\')
         if os.path.exists(arg):
-            if os.path.isdir(arg):
-                for root, dirs, files in os.walk(directory):
-                    excluded = False
-                    for exclude_path in exclude_paths:
-                        if exclude_path in path_join(directory,root):
-                            excluded = True
-                    if not excluded:
-                        for file in files:
-                            file_loc = os.path.relpath(path_join(root, file), directory)
-                            if verbose:
-                                log(file_loc)
-                            try:
-                                zip_file.write(file_loc)
-                            except ValueError:
-                                os.utime(file_loc, None)
-                                zip_file.write(file_loc)
-                            except FileNotFoundError:
-                                pass
-                        for direc in dirs:
-                            dir_loc = os.path.relpath(path_join(root, direc), directory)
-                            if verbose:
-                                log(dir_loc)
-                            try:
-                                zip_file.write(dir_loc)
-                            except ValueError:
-                                os.utime(file_loc, None)
-                                zip_file.write(file_loc)
-                            except FileNotFoundError:
-                                pass
-
-            else:
-                file_loc = arg
-                if verbose:
-                    log(file_loc)
-                try:
-                    zip_file.write(file_loc)
-                except ValueError:
-                    os.utime(file_loc, None)
-                    zip_file.write(file_loc)
+            file_loc = arg
+            if verbose:
+                log(file_loc)
+            try:
+                zip_file.write(file_loc)
+            except ValueError:
+                os.utime(file_loc, None)
+                zip_file.write(file_loc)
 
     os.chdir(old_path)
 
