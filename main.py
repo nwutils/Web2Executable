@@ -24,14 +24,14 @@ Run Example:
 import os
 import glob
 import sys
-import codecs
+import logging
 import platform
 
 import utils
 from utils import log, open_folder_in_explorer
 
 import config
-from config import logger, get_file
+from config import get_file
 from config import __version__ as __gui_version__
 
 from util_classes import ExistingProjectDialog
@@ -144,7 +144,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.setup_project_menu()
 
-        self.logger = logger
+        self.logger = logging.getLogger(__name__)
 
         self.gui_app = app
         self.desktop_width = app.desktop().screenGeometry().width()

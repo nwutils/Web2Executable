@@ -90,7 +90,6 @@ ENV_VARS_BASH_PATH = 'files/env_vars.bash'
 
 ## Logger setup ----------------------------------------------
 
-logger = logging.getLogger('W2E logger')
 LOG_FILENAME = utils.get_data_file_path(ERROR_LOG_FILE)
 if __name__ != '__main__':
     logging.basicConfig(
@@ -99,10 +98,6 @@ if __name__ != '__main__':
                 "%(lineno)s %(funcName)s - %(message)s"),
         level=logging.DEBUG
     )
-    logger = logging.getLogger('W2E logger')
-
-handler = lh.RotatingFileHandler(LOG_FILENAME, maxBytes=100000, backupCount=2)
-logger.addHandler(handler)
 
 ## Custom except hook to log all errors ----------------------
 

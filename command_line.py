@@ -35,6 +35,7 @@ import traceback
 import subprocess
 import plistlib
 import codecs
+import logging
 from datetime import datetime, timedelta
 
 from io import StringIO
@@ -72,7 +73,7 @@ class CommandBase(object):
         self.file_tree = FileTree()
 
     def init(self):
-        self.logger = config.logger
+        self.logger = logging.getLogger(__name__)
         self.update_nw_versions(None)
         self.setup_nw_versions()
 

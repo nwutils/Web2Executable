@@ -16,8 +16,11 @@ import subprocess
 from appdirs import AppDirs
 import validators
 import traceback
+import logging
 
 from PySide import QtCore
+
+logger = logging.getLogger(__name__)
 
 def url_exists(path):
     if validators.url(path):
@@ -194,9 +197,7 @@ def log(*args):
     """Print logging information or log it to a file."""
     if config.DEBUG:
         print(*args)
-    with open(get_data_file_path(config.ERROR_LOG_FILE), 'a+') as f:
-        f.write(', '.join(args))
-        f.write('\n')
+    logger.info(', '.join(args))
 
 def open_folder_in_explorer(path):
     """Cross platform open folder window."""
