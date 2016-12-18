@@ -66,7 +66,11 @@ rm $BUILD_DIR/Web2ExeLinux/files/error.log \
 
 ################# Zip and Upload to Github ###################
 
-zip -r -9 $BUILD_DIR/Web2ExeLinux-CMD.zip $BUILD_DIR/Web2ExeLinux-CMD/*
-zip -r -9 $BUILD_DIR/Web2ExeLinux-${VERSION}.zip $BUILD_DIR/Web2ExeLinux
+cd $BUILD_DIR
+
+zip -r -9 Web2ExeLinux-CMD.zip Web2ExeLinux-CMD/*
+zip -r -9 Web2ExeLinux-${VERSION}.zip Web2ExeLinux
+
+cd -
 
 python3.4 $DIR/upload_release.py
