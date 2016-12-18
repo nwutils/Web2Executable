@@ -99,6 +99,8 @@ if __name__ != '__main__':
         level=logging.DEBUG
     )
 
+logger = logging.getLogger(__name__)
+
 ## Custom except hook to log all errors ----------------------
 
 def my_excepthook(type_, value, tback):
