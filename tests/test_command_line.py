@@ -1,7 +1,9 @@
-from command_line import CommandBase
-import utils
+import os
 import config
+import utils
 import pytest
+
+from command_line import CommandBase
 
 api = pytest.mark.skipif(
     not pytest.config.getoption("--runapi"),
@@ -10,6 +12,12 @@ api = pytest.mark.skipif(
 
 @pytest.fixture(scope='module')
 def command_base():
+    config.TESTING = True
+    dpath = utils.get_data_path('')
+
+    if os.path.exists(dpath):
+        utils.rmtree(dpath)
+
     base = CommandBase()
     base._project_name = 'Test'
     return base
@@ -71,7 +79,6 @@ def test_get_default_nwjs_branch(command_base):
     assert match != None
 
 def test_get_versions(command_base):
-    import os
     path = utils.get_data_file_path(config.VER_FILE)
 
     if os.path.exists(path):
@@ -83,4 +90,16 @@ def test_get_versions(command_base):
         data = ver_file.read()
         assert len(data) > 0
 
+def test_download_nwjs(command_base):
+    command_base.get_setting('nw_version').value = '0.19.0'
+    command_base.get_setting('windows-x64').value = True
+    command_base.init()
+    command_base.get_files_to_download()
 
+    command_base.download_file_with_error_handling()
+
+    base, _ = os.path.split(__file__)
+
+    assert os.path.exists(utils.path_join(base, 'test_data', 'files',
+                                          'downloads',
+                                          'nwjs-v0.19.0-win-x64.zip'))

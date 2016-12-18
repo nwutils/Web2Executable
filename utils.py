@@ -17,6 +17,7 @@ from appdirs import AppDirs
 import validators
 import traceback
 import logging
+import config
 
 from PySide import QtCore
 
@@ -136,9 +137,13 @@ def path_join(base, *rest):
     return rpath
 
 def get_data_path(dir_path):
+
     parts = dir_path.split('/')
-    dirs = AppDirs('Web2Executable', 'Web2Executable')
-    data_path = path_join(dirs.user_data_dir, *parts)
+    if config.TESTING:
+        data_path = path_join(config.CWD, 'tests', 'test_data', *parts)
+    else:
+        dirs = AppDirs('Web2Executable', 'Web2Executable')
+        data_path = path_join(dirs.user_data_dir, *parts)
 
     if is_windows():
         data_path = data_path.replace('\\', '/')

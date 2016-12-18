@@ -19,6 +19,7 @@ ZIP_MODE = zipfile.ZIP_STORED
 MAX_RECENT = 10
 
 DEBUG = False
+TESTING = False
 
 SSL_CONTEXT = ssl._create_unverified_context()
 
@@ -66,7 +67,6 @@ FOLDER_OPEN_ICON = 'files/images/folder_open.png'
 W2E_VER_FILE = 'files/version.txt'
 
 TEMP_DIR = utils.get_temp_dir()
-DEFAULT_DOWNLOAD_PATH = utils.get_data_path('files/downloads')
 
 ERROR_LOG_FILE = 'files/error.log'
 VER_FILE = 'files/nw-versions.txt'
@@ -91,6 +91,7 @@ ENV_VARS_BASH_PATH = 'files/env_vars.bash'
 ## Logger setup ----------------------------------------------
 
 LOG_FILENAME = utils.get_data_file_path(ERROR_LOG_FILE)
+
 if __name__ != '__main__':
     logging.basicConfig(
         filename=LOG_FILENAME,
@@ -104,15 +105,18 @@ logger = logging.getLogger(__name__)
 ## Custom except hook to log all errors ----------------------
 
 def my_excepthook(type_, value, tback):
-    output_err = ''.join([x for x in traceback.format_exception(type_, value, tback)])
+    output_err = ''.join([x for x in traceback.format_exception(type_, value,
+                                                                tback)])
     logger.error('{}'.format(output_err))
     sys.__excepthook__(type_, value, tback)
 
 sys.excepthook = my_excepthook
 
-
-# Ensure that the default download path exists
-try:
-    os.makedirs(DEFAULT_DOWNLOAD_PATH)
-except:
-    pass
+def download_path(path=None):
+    # Ensure that the default download path exists
+    path = path or utils.get_data_path('files/downloads')
+    try:
+        os.makedirs(path)
+    except:
+        pass
+    return path

@@ -27,10 +27,11 @@ import sys
 import logging
 import platform
 
+import config
+
 import utils
 from utils import log, open_folder_in_explorer
 
-import config
 from config import get_file
 from config import __version__ as __gui_version__
 
@@ -730,7 +731,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         sdk_build_setting = self.get_setting('sdk_build')
         sdk_build = sdk_build_setting.value
 
-        location = self.get_setting('download_dir').value
+        location = self.get_setting('download_dir').value or config.download_path()
 
         if sdk_build:
             # Switch the download URL if an sdk build is selected

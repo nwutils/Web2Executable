@@ -429,7 +429,7 @@ class Setting(object):
         if location:
             self.save_path = location
         else:
-            self.save_path = self.save_path or config.DEFAULT_DOWNLOAD_PATH
+            self.save_path = location or config.download_path()
 
 
         self.get_file_information_from_url()

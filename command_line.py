@@ -105,9 +105,6 @@ class CommandBase(object):
 
         contents = codecs.open(config_file, encoding='utf-8').read()
 
-        contents = contents.replace('{DEFAULT_DOWNLOAD_PATH}',
-                                    config.DEFAULT_DOWNLOAD_PATH)
-
         config_io = StringIO(contents)
         config_obj = ConfigObj(config_io, unrepr=True).dict()
 
@@ -362,7 +359,8 @@ class CommandBase(object):
         in the GUI.
         """
         setting = self.files_to_download.pop()
-        location = self.get_setting('download_dir').value
+        location = (self.get_setting('download_dir').value or
+                    config.download_path())
         version = self.selected_version()
         path = setting.url.format(version, version)
 
@@ -583,7 +581,8 @@ class CommandBase(object):
     def extract_files(self):
         """Extract nw.js files to the specific version path"""
         self.extract_error = None
-        location = self.get_setting('download_dir').value
+        location = (self.get_setting('download_dir').value or
+                    config.download_path())
 
         sdk_build_setting = self.get_setting('sdk_build')
         sdk_build = sdk_build_setting.value
@@ -1387,7 +1386,8 @@ class CommandBase(object):
         """Download a file from the path and setting"""
         self.logger.info('Downloading file {}.'.format(path))
 
-        location = self.get_setting('download_dir').value
+        location = (self.get_setting('download_dir').value or
+                    config.download_path())
 
         sdk_build_setting = self.get_setting('sdk_build')
         sdk_build = sdk_build_setting.value
@@ -1496,7 +1496,7 @@ class ArgParser(argparse.ArgumentParser):
         sys.stderr.write('error: {}\n'.format(message))
         sys.exit(2)
 
-def get_arguments(command_base):
+def get_arguments(command_base, args=None):
     """Retrieves arguments from the command line"""
 
     parser = ArgParser(description=('Command line interface '
@@ -1534,6 +1534,9 @@ def get_arguments(command_base):
                         choices=export_args,
                         help=('Choose at least one system '
                               'to export to.'))
+
+    if args:
+        return parse.parse_args(args)
 
     return parser.parse_args()
 
@@ -1678,12 +1681,12 @@ def initialize_setting_values(args, command_base):
             if setting is not None:
                 setting.value = val
 
-def main():
+def main(args=None):
     """Main setup and argument parsing"""
     command_base = CommandBase()
     command_base.init()
 
-    args = get_arguments(command_base)
+    args = get_arguments(command_base, args)
 
     setup_logging(args, command_base)
     setup_directories(args, command_base)
