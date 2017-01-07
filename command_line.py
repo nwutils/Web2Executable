@@ -595,7 +595,8 @@ class CommandBase(object):
             try:
                 if setting.value:
                     extract_path = get_data_path('files/'+setting.name)
-                    setting.extract(extract_path, version, sdk_build)
+                    setting.extract(extract_path, version, save_file_path,
+                                    sdk_build)
 
                     self.progress_text += '.'
 

@@ -449,11 +449,12 @@ class Setting(object):
         for undefined_key, undefined_value in kwargs.items():
             setattr(self, undefined_key, undefined_value)
 
-    def extract(self, ex_path, version, sdk_build=False):
+    def extract(self, ex_path, version, location=None, sdk_build=False):
         if os.path.exists(ex_path):
             utils.rmtree(ex_path, ignore_errors=True)
 
-        path = self.save_file_path(version, sdk_build=sdk_build)
+        path = location or self.save_file_path(version,
+                                               sdk_build=sdk_build)
 
         file = self.extract_class(path,
                                   *self.extract_args)

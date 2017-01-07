@@ -763,7 +763,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             return
 
         # Download in HTTP mode
-        mode = QHttp.ConnectionModeHttp
+        if path.startswith('https'):
+            mode = QHttp.ConnectionModeHttps
+        else:
+            mode = QHttp.ConnectionModeHttp
+
         port = url.port()
 
         if port == -1:
