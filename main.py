@@ -30,7 +30,7 @@ import platform
 import config
 
 import utils
-from utils import log, open_folder_in_explorer
+from utils import log, open_folder_in_explorer, is_windows
 
 from config import get_file
 from config import __version__ as __gui_version__
@@ -726,6 +726,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             path (string): the URL path of the file
             setting (Setting): The file setting to download
         """
+        if is_windows():
+            path = path.replace('https', 'http')
+
         version_file = self.settings['base_url'].format(self.selected_version())
 
         sdk_build_setting = self.get_setting('sdk_build')
