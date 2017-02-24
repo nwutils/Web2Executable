@@ -900,9 +900,9 @@ class CommandBase(object):
         output_blacklist = os.path.basename(self.output_dir())
 
         self.file_tree.init(self.project_dir(),
-                            blacklist=(blacklist_setting.value.split(',') +
+                            blacklist=(blacklist_setting.value.split('\n') +
                                        ['*'+output_blacklist+'*']),
-                            whitelist=whitelist_setting.value.split(','))
+                            whitelist=whitelist_setting.value.split('\n'))
 
         self.copy_files_to_project_folder()
 
