@@ -899,8 +899,8 @@ class CommandBase(object):
 
         output_blacklist = os.path.basename(self.output_dir())
 
-        blacklist_vals = re.split(r'\\n?,?\n?', blacklist_setting.value)
-        whitelist_vals = re.split(r'\\n?,?\n?', whitelist_setting.value)
+        blacklist_vals = re.split(',?\n?', blacklist_setting.value)
+        whitelist_vals = re.split(',?\n?', whitelist_setting.value)
 
         self.file_tree.init(self.project_dir(),
                             blacklist=(blacklist_vals +
