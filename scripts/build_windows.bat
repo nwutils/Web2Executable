@@ -1,4 +1,5 @@
 rd /S /Q Web2ExeWin
+rd /S /Q build
 del *.zip
 call pyinstaller --onefile ^
  --hidden-import PIL.Jpeg2KImagePlugin ^
