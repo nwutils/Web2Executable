@@ -899,10 +899,13 @@ class CommandBase(object):
 
         output_blacklist = os.path.basename(self.output_dir())
 
+        blacklist_vals = re.split(r'\\n?,?\n?', blacklist_setting.value)
+        whitelist_vals = re.split(r'\\n?,?\n?', whitelist_setting.value)
+
         self.file_tree.init(self.project_dir(),
-                            blacklist=(blacklist_setting.value.split('\n') +
+                            blacklist=(blacklist_vals +
                                        ['*'+output_blacklist+'*']),
-                            whitelist=whitelist_setting.value.split('\n'))
+                            whitelist=whitelist_vals)
 
         self.copy_files_to_project_folder()
 
@@ -1537,7 +1540,7 @@ def get_arguments(command_base, args=None):
                               'to export to.'))
 
     if args:
-        return parse.parse_args(args)
+        return parser.parse_args(args)
 
     return parser.parse_args()
 
@@ -1601,18 +1604,11 @@ def setup_logging(args, command_base):
     if args.verbose:
         logging.basicConfig(
             stream=sys.stdout,
-            format=("%(levelname) -10s %(module)s.py: "
-                    "%(lineno)s %(funcName)s - %(message)s"),
+            format=("%(levelname) -6s %(module)s.py %(lineno)s: "
+                    "%(message)s"),
             level=logging.DEBUG
         )
-    else:
-        # Log to the logfile in config.py
-        logging.basicConfig(
-            filename=config.LOG_FILENAME,
-            format=("%(levelname) -10s %(asctime)s %(module)s.py: "
-                    "%(lineno)s %(funcName)s - %(message)s"),
-            level=logging.DEBUG
-        )
+
 
     config.logger = logging.getLogger('CMD Logger')
     config.handler = lh.RotatingFileHandler(config.LOG_FILENAME,

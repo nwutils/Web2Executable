@@ -24,6 +24,7 @@ Run Example:
 import os
 import glob
 import sys
+import re
 import logging
 import platform
 
@@ -988,11 +989,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.open_export_button.setEnabled(True)
 
         blacklist_setting = self.get_setting('blacklist')
+        whitelist_setting = self.get_setting('whitelist')
 
         output_blacklist = os.path.basename(self.output_dir())
 
         self.tree_browser.init(directory,
-                               blacklist=(blacklist_setting.value.split('\n') +
+                               whitelist=re.split('\n?,?', whitelist_setting.value),
+                               blacklist=(re.split('\n?,?', blacklist_setting.value) +
                                           ['*'+output_blacklist+'*']))
 
         self.update_json = True
@@ -1260,12 +1263,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def blacklist_changed(self, text, blacklist_setting):
         new_val = text.toPlainText()
         output_blacklist = os.path.basename(self.output_dir())
-        self.tree_browser.refresh(blacklist=(new_val.split('\n') +
+        self.tree_browser.refresh(blacklist=(re.split('\n?,?', new_val) +
                                             ['*'+output_blacklist+'*']))
 
     def whitelist_changed(self, text, whitelist_setting):
         new_val = text.toPlainText()
-        self.tree_browser.refresh(whitelist=new_val.split('\n'))
+        self.tree_browser.refresh(whitelist=re.split('\n?,?', new_val))
 
     @property
     def used_project_files(self):

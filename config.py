@@ -92,14 +92,6 @@ ENV_VARS_BASH_PATH = 'files/env_vars.bash'
 
 LOG_FILENAME = utils.get_data_file_path(ERROR_LOG_FILE)
 
-if __name__ != '__main__':
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format=("%(levelname) -10s %(asctime)s %(module)s.py: "
-                "%(lineno)s %(funcName)s - %(message)s"),
-        level=logging.DEBUG
-    )
-
 logger = logging.getLogger(__name__)
 
 ## Custom except hook to log all errors ----------------------

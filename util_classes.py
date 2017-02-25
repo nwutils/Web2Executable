@@ -6,6 +6,8 @@ from fnmatch import fnmatch
 import zipfile
 import tarfile
 import time
+import logging
+from pprint import pformat
 
 import config
 import utils
@@ -39,6 +41,8 @@ class FileTree(object):
 
     def init(self, directory=None,
              whitelist=None, blacklist=None):
+
+        self.logger = logging.getLogger(__name__)
 
         if directory:
             self.directory = directory + os.sep
@@ -104,11 +108,31 @@ class FileTree(object):
         if self.cache:
             self.walkcache[self.directory].append(args)
 
+    def is_in_skipped(self, skipped, path):
+        temp = path
+
+        while temp:
+            if temp in skipped:
+                return True
+            if temp == os.path.dirname(temp):
+                return False
+            temp = os.path.dirname(temp)
+        return False
+
     def generate_files(self):
         if self.directory is None:
             return
 
+        self.logger.debug('Blacklist pattern:')
+        self.logger.debug(pformat(self.blacklist))
+        self.logger.debug('')
+        self.logger.debug('Whitelist pattern:')
+        self.logger.debug(pformat(self.whitelist))
+        self.logger.debug('')
+
         self.init_cache()
+
+        skipped_files = set()
 
         for root, dirs, files in self.walk(self.directory):
             self.add_to_cache(root, dirs, files)
@@ -119,7 +143,13 @@ class FileTree(object):
                 path = os.path.join(proj_path, directory)
 
                 if self.determine_skip(path):
+                    if not self.is_in_skipped(skipped_files, path):
+                        self.logger.debug('Skipping dir: %s', path)
+                    skipped_files.add(path)
                     continue
+                else:
+                    if self.is_in_skipped(skipped_files, path):
+                        self.logger.debug('Keeping dir: %s', path)
 
                 self.dirs.append(path)
 
@@ -127,7 +157,13 @@ class FileTree(object):
                 path = os.path.join(proj_path, file)
 
                 if self.determine_skip(path):
+                    if not self.is_in_skipped(skipped_files, path):
+                        self.logger.debug('Skipping file: %s', path)
+                    skipped_files.add(path)
                     continue
+                else:
+                    if self.is_in_skipped(skipped_files, path):
+                        self.logger.debug('Keeping file: %s', path)
 
                 self.files.append(path)
 
