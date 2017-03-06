@@ -15,7 +15,7 @@ Web2Executable
 What is it?
 -----------
 
-Web2Executable is a friendly command line and GUI application that can transform your Nodejs (or any other JS/HTML) app into a standalone executable. It can export to Mac OS X, Windows and Linux all from one platform, so no need to go out and buy expensive hardware.
+Web2Executable is a friendly command line and GUI application that can transform your Nodejs (or any other JS/HTML) app into an executable (and libraries) that can run in a contained, desktop-like style. It can export to Mac OS X, Windows and Linux all from one platform, so no need to go out and buy expensive hardware.
 
 It's powered by the very awesome project [NWJS](https://github.com/nwjs) and PySide, is open source, and is just dang awesome and easy to use.
 
