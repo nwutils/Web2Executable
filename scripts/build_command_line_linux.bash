@@ -68,8 +68,8 @@ rm $BUILD_DIR/Web2ExeLinux/files/error.log \
 
 cd $BUILD_DIR
 
-zip -r -9 Web2ExeLinux-CMD.zip Web2ExeLinux-CMD/*
-zip -r -9 Web2ExeLinux-${VERSION}.zip Web2ExeLinux
+zip -r -9 $PROJ_DIR/Web2ExeLinux-CMD.zip Web2ExeLinux-CMD/*
+zip -r -9 $PROJ_DIR/Web2ExeLinux-${VERSION}.zip Web2ExeLinux
 
 cd -
 
