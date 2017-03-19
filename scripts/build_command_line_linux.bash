@@ -20,6 +20,7 @@ BUILD_DIR="$PROJ_DIR/Web2ExeBuild"
 
 ## Remove old build directories
 rm -rf $PROJ_DIR/build $BUILD_DIR
+rm -rf $PROJ_DIR/Web2ExeLinux-*
 
 VERSION=$(cat $PROJ_DIR/files/version.txt)
 
