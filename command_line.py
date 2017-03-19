@@ -73,7 +73,7 @@ class CommandBase(object):
         self.file_tree = FileTree()
 
     def init(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = config.getLogger(__name__)
         self.update_nw_versions(None)
         self.setup_nw_versions()
 
@@ -907,10 +907,12 @@ class CommandBase(object):
                                        ['*'+output_blacklist+'*']),
                             whitelist=whitelist_vals)
 
-        self.copy_files_to_project_folder()
 
         if write_json:
             self.write_package_json()
+            self.file_tree.refresh()
+
+        self.copy_files_to_project_folder()
 
         for ex_setting in self.settings['export_settings'].values():
             self.process_export_setting(ex_setting, output_name)
@@ -1610,11 +1612,7 @@ def setup_logging(args, command_base):
         )
 
 
-    config.logger = logging.getLogger('CMD Logger')
-    config.handler = lh.RotatingFileHandler(config.LOG_FILENAME,
-                                            maxBytes=100000,
-                                            backupCount=2)
-    config.logger.addHandler(config.handler)
+    config.logger = config.getLogger('CMD Logger')
 
     def my_excepthook(type_, value, tback):
         exc_format = traceback.format_exception(type_, value, tback)

@@ -146,7 +146,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.setup_project_menu()
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = config.getLogger(__name__)
 
         self.gui_app = app
         self.desktop_width = app.desktop().screenGeometry().width()
@@ -669,6 +669,9 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         otherwise run the user's custom script.
         """
         self.ex_button.setEnabled(self.required_settings_filled())
+
+        self.tree_browser.refresh()
+
         self.progress_text = 'Done Exporting.'
         self.delete_files()
 
@@ -1202,6 +1205,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def create_blacklist_layout(self, blacklist_layout):
 
         self.tree_browser = TreeBrowser()
+        self.file_tree = self.tree_browser.file_tree
         self.tree_browser.setContentsMargins(0, 0, 0, 0)
 
         self.blacklist_text = QtGui.QPlainTextEdit()
@@ -1269,14 +1273,6 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def whitelist_changed(self, text, whitelist_setting):
         new_val = text.toPlainText()
         self.tree_browser.refresh(whitelist=re.split('\n?,?', new_val))
-
-    @property
-    def used_project_files(self):
-        return self.tree_browser.files
-
-    @property
-    def used_project_dirs(self):
-        return self.tree_browser.dirs
 
     def create_output_name_pattern_line(self):
         output_name_layout = QtGui.QHBoxLayout()

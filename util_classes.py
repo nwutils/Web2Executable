@@ -42,7 +42,7 @@ class FileTree(object):
     def init(self, directory=None,
              whitelist=None, blacklist=None):
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = config.getLogger(__name__)
 
         if directory:
             self.directory = directory + os.sep
@@ -52,15 +52,12 @@ class FileTree(object):
         self.refresh(whitelist, blacklist)
 
     def clear(self):
-        pass
+        self.files = []
+        self.dirs = []
 
     def refresh(self, whitelist=None,
                 blacklist=None):
-        self.whitelist = whitelist or self.whitelist or []
-        self.blacklist = blacklist or self.blacklist or []
-
-        self.files = []
-        self.dirs = []
+        self.set_filters(whitelist, blacklist)
 
         self.clear()
 
@@ -79,22 +76,34 @@ class FileTree(object):
 
         return self.walkcache[directory]
 
-    def determine_skip(self, path):
+    def determine_skip(self, path, *args, **kwargs):
         skip = False
 
         for blacklist in self.blacklist:
             match = fnmatch(path, blacklist)
             if match:
                 skip = True
+                self.on_blacklist_match(path, *args, **kwargs)
                 break
 
         for whitelist in self.whitelist:
             match = fnmatch(path, whitelist)
             if match:
                 skip = False
+                self.on_whitelist_match(path, *args, **kwargs)
                 break
 
         return skip
+
+    def set_filters(self, whitelist=None, blacklist=None):
+        self.whitelist = whitelist or self.whitelist or []
+        self.blacklist = blacklist or self.blacklist or []
+
+    def on_whitelist_match(self, path, *args, **kwargs):
+        pass
+
+    def on_blacklist_match(self, path, *args, **kwargs):
+        pass
 
     def init_cache(self):
         if self.walkcache.get(self.directory) is None:
@@ -168,7 +177,7 @@ class FileTree(object):
                 self.files.append(path)
 
 
-class TreeBrowser(QtGui.QWidget, FileTree):
+class TreeBrowser(QtGui.QWidget):
     def __init__(self, directory=None,
                  whitelist=None, blacklist=None, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
@@ -184,10 +193,25 @@ class TreeBrowser(QtGui.QWidget, FileTree):
         layout.addWidget(self.root)
         self.setLayout(layout)
 
-        FileTree.__init__(self, directory, whitelist, blacklist)
+        self.file_tree = FileTree(directory, whitelist, blacklist)
+        self.init(directory, whitelist, blacklist)
 
     def clear(self):
         self.root.clear()
+        self.file_tree.clear()
+
+    def init(self, directory=None,
+             whitelist=None, blacklist=None):
+
+        self.file_tree.init(directory, whitelist, blacklist)
+
+        self.refresh(whitelist, blacklist)
+
+    def refresh(self, whitelist=None,
+                blacklist=None):
+        self.file_tree.set_filters(whitelist, blacklist)
+        self.clear()
+        self.generate_files()
 
     def fix_tree(self, path, parent):
         temp = parent
@@ -232,62 +256,49 @@ class TreeBrowser(QtGui.QWidget, FileTree):
             temp.addChild(child)
             temp = child
 
-    def determine_skip(self, path, parent):
-        skip = False
-
-        for blacklist in self.blacklist:
-            match = fnmatch(path, blacklist)
-            if match:
-                skip = True
-                break
-
-        for whitelist in self.whitelist:
-            match = fnmatch(path, whitelist)
-            if match:
-                skip = False
-                if parent is None:
-                    self.fix_tree(path, parent)
-                break
-
-        return skip
+    def on_whitelist_match(self, path, parent=None):
+        if parent is None:
+            self.fix_tree(path, parent)
 
     def generate_files(self):
-        if self.directory is None:
+        directory = self.file_tree.directory
+
+        if directory is None:
             return
 
         self.parent_map = {'': self.root}
 
-        self.init_cache()
+        self.file_tree.init_cache()
 
-        for root, dirs, files in self.walk(self.directory):
-            self.add_to_cache(root, dirs, files)
+        for root, dirs, files in self.file_tree.walk(directory):
+            self.file_tree.add_to_cache(root, dirs, files)
 
-            proj_path = root.replace(self.directory, '')
+            proj_path = root.replace(directory, '')
 
-            for directory in dirs:
+            for dir in dirs:
                 parent = self.parent_map.get(proj_path)
 
-                path = os.path.join(proj_path, directory)
+                path = os.path.join(proj_path, dir)
 
-                if self.determine_skip(path, parent) or parent is None:
+                if self.file_tree.determine_skip(path, parent=parent) or parent is None:
                     continue
 
                 child = FileItem(parent, path)
-                child.setText(0, directory)
+                child.setText(0, dir)
                 self.parent_map[path] = child
-                self.dirs.append(path)
+                self.file_tree.dirs.append(path)
 
             for file in files:
                 parent = self.parent_map.get(proj_path)
 
                 path = os.path.join(proj_path, file)
 
-                if self.determine_skip(path, parent) or parent is None:
+                if self.file_tree.determine_skip(path, parent=parent) or parent is None:
                     continue
 
                 child = FileItem(parent, path)
                 child.setText(0, file)
-                self.files.append(path)
+                self.file_tree.files.append(path)
 
         self.root.sortItems(0, Qt.AscendingOrder)
 
