@@ -907,12 +907,11 @@ class CommandBase(object):
                                        ['*'+output_blacklist+'*']),
                             whitelist=whitelist_vals)
 
+        self.copy_files_to_project_folder()
 
         if write_json:
             self.write_package_json()
             self.file_tree.refresh()
-
-        self.copy_files_to_project_folder()
 
         for ex_setting in self.settings['export_settings'].values():
             self.process_export_setting(ex_setting, output_name)
