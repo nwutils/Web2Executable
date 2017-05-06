@@ -1728,7 +1728,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         setting_list = super(MainWindow, self).load_package_json(json_path)
         for setting in setting_list:
             setting_field = self.find_child_by_name(setting.name)
-            if setting_field:
+            if setting_field and setting.value is not None:
                 if (setting.type == 'file' or
                         setting.type == 'string' or
                         setting.type == 'folder' or

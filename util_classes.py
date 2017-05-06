@@ -453,10 +453,10 @@ class Setting(object):
 
     def filter_name(self, text):
         """Use the filter action to filter out invalid text"""
-        if hasattr(self.filter_action, text):
+        if text and hasattr(self.filter_action, text):
             action = getattr(self.filter_action, text)
             return action(text)
-        return text
+        return text or ''
 
     def get_file_information_from_url(self):
         """Extract the file information from the setting url"""
