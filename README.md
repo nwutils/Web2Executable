@@ -1,3 +1,8 @@
+## Not being actively maintained!
+
+Thank you all for using Web2Exe over the years! Unfortunately, I don't have the time to maintain this anymore (as you've probably noticed). If anyone wants to take over this repo let me know via email. If you use this and want paid support or you want to pay for further development, you can also contact me via email (which is on my Github profile).
+
+
 Latest Release:
 
 [![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
