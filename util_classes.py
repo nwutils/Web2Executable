@@ -12,11 +12,12 @@ from pprint import pformat
 import config
 import utils
 
-from PySide import QtGui, QtCore
-from PySide.QtCore import Qt
+from PySide2 import QtGui, QtCore
+from PySide2 import QtWidgets
+from PySide2.QtCore import Qt
 
 
-class FileItem(QtGui.QTreeWidgetItem):
+class FileItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, parent=None, path=None):
         super(FileItem, self).__init__(parent)
         self.path = path
@@ -177,18 +178,18 @@ class FileTree(object):
                 self.files.append(path)
 
 
-class TreeBrowser(QtGui.QWidget):
+class TreeBrowser(QtWidgets.QWidget):
     def __init__(self, directory=None,
                  whitelist=None, blacklist=None, parent=None):
-        QtGui.QWidget.__init__(self, parent=parent)
-        self.root = QtGui.QTreeWidget()
-        self.root.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        QtWidgets.QWidget.__init__(self, parent=parent)
+        self.root = QtWidgets.QTreeWidget()
+        self.root.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.root.header().setStretchLastSection(False)
         self.root.setHeaderLabel('Included files')
 
         self.parent_map = {}
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.root)
         self.setLayout(layout)
@@ -303,16 +304,16 @@ class TreeBrowser(QtGui.QWidget):
         self.root.sortItems(0, Qt.AscendingOrder)
 
 
-class ExistingProjectDialog(QtGui.QDialog):
+class ExistingProjectDialog(QtWidgets.QDialog):
     def __init__(self, recent_projects, directory_callback, parent=None):
         super(ExistingProjectDialog, self).__init__(parent)
         self.setWindowTitle('Open Project Folder')
         self.setWindowIcon(QtGui.QIcon(config.get_file('files/images/icon.png')))
         self.setMinimumWidth(500)
 
-        group_box = QtGui.QGroupBox('Existing Projects')
-        gbox_layout = QtGui.QVBoxLayout()
-        self.project_list = QtGui.QListWidget()
+        group_box = QtWidgets.QGroupBox('Existing Projects')
+        gbox_layout = QtWidgets.QVBoxLayout()
+        self.project_list = QtWidgets.QListWidget()
 
         gbox_layout.addWidget(self.project_list)
         group_box.setLayout(gbox_layout)
@@ -327,10 +328,10 @@ class ExistingProjectDialog(QtGui.QDialog):
 
         self.project_list.itemClicked.connect(self.project_clicked)
 
-        self.cancel = QtGui.QPushButton('Cancel')
-        self.open = QtGui.QPushButton('Open Selected')
-        self.open_readonly = QtGui.QPushButton('Open Read-only')
-        self.browse = QtGui.QPushButton('Browse...')
+        self.cancel = QtWidgets.QPushButton('Cancel')
+        self.open = QtWidgets.QPushButton('Open Selected')
+        self.open_readonly = QtWidgets.QPushButton('Open Read-only')
+        self.browse = QtWidgets.QPushButton('Browse...')
 
         self.open.setEnabled(False)
         self.open.clicked.connect(self.open_clicked)
@@ -340,18 +341,18 @@ class ExistingProjectDialog(QtGui.QDialog):
 
         self.browse.clicked.connect(self.browse_clicked)
 
-        buttons = QtGui.QWidget()
+        buttons = QtWidgets.QWidget()
 
-        button_layout = QtGui.QHBoxLayout()
+        button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(self.cancel)
-        button_layout.addWidget(QtGui.QWidget())
+        button_layout.addWidget(QtWidgets.QWidget())
         button_layout.addWidget(self.browse)
         button_layout.addWidget(self.open_readonly)
         button_layout.addWidget(self.open)
 
         buttons.setLayout(button_layout)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(group_box)
         layout.addWidget(buttons)
 
@@ -362,7 +363,7 @@ class ExistingProjectDialog(QtGui.QDialog):
 
         default = self.parent().project_dir() or self.parent().last_project_dir
 
-        directory = QtGui.QFileDialog.getExistingDirectory(self, 'Find Project Directory',
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Find Project Directory',
                                                            default)
 
         if directory:
@@ -546,10 +547,10 @@ class Setting(object):
                  self.type,
                  url)
 
-class CompleterLineEdit(QtGui.QLineEdit):
+class CompleterLineEdit(QtWidgets.QLineEdit):
 
     def __init__(self, tag_dict, *args):
-        QtGui.QLineEdit.__init__(self, *args)
+        QtWidgets.QLineEdit.__init__(self, *args)
 
         self.pref = ''
         self.tag_dict = tag_dict
@@ -578,19 +579,19 @@ class CompleterLineEdit(QtGui.QLineEdit):
         self.setText(new_text)
         self.setCursorPosition(len(new_text))
 
-class TagsCompleter(QtGui.QCompleter):
+class TagsCompleter(QtWidgets.QCompleter):
 
     def __init__(self, parent, all_tags):
         self.keys = sorted(all_tags.keys())
         self.vals = sorted([val for val in all_tags.values()])
         self.tags = list(sorted(self.vals+self.keys))
-        QtGui.QCompleter.__init__(self, self.tags, parent)
+        QtWidgets.QCompleter.__init__(self, self.tags, parent)
         self.editor = parent
 
     def update(self, text):
         obj = self.editor
         completion_prefix = obj.pref
-        model = QtGui.QStringListModel(self.tags, self)
+        model = QtWidgets.QStringListModel(self.tags, self)
         self.setModel(model)
 
         self.setCompletionPrefix(completion_prefix)

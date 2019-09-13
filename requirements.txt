@@ -2,7 +2,7 @@ appdirs
 configobj
 https://github.com/pyinstaller/pyinstaller/archive/develop.zip
 pillow
-pyside
+pyside2
 pytest
 requests
 semantic_version

@@ -41,16 +41,17 @@ from util_classes import BackgroundThread, Validator
 from util_classes import CompleterLineEdit, TagsCompleter
 from util_classes import TreeBrowser
 
-from PySide import QtGui, QtCore
-from PySide.QtGui import (QApplication, QHBoxLayout, QVBoxLayout)
-from PySide.QtNetwork import QHttp
-from PySide.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
+from PySide2 import QtGui, QtCore, QtWidgets
+from PySide2.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QMainWindow)
+from PySide2 import QtNetwork
+from PySide2.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
+from PySide2.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
 
 from image_utils.pycns import pngs_from_icns
 
 from command_line import CommandBase
 
-class MainWindow(QtGui.QMainWindow, CommandBase):
+class MainWindow(QMainWindow, CommandBase):
     """The main window of Web2Executable."""
 
     def update_nw_versions(self, button=None):
@@ -131,7 +132,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                                      parent=self)
 
         # initialize application to middle of screen
-        drect = QtGui.QApplication.desktop().availableGeometry(self)
+        drect = QApplication.desktop().availableGeometry(self)
         center = drect.center()
         self.move(center.x() - self.width()*0.5,
                   center.y() - self.height()*0.5)
@@ -141,7 +142,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.last_project_dir = utils.load_last_project_path()
 
-        status_bar = QtGui.QStatusBar()
+        status_bar = QtWidgets.QStatusBar()
         self.setStatusBar(status_bar)
 
         self.setup_project_menu()
@@ -170,12 +171,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.project_menu = self.menuBar().addMenu('File')
         self.edit_menu = self.menuBar().addMenu('Edit')
 
-        browse_action = QtGui.QAction('Open Project', self.project_menu,
+        browse_action = QtWidgets.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
                                       statusTip='Open an existing or new project.',
                                       triggered=self.browse_dir)
 
-        toggle_readonly_action = QtGui.QAction('Toggle Readonly',
+        toggle_readonly_action = QtWidgets.QAction('Toggle Readonly',
                                                self.edit_menu,
                                                shortcut='Ctrl+R',
                                                statusTip='Toggle Readonly',
@@ -192,7 +193,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                 key = 0
             else:
                 key = i+1
-            action = QtGui.QAction(self, visible=False,
+            action = QtWidgets.QAction(self, visible=False,
                                    triggered=self.open_recent_file,
                                    shortcut=QtGui.QKeySequence('Ctrl+{}'.format(key)))
             self.recent_file_actions.append(action)
@@ -202,7 +203,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.update_recent_files()
 
-        exit_action = QtGui.QAction('Exit', self.project_menu)
+        exit_action = QtWidgets.QAction('Exit', self.project_menu)
         exit_action.triggered.connect(QtGui.qApp.closeAllWindows)
         self.project_menu.addAction(exit_action)
 
@@ -214,15 +215,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_application_layout(self):
         """Create all widgets and set the central widget."""
-        self.main_layout = QtGui.QVBoxLayout()
-        self.tab_widget = QtGui.QTabWidget()
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.tab_widget = QtWidgets.QTabWidget()
         self.main_layout.setContentsMargins(10, 5, 10, 5)
 
         self.create_layout_widgets()
 
         self.add_widgets_to_main_layout()
 
-        w = QtGui.QWidget()
+        w = QtWidgets.QWidget()
         w.setLayout(self.main_layout)
 
         self.setCentralWidget(w)
@@ -320,7 +321,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             # This shouldn't happen since we disable the UI if there are no
             # options selected
             # But in the weird event that this does happen, we are prepared!
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Options Empty!',
                                           ('Please choose one of '
                                            'the export options!'))
@@ -347,7 +348,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Args:
             exception (Exception): an error that has occurred
         """
-        QtGui.QMessageBox.information(self, 'Error!', exception)
+        QtWidgets.QMessageBox.information(self, 'Error!', exception)
 
     def disable_ui_while_working(self):
         self.option_settings_enabled(False)
@@ -499,30 +500,30 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Create the bottom bar of the GUI with the progress bar and
         export button.
         """
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QtWidgets.QVBoxLayout()
         vlayout.setContentsMargins(5, 5, 5, 5)
         vlayout.setSpacing(5)
         hlayout.setSpacing(5)
         hlayout.setContentsMargins(5, 5, 5, 5)
 
-        progress_label = QtGui.QLabel('')
-        progress_bar = QtGui.QProgressBar()
+        progress_label = QtWidgets.QLabel('')
+        progress_bar = QtWidgets.QProgressBar()
         progress_bar.setVisible(False)
         progress_bar.setContentsMargins(5, 5, 5, 5)
 
         vlayout.addWidget(progress_label)
         vlayout.addWidget(progress_bar)
-        vlayout.addWidget(QtGui.QLabel(''))
+        vlayout.addWidget(QtWidgets.QLabel(''))
 
-        ex_button = QtGui.QPushButton('Export')
+        ex_button = QtWidgets.QPushButton('Export')
         ex_button.setEnabled(False)
 
-        cancel_button = QtGui.QPushButton('Cancel Download')
+        cancel_button = QtWidgets.QPushButton('Cancel Download')
         cancel_button.setEnabled(False)
 
-        open_export_button = QtGui.QPushButton()
+        open_export_button = QtWidgets.QPushButton()
         open_export_button.setEnabled(False)
         open_export_button.setIcon(QtGui.QIcon(get_file(config.FOLDER_OPEN_ICON)))
         open_export_button.setToolTip('Open Export Folder')
@@ -534,10 +535,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         cancel_button.clicked.connect(self.cancel_download)
         open_export_button.clicked.connect(self.open_export)
 
-        button_box = QtGui.QDialogButtonBox()
-        button_box.addButton(open_export_button, QtGui.QDialogButtonBox.NoRole)
-        button_box.addButton(cancel_button, QtGui.QDialogButtonBox.RejectRole)
-        button_box.addButton(ex_button, QtGui.QDialogButtonBox.AcceptRole)
+        button_box = QtWidgets.QDialogButtonBox()
+        button_box.addButton(open_export_button, QtWidgets.QDialogButtonBox.NoRole)
+        button_box.addButton(cancel_button, QtWidgets.QDialogButtonBox.RejectRole)
+        button_box.addButton(ex_button, QtWidgets.QDialogButtonBox.AcceptRole)
 
         hlayout.addLayout(vlayout)
         hlayout.addWidget(button_box)
@@ -547,51 +548,35 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.cancel_button = cancel_button
         self.open_export_button = open_export_button
 
-        http = QHttp(self)
-        http.requestFinished.connect(self.http_request_finished)
-        http.dataReadProgress.connect(self.update_progress_bar)
-        http.responseHeaderReceived.connect(self.read_response_header)
-        self.http = http
+        self.http_request_aborted = True
+        self.download_error = None
+
+        self.downloading_file = QFile()
+        self.current_download_request = None
+        self.net_manager = QNetworkAccessManager()
+        self.net_manager.finished[QNetworkReply].connect(self.download_finished)
+
         self.ex_button = ex_button
 
         return hlayout
 
-    def read_response_header(self, response_header):
-        """
-        Read the response header of a download and show an error if an
-        invalid response code is shown.
-        """
-        # Check for genuine error conditions.
-        if response_header.statusCode() not in (200, 300, 301, 302, 303, 307):
-            self.show_error('Download failed: {}.'.format(response_header.reasonPhrase()))
-            self.http_request_aborted = True
-            self.http.abort()
-            self.enable_ui_after_error()
-
-    def http_request_finished(self, request_id, error):
+    def download_finished(self, *args, **kwargs):
         """
         After the request is finished, keep downloading files if they exist.
         If all files are done downloading, start extracting them.
         """
-        if request_id != self.http_get_id:
-            return
+        self.downloading_file.close()
+        self.current_download_request.deleteLater()
 
-        if self.http_request_aborted:
-            if self.out_file is not None:
-                self.out_file.close()
-                self.out_file.remove()
-                self.out_file = None
-            return
+        self.http_request_aborted = True
+        self.enable_ui()
+        self.progress_bar.reset()
+        self.progress_bar.setVisible(False)
 
-        self.out_file.close()
-        self.http.abort()
-
-        if error:
-            self.out_file.remove()
-            self.show_error('Download failed: {}.'.format(self.http.errorString()))
-            self.enable_ui_after_error()
-        else:
+        if not self.download_error:
             self.continue_downloading_or_extract()
+        else:
+            self.download_error = None
 
     def continue_downloading_or_extract(self):
         """Keep downloading files if they exist, otherwise extract."""
@@ -708,18 +693,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         """Cancel downloading if the user presses the cancel button."""
         self.progress_text = 'Download cancelled.'
         self.cancel_button.setEnabled(False)
-        self.http_request_aborted = True
-        self.http.abort()
-        self.enable_ui()
-        self.progress_bar.setValue(0)
-        self.progress_bar.setVisible(False)
+        self.current_download_request.abort()
 
     def update_progress_bar(self, bytes_read, total_bytes):
         """Show progress of download on the progress bar."""
-        if self.http_request_aborted:
-            self.progress_bar.setValue(0)
-            self.progress_bar.setVisible(False)
-            return
         self.progress_bar.setMaximum(total_bytes)
         self.progress_bar.setValue(bytes_read)
 
@@ -759,45 +736,48 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             self.continue_downloading_or_extract()
             return
 
-        self.out_file = QFile(file_name)
+        self.downloading_file.setFileName(file_name)
         # If the file could not be opened, show the error and abort!
-        if not self.out_file.open(QIODevice.WriteOnly):
-            error = self.out_file.error().name
+        if not self.downloading_file.open(QIODevice.WriteOnly):
+            error = self.downloading_file.error().name
             self.show_error('Unable to save the file {}: {}.'.format(file_name,
                                                                      error))
-            self.out_file = None
             self.enable_ui()
             return
 
-        # Download in HTTP mode
-        if path.startswith('https'):
-            mode = QHttp.ConnectionModeHttps
-        else:
-            mode = QHttp.ConnectionModeHttp
+        request = QNetworkRequest()
+        request.setUrl(url)
+        request.setRawHeader(b"User-Agent", b"Firefox 16.0")
 
-        port = url.port()
+        reply = self.net_manager.get(request)
+        reply.readyRead.connect(self.ready_read_file)
+        reply.error[QNetworkReply.NetworkError].connect(self.network_error)
+        reply.sslErrors.connect(self.network_ssl_error)
+        reply.downloadProgress.connect(self.update_progress_bar)
+        self.current_download_request = reply
 
-        if port == -1:
-            port = 0
+    def network_ssl_error(self, error):
+        self.download_error = error
+        self.downloading_file.remove()
+        self.show_error(f'Download failed: {error}.')
+        self.http_request_aborted = True
+        self.enable_ui_after_error()
 
-        # Set up the download host
-        self.http.setHost(url.host(), mode, port)
-        self.http_request_aborted = False
+    def network_error(self, error):
+        self.download_error = error
+        self.downloading_file.remove()
+        self.show_error(f'Download failed: {error}.')
+        self.http_request_aborted = True
+        self.enable_ui_after_error()
 
-        # Normalize path
-        path = QUrl.toPercentEncoding(url.path(), "!$&'()*+,;=:@/")
-        if path:
-            path = str(path)
-        else:
-            path = '/'
-
-        # Download the file.
-        self.http_get_id = self.http.get(path, self.out_file)
+    def ready_read_file(self):
+        data = self.current_download_request.readAll()
+        self.downloading_file.write(data)
 
     def create_icon_box(self, name, text):
         style = ('width:48px;height:48px;background-color:white;'
                  'border-radius:5px;border:1px solid rgb(50,50,50);')
-        icon_label = QtGui.QLabel()
+        icon_label = QtWidgets.QLabel()
         icon_label.setStyleSheet(style)
         icon_label.setMaximumWidth(48)
         icon_label.setMinimumWidth(48)
@@ -806,7 +786,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         setattr(self, name, icon_label)
 
-        icon_text = QtGui.QLabel(text)
+        icon_text = QtWidgets.QLabel(text)
         icon_text.setStyleSheet('font-size:10px;')
         icon_text.setAlignment(QtCore.Qt.AlignCenter)
         vbox = QVBoxLayout()
@@ -815,14 +795,14 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         vbox.addWidget(icon_text)
         vbox.setContentsMargins(0, 0, 0, 0)
 
-        w = QtGui.QWidget()
+        w = QtWidgets.QWidget()
         w.setLayout(vbox)
         w.setMaximumWidth(70)
         return w
 
     def create_project_info(self):
         """Create the GroupBox that shows the user's project name and icons."""
-        group_box = QtGui.QGroupBox('An awesome web project called:')
+        group_box = QtWidgets.QGroupBox('An awesome web project called:')
 
         title_hbox = QHBoxLayout()
         title_hbox.setContentsMargins(10, 10, 10, 10)
@@ -831,15 +811,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         exe_icon = self.create_icon_box('exe_icon', 'Exe Icon')
         mac_icon = self.create_icon_box('mac_icon', 'Mac Icon')
 
-        self.title_label = QtGui.QLabel('TBD')
+        self.title_label = QtWidgets.QLabel('TBD')
         self.title_label.setStyleSheet('font-size:20px; font-weight:bold;')
         title_hbox.addWidget(self.title_label)
-        title_hbox.addWidget(QtGui.QLabel())
+        title_hbox.addWidget(QtWidgets.QLabel())
         title_hbox.addWidget(win_icon)
         title_hbox.addWidget(exe_icon)
         title_hbox.addWidget(mac_icon)
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QtWidgets.QVBoxLayout()
 
         vlayout.setSpacing(5)
         vlayout.setContentsMargins(10, 5, 10, 5)
@@ -940,7 +920,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Open a directory browsing window for the user to choose a
         directory.
         """
-        dir_func = QtGui.QFileDialog.getExistingDirectory
+        dir_func = QtWidgets.QFileDialog.getExistingDirectory
         directory = dir_func(self, 'Find Project Directory',
                              self.project_dir() or self.last_project_dir)
 
@@ -1040,7 +1020,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
     def browse_out_dir(self):
         """Browse for an output directory by showing a dialog."""
         self.update_json = False
-        directory = QtGui.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
                                                            (self.output_line.text() or
                                                             self.project_dir() or
                                                             self.last_project_dir))
@@ -1057,7 +1037,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                    selected file name in
             setting (Setting): the related setting object
         """
-        file_path, _ = QtGui.QFileDialog.getOpenFileName(self, 'Choose File',
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose File',
                                                          (setting.last_value or
                                                           self.project_dir() or
                                                           QtCore.QDir.currentPath()),
@@ -1079,7 +1059,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             file_types (string): file types specified by a regex
                                  (eg. "*.py|*.html")
         """
-        file_path, _ = QtGui.QFileDialog.getOpenFileName(self, 'Choose File',
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose File',
                                                          (setting.last_value or
                                                           self.project_dir() or
                                                           QtCore.QDir.currentPath()),
@@ -1100,7 +1080,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             setting (Setting): the related setting object
         """
 
-        folder = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Folder',
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose Folder',
                                                         (setting.last_value or
                                                          QtCore.QDir.currentPath()))
         if folder:
@@ -1109,7 +1089,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             setting.last_value = folder
 
     def create_application_settings(self):
-        group_box = QtGui.QWidget()
+        group_box = QtWidgets.QWidget()
         app_setting = self.settings['order']['application_setting_order']
         vlayout = self.create_layout(app_setting, cols=3)
 
@@ -1117,14 +1097,14 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return group_box
 
     def create_compression_settings(self):
-        group_box = QtGui.QWidget()
+        group_box = QtWidgets.QWidget()
         comp_setting = self.settings['order']['compression_setting_order']
         vlayout = self.create_layout(comp_setting, cols=1)
-        warning_label = QtGui.QLabel('Note: When using compression (greater '
+        warning_label = QtWidgets.QLabel('Note: When using compression (greater '
                                      'than 0) it will decrease the executable '
                                      'size,\nbut will increase the startup '
                                      'time when running it.')
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(vlayout)
         vbox.addWidget(warning_label)
         group_box.setLayout(vbox)
@@ -1159,7 +1139,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return res
 
     def create_window_settings(self):
-        group_box = QtGui.QWidget()
+        group_box = QtWidgets.QWidget()
         win_setting_order = self.settings['order']['window_setting_order']
         vlayout = self.create_layout(win_setting_order, cols=3)
 
@@ -1167,7 +1147,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return group_box
 
     def create_export_settings(self):
-        group_box = QtGui.QWidget()
+        group_box = QtWidgets.QWidget()
 
         ex_setting_order = self.settings['order']['export_setting_order']
 
@@ -1180,11 +1160,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         script_layout = self.create_script_layout()
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
-        platform_group = QtGui.QGroupBox('Platforms')
+        platform_group = QtWidgets.QGroupBox('Platforms')
         platform_group.setContentsMargins(0, 10, 0, 0)
-        playout = QtGui.QVBoxLayout()
+        playout = QtWidgets.QVBoxLayout()
         playout.addLayout(vlayout)
         platform_group.setLayout(playout)
 
@@ -1193,7 +1173,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         tree_layout = self.create_blacklist_layout(hlayout)
         tree_layout.setContentsMargins(0, 10, 0, 0)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(hlayout)
         vbox.addLayout(output_name_layout)
         vbox.addLayout(output_layout)
@@ -1208,13 +1188,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.file_tree = self.tree_browser.file_tree
         self.tree_browser.setContentsMargins(0, 0, 0, 0)
 
-        self.blacklist_text = QtGui.QPlainTextEdit()
-        self.whitelist_text = QtGui.QPlainTextEdit()
+        self.blacklist_text = QtWidgets.QPlainTextEdit()
+        self.whitelist_text = QtWidgets.QPlainTextEdit()
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
-        blacklayout = QtGui.QVBoxLayout()
-        whitelayout = QtGui.QHBoxLayout()
+        blacklayout = QtWidgets.QVBoxLayout()
+        whitelayout = QtWidgets.QHBoxLayout()
 
         blacklayout.addWidget(self.blacklist_text)
         whitelayout.addWidget(self.whitelist_text)
@@ -1228,8 +1208,8 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.blacklist_text.setObjectName(blacklist_setting.name)
         self.whitelist_text.setObjectName(whitelist_setting.name)
 
-        blackgroup = QtGui.QGroupBox(blacklist_setting.display_name)
-        whitegroup = QtGui.QGroupBox(whitelist_setting.display_name)
+        blackgroup = QtWidgets.QGroupBox(blacklist_setting.display_name)
+        whitegroup = QtWidgets.QGroupBox(whitelist_setting.display_name)
 
         blackgroup.setLayout(blacklayout)
         whitegroup.setLayout(whitelayout)
@@ -1275,10 +1255,10 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         self.tree_browser.refresh(whitelist=re.split('\n?,?', new_val))
 
     def create_output_name_pattern_line(self):
-        output_name_layout = QtGui.QHBoxLayout()
+        output_name_layout = QtWidgets.QHBoxLayout()
 
         output_name_setting = self.get_setting('output_pattern')
-        output_name_label = QtGui.QLabel(output_name_setting.display_name+':')
+        output_name_label = QtWidgets.QLabel(output_name_setting.display_name+':')
         output_name_label.setMinimumWidth(155)
 
         tag_dict = self.get_tag_dict()
@@ -1304,12 +1284,12 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return output_name_layout
 
     def create_output_directory_line(self):
-        output_layout = QtGui.QHBoxLayout()
+        output_layout = QtWidgets.QHBoxLayout()
 
         ex_dir_setting = self.get_setting('export_dir')
-        output_label = QtGui.QLabel(ex_dir_setting.display_name+':')
+        output_label = QtWidgets.QLabel(ex_dir_setting.display_name+':')
         output_label.setMinimumWidth(155)
-        self.output_line = QtGui.QLineEdit()
+        self.output_line = QtWidgets.QLineEdit()
 
         self.output_line.textChanged.connect(
             self.call_with_object('setting_changed',
@@ -1319,7 +1299,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
         self.output_line.textChanged.connect(self.project_path_changed)
         self.output_line.setStatusTip(ex_dir_setting.description)
-        output_button = QtGui.QPushButton('...')
+        output_button = QtWidgets.QPushButton('...')
         output_button.clicked.connect(self.browse_out_dir)
 
         output_layout.addWidget(output_label)
@@ -1329,13 +1309,13 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return output_layout
 
     def create_script_layout(self):
-        script_layout = QtGui.QHBoxLayout()
+        script_layout = QtWidgets.QHBoxLayout()
 
         script_setting = self.get_setting('custom_script')
-        script_label = QtGui.QLabel(script_setting.display_name+':')
+        script_label = QtWidgets.QLabel(script_setting.display_name+':')
         script_label.setMinimumWidth(155)
 
-        self.script_line = QtGui.QLineEdit()
+        self.script_line = QtWidgets.QLineEdit()
 
         self.script_line.setObjectName(script_setting.name)
 
@@ -1345,7 +1325,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
                                   script_setting)
         )
         self.script_line.setStatusTip(script_setting.description)
-        script_button = QtGui.QPushButton('...')
+        script_button = QtWidgets.QPushButton('...')
 
         file_types = ['*.py']
 
@@ -1368,7 +1348,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         return script_layout
 
     def create_download_settings(self):
-        group_box = QtGui.QWidget()
+        group_box = QtWidgets.QWidget()
         dl_setting = self.settings['order']['download_setting_order']
         vlayout = self.create_layout(dl_setting, cols=1)
 
@@ -1384,7 +1364,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             cols (int): number of columns to divide up the layout
         """
 
-        glayout = QtGui.QGridLayout()
+        glayout = QtWidgets.QGridLayout()
         glayout.setContentsMargins(10, 15, 10, 5)
         glayout.setAlignment(QtCore.Qt.AlignTop)
         glayout.setSpacing(10)
@@ -1400,7 +1380,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
             display_name = setting.display_name+':'
             if setting.required:
                 display_name += '*'
-            setting_label = QtGui.QLabel(display_name)
+            setting_label = QtWidgets.QLabel(display_name)
             setting_label.setToolTip(setting.description)
             setting_label.setStatusTip(setting.description)
             glayout.addWidget(setting_label, row, col)
@@ -1412,11 +1392,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_text_input_setting(self, name):
         """Create a generic text input with the setting name."""
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
-        text = QtGui.QLineEdit()
+        text = QtWidgets.QLineEdit()
         text.setValidator(Validator(setting.filter, setting.filter_action))
         text.setObjectName(setting.name)
 
@@ -1436,14 +1416,14 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Create a generic text input and file browse button with the
         setting name.
         """
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
-        text = QtGui.QLineEdit()
+        text = QtWidgets.QLineEdit()
         text.setObjectName(setting.name)
 
-        button = QtGui.QPushButton('...')
+        button = QtWidgets.QPushButton('...')
         button.setMaximumWidth(30)
         button.setMaximumHeight(26)
 
@@ -1468,14 +1448,14 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Create a generic text input and folder browse button with the
         setting name.
         """
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
-        text = QtGui.QLineEdit()
+        text = QtWidgets.QLineEdit()
         text.setObjectName(setting.name)
 
-        button = QtGui.QPushButton('...')
+        button = QtWidgets.QPushButton('...')
         button.setMaximumWidth(30)
         button.setMaximumHeight(26)
 
@@ -1624,11 +1604,11 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_check_setting(self, name):
         """Create a generic checkbox setting in the GUI."""
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
-        check = QtGui.QCheckBox()
+        check = QtWidgets.QCheckBox()
 
         check.setObjectName(setting.name)
 
@@ -1644,15 +1624,15 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
 
     def create_list_setting(self, name):
         """Create a generic list combobox setting from the setting name."""
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
         button = None
         if setting.button:
-            button = QtGui.QPushButton(setting.button)
+            button = QtWidgets.QPushButton(setting.button)
             button.clicked.connect(lambda: setting.button_callback(button))
-        combo = QtGui.QComboBox()
+        combo = QtWidgets.QComboBox()
 
         combo.setObjectName(setting.name)
 
@@ -1671,7 +1651,7 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         if default_index != -1:
             combo.setCurrentIndex(default_index)
 
-        hlayout.addWidget(QtGui.QLabel())
+        hlayout.addWidget(QtWidgets.QLabel())
         hlayout.addWidget(combo)
         if button:
             hlayout.addWidget(button)
@@ -1683,16 +1663,16 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         Create a generic range setting with a slider based on the
         setting values.
         """
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
 
         setting = self.get_setting(name)
 
         button = None
         if setting.button:
-            button = QtGui.QPushButton(setting.button)
+            button = QtWidgets.QPushButton(setting.button)
             button.clicked.connect(lambda: setting.button_callback(button))
 
-        slider = QtGui.QSlider(QtCore.Qt.Orientation.Horizontal)
+        slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         slider.setRange(setting.min, setting.max)
         slider.valueChanged.connect(self.call_with_object('setting_changed',
                                                           slider, setting))
@@ -1702,14 +1682,14 @@ class MainWindow(QtGui.QMainWindow, CommandBase):
         slider.setStatusTip(setting.description)
         slider.setToolTip(setting.description)
 
-        range_label = QtGui.QLabel(str(setting.default_value))
+        range_label = QtWidgets.QLabel(str(setting.default_value))
         range_label.setMaximumWidth(30)
 
         slider.valueChanged.connect(self.call_with_object('_update_range_label',
                                                           range_label))
 
-        w = QtGui.QWidget()
-        whlayout = QtGui.QHBoxLayout()
+        w = QtWidgets.QWidget()
+        whlayout = QtWidgets.QHBoxLayout()
         whlayout.addWidget(slider)
         whlayout.addWidget(range_label)
         w.setLayout(whlayout)

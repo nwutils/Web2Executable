@@ -82,4 +82,4 @@ cp $PROJ_DIR/scripts/Info.plist $BUILD_DIR/Web2Executable.app/Contents/
 /Applications/Keka.app/Contents/Resources/keka7z a -r \
     Web2ExeMac-${VERSION}.zip $BUILD_DIR/Web2Executable.app
 
-python3.4 $DIR/upload_release.py
+python3 $DIR/upload_release.py
