@@ -576,7 +576,7 @@ class CommandBase(object):
 
     def selected_version(self):
         """Get the currently selected version from the NW.js dropdown"""
-        return self.get_setting('nw_version').value
+        return self.get_setting('nw_version').value or self.get_setting('nw_version').values[0]
 
     def extract_files(self):
         """Extract nw.js files to the specific version path"""
