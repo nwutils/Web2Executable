@@ -92,29 +92,35 @@ ENV_VARS_BASH_PATH = 'files/env_vars.bash'
 
 LOG_FILENAME = utils.get_data_file_path(ERROR_LOG_FILE)
 
+def getLogHandler():
+    return lh.RotatingFileHandler(
+        LOG_FILENAME,
+        maxBytes=100000,
+        backupCount=2,
+        encoding='utf-8'
+    )
+
+
 if DEBUG:
     logging.basicConfig(
-        filename=LOG_FILENAME,
         format=("%(levelname) -10s %(asctime)s %(module)s.py: "
                 "%(lineno)s %(funcName)s - %(message)s"),
-        level=logging.DEBUG
+        level=logging.DEBUG,
+        handlers=[getLogHandler()]
     )
 else:
     logging.basicConfig(
-        filename=LOG_FILENAME,
         format=("%(levelname) -10s %(asctime)s %(module)s.py: "
                 "%(lineno)s %(funcName)s - %(message)s"),
-        level=logging.INFO
+        level=logging.INFO,
+        handlers=[getLogHandler()]
     )
 
 
 
 def getLogger(name):
     logger = logging.getLogger(name)
-    handler = lh.RotatingFileHandler(LOG_FILENAME,
-                                     maxBytes=100000,
-                                     backupCount=2)
-    logger.addHandler(handler)
+    logger.addHandler(getLogHandler())
     return logger
 
 
