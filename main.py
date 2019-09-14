@@ -132,7 +132,7 @@ class MainWindow(QMainWindow, CommandBase):
                                                      parent=self)
 
         # initialize application to middle of screen
-        drect = QApplication.desktop().availableGeometry(self)
+        drect = app.primaryScreen().availableGeometry()
         center = drect.center()
         self.move(center.x() - self.width()*0.5,
                   center.y() - self.height()*0.5)
@@ -150,8 +150,8 @@ class MainWindow(QMainWindow, CommandBase):
         self.logger = config.getLogger(__name__)
 
         self.gui_app = app
-        self.desktop_width = app.desktop().screenGeometry().width()
-        self.desktop_height = app.desktop().screenGeometry().height()
+        self.desktop_width = drect.width()
+        self.desktop_height = drect.height()
 
         self.setWindowIcon(QtGui.QIcon(get_file(config.ICON_PATH)))
 
