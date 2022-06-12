@@ -204,7 +204,7 @@ class MainWindow(QMainWindow, CommandBase):
         self.update_recent_files()
 
         exit_action = QtWidgets.QAction('Exit', self.project_menu)
-        exit_action.triggered.connect(QtGui.qApp.closeAllWindows)
+        exit_action.triggered.connect(self.close)
         self.project_menu.addAction(exit_action)
 
     def open_recent_file(self):

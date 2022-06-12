@@ -1,9 +1,9 @@
-appdirs
-configobj
+appdirs==1.4.4
+configobj==5.0.6
 https://github.com/pyinstaller/pyinstaller/archive/develop.zip
-pillow
-pyside2
-pytest
-requests
-semantic_version
-validators
+pillow==9.1.1
+pyside2==5.15.2.1
+pytest==7.1.2
+requests==2.28.0
+semantic_version==2.10.0
+validators==0.20.0

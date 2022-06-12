@@ -757,7 +757,8 @@ class CommandBase(object):
 
         plist_path = utils.path_join(app_path, 'Contents', 'Info.plist')
 
-        plist_dict = plistlib.readPlist(plist_path)
+        with open(plist_path, 'rb') as fp:
+            plist_dict = plistlib.load(fp)
 
         plist_dict['CFBundleDisplayName'] = self.project_name()
         plist_dict['CFBundleName'] = self.project_name()
@@ -769,7 +770,8 @@ class CommandBase(object):
             plist_dict['CFBundleShortVersionString'] = '0.0.0'
             plist_dict['CFBundleVersion'] = '0.0.0'
 
-        plistlib.writePlist(plist_dict, plist_path)
+        with open(plist_path, 'wb') as fp:
+            plistlib.dump(plist_dict, fp)
 
     def process_mac_setting(self, app_loc, export_dest,
                             ex_setting):
