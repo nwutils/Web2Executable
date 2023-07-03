@@ -13,13 +13,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3.3.0
-      - uses: awalsh128/cache-apt-pkgs-action@v1.3.0
-        with:
-          packages: libegl1
-          version: 1.0
       - uses: actions/setup-python@v4.6.1
         with:
           python-version: "3.11.0"
           cache: pip
+      - if: matrix.os == "ubuntu-2022"
+        uses: awalsh128/cache-apt-pkgs-action@v1.3.0
+        with:
+          packages: libegl1
+          version: 1.0
       - run: python -m pip install -r requirements.txt
       - run: python -m pytest
