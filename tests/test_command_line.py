@@ -56,7 +56,7 @@ def test_multiple_sub_output_pattern(command_base):
 
     value = command_base.sub_pattern()
 
-    assert value == 'Test 123 0.14.0'
+    assert value == 'Test 123 0.72.0'
 
 def test_valid_get_setting_objects(command_base):
     valid_settings = ['name', 'nw_version', 'windows-x64', 'main']
