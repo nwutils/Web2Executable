@@ -1,6 +1,4 @@
-> Note: This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back. Now a message from the author:
-
-Thank you all for using Web2Exe over the years! Unfortunately, I don't have the time to maintain this anymore (as you've probably noticed). If anyone wants to take over this repo let me know via email. If you use this and want paid support or you want to pay for further development, you can also contact me via email (which is on my Github profile).
+This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
 Web2Executable
 ==============
