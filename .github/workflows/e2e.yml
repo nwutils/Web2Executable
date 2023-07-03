@@ -23,4 +23,5 @@ jobs:
           packages: libegl1
           version: 1.0
       - run: python -m pip install -r requirements.txt
+      - run: python -m pylint ./**/*.py
       - run: python -m pytest
