@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.11.0"
           cache: pip
-      - if: matrix.os == "ubuntu-22.04"
+      - if: matrix.os == ubuntu-22.04
         uses: awalsh128/cache-apt-pkgs-action@v1.3.0
         with:
           packages: libegl1
