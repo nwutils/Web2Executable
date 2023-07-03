@@ -50,7 +50,7 @@ def test_multiple_sub_output_pattern(command_base):
     pattern_setting = command_base.get_setting('output_pattern')
 
     command_base.get_setting('name').value = 'Test'
-    command_base.get_setting('nw_version').value = '0.14.0'
+    command_base.get_setting('nw_version').value = '0.72.0'
 
     pattern_setting.value = '%(name) 123 %(nw_version)'
 
