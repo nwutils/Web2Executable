@@ -2,7 +2,7 @@ appdirs==1.4.4
 configobj==5.0.8
 pyinstaller==5.13.0
 pillow==10.0.0
-pyside2==5.15.2.1
+pyside6==6.5.1.1
 pytest==7.4.0
 requests==2.31.0
 semantic_version==2.10.0

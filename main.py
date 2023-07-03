@@ -41,11 +41,11 @@ from util_classes import BackgroundThread, Validator
 from util_classes import CompleterLineEdit, TagsCompleter
 from util_classes import TreeBrowser
 
-from PySide2 import QtGui, QtCore, QtWidgets
-from PySide2.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QMainWindow)
-from PySide2 import QtNetwork
-from PySide2.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
-from PySide2.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
+from PySide6 import QtGui, QtCore, QtWidgets
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QMainWindow)
+from PySide6 import QtNetwork
+from PySide6.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
+from PySide6.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
 
 from image_utils.pycns import pngs_from_icns
 
@@ -171,12 +171,12 @@ class MainWindow(QMainWindow, CommandBase):
         self.project_menu = self.menuBar().addMenu('File')
         self.edit_menu = self.menuBar().addMenu('Edit')
 
-        browse_action = QtWidgets.QAction('Open Project', self.project_menu,
+        browse_action = QtGui.QAction('Open Project', self.project_menu,
                                       shortcut=QtGui.QKeySequence.Open,
                                       statusTip='Open an existing or new project.',
                                       triggered=self.browse_dir)
 
-        toggle_readonly_action = QtWidgets.QAction('Toggle Readonly',
+        toggle_readonly_action = QtGui.QAction('Toggle Readonly',
                                                self.edit_menu,
                                                shortcut='Ctrl+R',
                                                statusTip='Toggle Readonly',
@@ -193,7 +193,7 @@ class MainWindow(QMainWindow, CommandBase):
                 key = 0
             else:
                 key = i+1
-            action = QtWidgets.QAction(self, visible=False,
+            action = QtGui.QAction(self, visible=False,
                                    triggered=self.open_recent_file,
                                    shortcut=QtGui.QKeySequence('Ctrl+{}'.format(key)))
             self.recent_file_actions.append(action)
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow, CommandBase):
 
         self.update_recent_files()
 
-        exit_action = QtWidgets.QAction('Exit', self.project_menu)
+        exit_action = QtGui.QAction('Exit', self.project_menu)
         exit_action.triggered.connect(self.close)
         self.project_menu.addAction(exit_action)
 
