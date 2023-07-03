@@ -5,10 +5,10 @@ import pytest
 
 from command_line import CommandBase
 
-api = pytest.mark.skipif(
-    not pytest.config.getoption("--runapi"),
-    reason="need --runapi option to run"
-)
+# api = pytest.mark.skipif(
+#     not pytest.Config.getoption("--runapi"),
+#     reason="need --runapi option to run"
+# )
 
 @pytest.fixture(scope='module')
 def command_base():
