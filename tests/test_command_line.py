@@ -5,10 +5,10 @@ import pytest
 
 from command_line import CommandBase
 
-api = pytest.mark.skipif(
-    not pytest.config.getoption("--runapi"),
-    reason="need --runapi option to run"
-)
+# api = pytest.mark.skipif(
+#     not pytest.Config.getoption("--runapi"),
+#     reason="need --runapi option to run"
+# )
 
 @pytest.fixture(scope='module')
 def command_base():
@@ -50,13 +50,13 @@ def test_multiple_sub_output_pattern(command_base):
     pattern_setting = command_base.get_setting('output_pattern')
 
     command_base.get_setting('name').value = 'Test'
-    command_base.get_setting('nw_version').value = '0.14.0'
+    command_base.get_setting('nw_version').value = '0.72.0'
 
     pattern_setting.value = '%(name) 123 %(nw_version)'
 
     value = command_base.sub_pattern()
 
-    assert value == 'Test 123 0.14.0'
+    assert value == 'Test 123 0.72.0'
 
 def test_valid_get_setting_objects(command_base):
     valid_settings = ['name', 'nw_version', 'windows-x64', 'main']

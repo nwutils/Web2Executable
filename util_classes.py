@@ -12,9 +12,9 @@ from pprint import pformat
 import config
 import utils
 
-from PySide2 import QtGui, QtCore
-from PySide2 import QtWidgets
-from PySide2.QtCore import Qt
+from PySide6 import QtGui, QtCore
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 
 class FileItem(QtWidgets.QTreeWidgetItem):
@@ -388,13 +388,13 @@ class ExistingProjectDialog(QtWidgets.QDialog):
         self.close()
 
 
-class Validator(QtGui.QRegExpValidator):
+class Validator(QtGui.QRegularExpressionValidator):
     def __init__(self, regex, action, parent=None):
         self.exp = regex
         self.action = str
         if hasattr(str, action):
             self.action = getattr(str, action)
-        reg = QtCore.QRegExp(regex)
+        reg = QtCore.QRegularExpression(regex)
         super(Validator, self).__init__(reg, parent)
 
     def validate(self, text, pos):

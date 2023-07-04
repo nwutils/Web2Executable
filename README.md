@@ -1,21 +1,13 @@
-## Not being actively maintained!
-
-Thank you all for using Web2Exe over the years! Unfortunately, I don't have the time to maintain this anymore (as you've probably noticed). If anyone wants to take over this repo let me know via email. If you use this and want paid support or you want to pay for further development, you can also contact me via email (which is on my Github profile).
-
-
-Latest Release:
-
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
-
-All Releases:
-
-[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]()
+> This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
 Web2Executable
 ==============
 
+[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
+
 [Releases (Downloads)](https://github.com/jyapayne/Web2Executable/releases) (new!)
 
+[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]()
 
 What is it?
 -----------
