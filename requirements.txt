@@ -2,7 +2,7 @@ appdirs==1.4.4
 black==23.7.0
 configobj==5.0.8
 pillow==10.0.0
-pyinstaller==5.13.1
+pyinstaller==5.13.2
 pylint==2.17.5
 pyside6==6.5.2
 pytest==7.4.0
