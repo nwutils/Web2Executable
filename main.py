@@ -42,7 +42,7 @@ from util_classes import CompleterLineEdit, TagsCompleter
 from util_classes import TreeBrowser
 
 from PySide6 import QtGui, QtCore, QtWidgets
-from PySide6.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QMainWindow)
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QMainWindow
 from PySide6 import QtNetwork
 from PySide6.QtCore import Qt, QUrl, QFile, QIODevice, QCoreApplication
 from PySide6.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
@@ -50,6 +50,7 @@ from PySide6.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessMana
 from image_utils.pycns import pngs_from_icns
 
 from command_line import CommandBase
+
 
 class MainWindow(QMainWindow, CommandBase):
     """The main window of Web2Executable."""
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow, CommandBase):
         previous_files = utils.load_recent_projects()
         self.recent_separator.setVisible(len(previous_files) > 0)
         for i, prev_file in enumerate(previous_files):
-            text = '{} - {}'.format(i+1, os.path.basename(prev_file))
+            text = "{} - {}".format(i + 1, os.path.basename(prev_file))
             action = self.recent_file_actions[i]
             action.setText(text)
             action.setData(prev_file)
@@ -113,32 +114,33 @@ class MainWindow(QMainWindow, CommandBase):
         self.readonly = False
 
         self.recent_file_actions = []
-        self.project_path = ''
+        self.project_path = ""
 
         self.tab_index_dict = {
-            'app_settings': 0,
-            'webkit_settings': 0,
-            'window_settings': 1,
-            'export_settings': 2,
-            'web2exe_settings': 2,
-            'compression': 3,
-            'download_settings': 4
+            "app_settings": 0,
+            "webkit_settings": 0,
+            "window_settings": 1,
+            "export_settings": 2,
+            "web2exe_settings": 2,
+            "compression": 3,
+            "download_settings": 4,
         }
 
         recent_projects = utils.load_recent_projects()
 
-        self.existing_dialog = ExistingProjectDialog(recent_projects,
-                                                     self.load_project,
-                                                     parent=self)
+        self.existing_dialog = ExistingProjectDialog(
+            recent_projects, self.load_project, parent=self
+        )
 
         # initialize application to middle of screen
         drect = app.primaryScreen().availableGeometry()
         center = drect.center()
-        self.move(center.x() - self.width()*0.5,
-                  center.y() - self.height()*0.5)
+        self.move(center.x() - self.width() * 0.5, center.y() - self.height() * 0.5)
 
-        self.icon_style = ('width:48px;height:48px;background-color:white;'
-                           'border-radius:5px;border:1px solid rgb(50,50,50);')
+        self.icon_style = (
+            "width:48px;height:48px;background-color:white;"
+            "border-radius:5px;border:1px solid rgb(50,50,50);"
+        )
 
         self.last_project_dir = utils.load_last_project_path()
 
@@ -163,24 +165,29 @@ class MainWindow(QMainWindow, CommandBase):
 
         self.option_settings_enabled(False)
 
-        self.setWindowTitle(u"Web2Executable {}".format(__gui_version__))
+        self.setWindowTitle("Web2Executable {}".format(__gui_version__))
         self.update_nw_versions(None)
 
     def setup_project_menu(self):
         """Set up the project menu bar with actions."""
-        self.project_menu = self.menuBar().addMenu('File')
-        self.edit_menu = self.menuBar().addMenu('Edit')
+        self.project_menu = self.menuBar().addMenu("File")
+        self.edit_menu = self.menuBar().addMenu("Edit")
 
-        browse_action = QtGui.QAction('Open Project', self.project_menu,
-                                      shortcut=QtGui.QKeySequence.Open,
-                                      statusTip='Open an existing or new project.',
-                                      triggered=self.browse_dir)
+        browse_action = QtGui.QAction(
+            "Open Project",
+            self.project_menu,
+            shortcut=QtGui.QKeySequence.Open,
+            statusTip="Open an existing or new project.",
+            triggered=self.browse_dir,
+        )
 
-        toggle_readonly_action = QtGui.QAction('Toggle Readonly',
-                                               self.edit_menu,
-                                               shortcut='Ctrl+R',
-                                               statusTip='Toggle Readonly',
-                                               triggered=self.toggle_readonly)
+        toggle_readonly_action = QtGui.QAction(
+            "Toggle Readonly",
+            self.edit_menu,
+            shortcut="Ctrl+R",
+            statusTip="Toggle Readonly",
+            triggered=self.toggle_readonly,
+        )
 
         self.edit_menu.addAction(toggle_readonly_action)
         self.project_menu.addAction(browse_action)
@@ -192,10 +199,13 @@ class MainWindow(QMainWindow, CommandBase):
                 # Display 0 last
                 key = 0
             else:
-                key = i+1
-            action = QtGui.QAction(self, visible=False,
-                                   triggered=self.open_recent_file,
-                                   shortcut=QtGui.QKeySequence('Ctrl+{}'.format(key)))
+                key = i + 1
+            action = QtGui.QAction(
+                self,
+                visible=False,
+                triggered=self.open_recent_file,
+                shortcut=QtGui.QKeySequence("Ctrl+{}".format(key)),
+            )
             self.recent_file_actions.append(action)
             self.project_menu.addAction(action)
 
@@ -203,7 +213,7 @@ class MainWindow(QMainWindow, CommandBase):
 
         self.update_recent_files()
 
-        exit_action = QtGui.QAction('Exit', self.project_menu)
+        exit_action = QtGui.QAction("Exit", self.project_menu)
         exit_action.triggered.connect(self.close)
         self.project_menu.addAction(exit_action)
 
@@ -245,29 +255,34 @@ class MainWindow(QMainWindow, CommandBase):
         self.win_settings_icon = QtGui.QIcon(get_file(config.WINDOW_SETTINGS_ICON))
         self.ex_settings_icon = QtGui.QIcon(get_file(config.EXPORT_SETTINGS_ICON))
         self.comp_settings_icon = QtGui.QIcon(get_file(config.COMPRESS_SETTINGS_ICON))
-        self.download_settings_icon = QtGui.QIcon(get_file(config.DOWNLOAD_SETTINGS_ICON))
+        self.download_settings_icon = QtGui.QIcon(
+            get_file(config.DOWNLOAD_SETTINGS_ICON)
+        )
 
-        self.tab_icons = [self.app_settings_icon,
-                          self.win_settings_icon,
-                          self.ex_settings_icon,
-                          self.comp_settings_icon,
-                          self.download_settings_icon]
+        self.tab_icons = [
+            self.app_settings_icon,
+            self.win_settings_icon,
+            self.ex_settings_icon,
+            self.comp_settings_icon,
+            self.download_settings_icon,
+        ]
 
         self.main_layout.addWidget(self.project_info_widget)
-        self.tab_widget.addTab(self.app_settings_widget,
-                               self.app_settings_icon,
-                               'App Settings')
-        self.tab_widget.addTab(self.win_settings_widget,
-                               self.win_settings_icon,
-                               'Window Settings')
-        self.tab_widget.addTab(self.ex_settings_widget,
-                               self.ex_settings_icon, 'Export Settings')
-        self.tab_widget.addTab(self.comp_settings_widget,
-                               self.comp_settings_icon,
-                               'Compression Settings')
-        self.tab_widget.addTab(self.dl_settings_widget,
-                               self.download_settings_icon,
-                               'Download Settings')
+        self.tab_widget.addTab(
+            self.app_settings_widget, self.app_settings_icon, "App Settings"
+        )
+        self.tab_widget.addTab(
+            self.win_settings_widget, self.win_settings_icon, "Window Settings"
+        )
+        self.tab_widget.addTab(
+            self.ex_settings_widget, self.ex_settings_icon, "Export Settings"
+        )
+        self.tab_widget.addTab(
+            self.comp_settings_widget, self.comp_settings_icon, "Compression Settings"
+        )
+        self.tab_widget.addTab(
+            self.dl_settings_widget, self.download_settings_icon, "Download Settings"
+        )
 
         self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.download_bar_widget)
@@ -321,14 +336,15 @@ class MainWindow(QMainWindow, CommandBase):
             # This shouldn't happen since we disable the UI if there are no
             # options selected
             # But in the weird event that this does happen, we are prepared!
-            QtWidgets.QMessageBox.information(self,
-                                          'Export Options Empty!',
-                                          ('Please choose one of '
-                                           'the export options!'))
+            QtWidgets.QMessageBox.information(
+                self,
+                "Export Options Empty!",
+                ("Please choose one of " "the export options!"),
+            )
 
     def selected_version(self):
         """Get the currently selected version."""
-        return self.get_setting('nw_version').value
+        return self.get_setting("nw_version").value
 
     def enable_ui_after_error(self):
         """
@@ -336,7 +352,7 @@ class MainWindow(QMainWindow, CommandBase):
         of an error.
         """
         self.enable_ui()
-        self.progress_text = ''
+        self.progress_text = ""
         self.progress_bar.setVisible(False)
         self.cancel_button.setEnabled(False)
 
@@ -348,7 +364,7 @@ class MainWindow(QMainWindow, CommandBase):
         Args:
             exception (Exception): an error that has occurred
         """
-        QtWidgets.QMessageBox.information(self, 'Error!', exception)
+        QtWidgets.QMessageBox.information(self, "Error!", exception)
 
     def disable_ui_while_working(self):
         self.option_settings_enabled(False)
@@ -376,7 +392,7 @@ class MainWindow(QMainWindow, CommandBase):
         settings_valid = self.settings_valid()
 
         export_chosen = False
-        for setting in self.settings['export_settings'].values():
+        for setting in self.settings["export_settings"].values():
             if setting.value:
                 export_chosen = True
 
@@ -384,22 +400,25 @@ class MainWindow(QMainWindow, CommandBase):
             return export_chosen and settings_valid
 
         # check export settings to make sure at least one is checked
-        for setting in self.settings['export_settings'].values():
+        for setting in self.settings["export_settings"].values():
             if not export_chosen:
                 widget = self.find_child_by_name(setting.name)
                 if widget is not None:
-                    widget.setStyleSheet('QCheckBox{border:3px solid '
-                                         'rgba(238, 68, 83, 200); '
-                                         'border-radius:5px;}')
-                    widget.setToolTip('At least one of these '
-                                      'options should be selected.')
+                    widget.setStyleSheet(
+                        "QCheckBox{border:3px solid "
+                        "rgba(238, 68, 83, 200); "
+                        "border-radius:5px;}"
+                    )
+                    widget.setToolTip(
+                        "At least one of these " "options should be selected."
+                    )
                     tab = self.get_tab_index_for_setting_name(setting.name)
                     self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
             else:
                 widget = self.find_child_by_name(setting.name)
                 if widget is not None:
-                    widget.setStyleSheet('')
-                    widget.setToolTip('')
+                    widget.setStyleSheet("")
+                    widget.setToolTip("")
                     tab = self.get_tab_index_for_setting_name(setting.name)
                     self.tab_widget.setTabIcon(tab, self.tab_icons[tab])
 
@@ -412,43 +431,50 @@ class MainWindow(QMainWindow, CommandBase):
         icon on the corresponding tab.
         """
 
-        red_border = ('QLineEdit{border:3px solid rgba(238, 68, 83, 200); '
-                      'border-radius:5px;}')
+        red_border = (
+            "QLineEdit{border:3px solid rgba(238, 68, 83, 200); " "border-radius:5px;}"
+        )
 
         settings_valid = True
-        for sgroup in self.settings['setting_groups']+[self.settings['web2exe_settings']]:
+        for sgroup in self.settings["setting_groups"] + [
+            self.settings["web2exe_settings"]
+        ]:
             for _, setting in sgroup.items():
                 if setting.value:
-                    if setting.type in set(['file', 'folder']) and os.path.isabs(setting.value):
+                    if setting.type in set(["file", "folder"]) and os.path.isabs(
+                        setting.value
+                    ):
                         setting_path = setting.value
                     else:
-                        setting_path = utils.path_join(self.project_dir(),
-                                                       setting.value)
+                        setting_path = utils.path_join(
+                            self.project_dir(), setting.value
+                        )
 
                 if setting.required and not setting.value:
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip('This setting is required.')
+                        widget.setToolTip("This setting is required.")
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
-                if setting.type == 'int' and setting.value != '':
+                if setting.type == "int" and setting.value != "":
                     try:
-                        int(setting.value or '0')
+                        int(setting.value or "0")
                     except ValueError:
                         settings_valid = False
                         widget = self.find_child_by_name(setting.name)
                         if widget is not None:
                             widget.setStyleSheet(red_border)
-                            tip = 'The value {} must be an integer.'.format(setting.value)
+                            tip = "The value {} must be an integer.".format(
+                                setting.value
+                            )
                             widget.setToolTip(tip)
                             tab = self.get_tab_index_for_setting_name(setting.name)
                             self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
-                if (setting.type == 'file' and
-                        setting.value):
+                if setting.type == "file" and setting.value:
                     setting_path_invalid = not os.path.exists(setting_path)
                     setting_url_invalid = not utils.url_exists(setting.value)
                     if setting_path_invalid and setting_url_invalid:
@@ -457,26 +483,32 @@ class MainWindow(QMainWindow, CommandBase):
                         widget = self.find_child_by_name(setting.name)
                         if widget is not None:
                             widget.setStyleSheet(red_border)
-                            tip = 'The file or url "{}" does not exist.'.format(setting.value)
+                            tip = 'The file or url "{}" does not exist.'.format(
+                                setting.value
+                            )
                             widget.setToolTip(tip)
                             tab = self.get_tab_index_for_setting_name(setting.name)
                             self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
 
-                if (setting.type == 'folder' and
-                        setting.value and
-                        not os.path.exists(setting_path)):
+                if (
+                    setting.type == "folder"
+                    and setting.value
+                    and not os.path.exists(setting_path)
+                ):
                     settings_valid = False
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
                         widget.setStyleSheet(red_border)
-                        widget.setToolTip('The folder "{}" does not exist'.format(setting_path))
+                        widget.setToolTip(
+                            'The folder "{}" does not exist'.format(setting_path)
+                        )
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.warning_settings_icon)
                 if settings_valid:
                     widget = self.find_child_by_name(setting.name)
                     if widget is not None:
-                        widget.setStyleSheet('')
-                        widget.setToolTip('')
+                        widget.setStyleSheet("")
+                        widget.setToolTip("")
                         tab = self.get_tab_index_for_setting_name(setting.name)
                         self.tab_widget.setTabIcon(tab, self.tab_icons[tab])
 
@@ -487,13 +519,12 @@ class MainWindow(QMainWindow, CommandBase):
 
     def output_dir(self):
         """Get the project output directory."""
-        if hasattr(self, 'output_line'):
+        if hasattr(self, "output_line"):
             if os.path.isabs(self.output_line.text()):
                 return self.output_line.text()
             else:
-                return utils.path_join(self.project_dir(),
-                                       self.output_line.text())
-        return ''
+                return utils.path_join(self.project_dir(), self.output_line.text())
+        return ""
 
     def create_download_bar(self):
         """
@@ -508,26 +539,26 @@ class MainWindow(QMainWindow, CommandBase):
         hlayout.setSpacing(5)
         hlayout.setContentsMargins(5, 5, 5, 5)
 
-        progress_label = QtWidgets.QLabel('')
+        progress_label = QtWidgets.QLabel("")
         progress_bar = QtWidgets.QProgressBar()
         progress_bar.setVisible(False)
         progress_bar.setContentsMargins(5, 5, 5, 5)
 
         vlayout.addWidget(progress_label)
         vlayout.addWidget(progress_bar)
-        vlayout.addWidget(QtWidgets.QLabel(''))
+        vlayout.addWidget(QtWidgets.QLabel(""))
 
-        ex_button = QtWidgets.QPushButton('Export')
+        ex_button = QtWidgets.QPushButton("Export")
         ex_button.setEnabled(False)
 
-        cancel_button = QtWidgets.QPushButton('Cancel Download')
+        cancel_button = QtWidgets.QPushButton("Cancel Download")
         cancel_button.setEnabled(False)
 
         open_export_button = QtWidgets.QPushButton()
         open_export_button.setEnabled(False)
         open_export_button.setIcon(QtGui.QIcon(get_file(config.FOLDER_OPEN_ICON)))
-        open_export_button.setToolTip('Open Export Folder')
-        open_export_button.setStatusTip('Open Export Folder')
+        open_export_button.setToolTip("Open Export Folder")
+        open_export_button.setStatusTip("Open Export Folder")
         open_export_button.setMaximumWidth(30)
         open_export_button.setMaximumHeight(30)
 
@@ -588,7 +619,7 @@ class MainWindow(QMainWindow, CommandBase):
 
             self.download_file_with_error_handling()
         else:
-            self.progress_text = 'Done.'
+            self.progress_text = "Done."
             self.cancel_button.setEnabled(False)
             self.progress_bar.setValue(0)
             self.progress_bar.setVisible(False)
@@ -618,7 +649,7 @@ class MainWindow(QMainWindow, CommandBase):
 
     def get_versions_in_background(self):
         self.ex_button.setEnabled(False)
-        self.run_in_background('get_versions', self.done_getting_versions)
+        self.run_in_background("get_versions", self.done_getting_versions)
 
     def done_getting_versions(self):
         """
@@ -626,9 +657,9 @@ class MainWindow(QMainWindow, CommandBase):
         versions combobox.
         """
         self.ex_button.setEnabled(self.required_settings_filled())
-        self.progress_text = 'Done retrieving versions.'
+        self.progress_text = "Done retrieving versions."
 
-        nw_version = self.get_setting('nw_version')
+        nw_version = self.get_setting("nw_version")
         combo = self.find_child_by_name(nw_version.name)
 
         combo.clear()
@@ -636,17 +667,17 @@ class MainWindow(QMainWindow, CommandBase):
 
     def make_output_files_in_background(self):
         self.ex_button.setEnabled(False)
-        self.run_in_background('make_output_dirs', self.done_making_files)
+        self.run_in_background("make_output_dirs", self.done_making_files)
 
     def run_custom_script(self):
         """Run the custom script setting"""
-        script = self.get_setting('custom_script').value
+        script = self.get_setting("custom_script").value
         self.run_script(script)
 
     def script_done(self):
         self.ex_button.setEnabled(self.required_settings_filled())
         self.enable_ui()
-        self.progress_text = 'Done!'
+        self.progress_text = "Done!"
 
     def done_making_files(self):
         """
@@ -657,41 +688,43 @@ class MainWindow(QMainWindow, CommandBase):
 
         self.tree_browser.refresh()
 
-        self.progress_text = 'Done Exporting.'
+        self.progress_text = "Done Exporting."
         self.delete_files()
 
         if self.output_err:
             self.show_error(self.output_err)
             self.enable_ui_after_error()
-            self.output_err = ''
+            self.output_err = ""
         else:
-            self.progress_text = 'Running custom script...'
+            self.progress_text = "Running custom script..."
             self.ex_button.setEnabled(False)
-            self.run_in_background('run_custom_script', self.script_done)
+            self.run_in_background("run_custom_script", self.script_done)
 
     def extract_files_in_background(self):
-        self.progress_text = 'Extracting.'
+        self.progress_text = "Extracting."
         self.ex_button.setEnabled(False)
 
-        self.run_in_background('extract_files', self.done_extracting)
+        self.run_in_background("extract_files", self.done_extracting)
 
     def done_extracting(self):
         self.ex_button.setEnabled(self.required_settings_filled())
         if self.extract_error:
-            self.progress_text = 'Error extracting.'
-            self.show_error('There were one or more errors with your '
-                            'zip/tar files. They were deleted. Please '
-                            'try to export again.')
+            self.progress_text = "Error extracting."
+            self.show_error(
+                "There were one or more errors with your "
+                "zip/tar files. They were deleted. Please "
+                "try to export again."
+            )
 
             self.enable_ui_after_error()
 
         else:
-            self.progress_text = 'Done extracting.'
+            self.progress_text = "Done extracting."
             self.make_output_files_in_background()
 
     def cancel_download(self):
         """Cancel downloading if the user presses the cancel button."""
-        self.progress_text = 'Download cancelled.'
+        self.progress_text = "Download cancelled."
         self.cancel_button.setEnabled(False)
         self.current_download_request.abort()
 
@@ -708,28 +741,26 @@ class MainWindow(QMainWindow, CommandBase):
             setting (Setting): The file setting to download
         """
         if is_windows():
-            path = path.replace('https', 'http')
+            path = path.replace("https", "http")
 
-        version_file = self.settings['base_url'].format(self.selected_version())
+        version_file = self.settings["base_url"].format(self.selected_version())
 
-        sdk_build_setting = self.get_setting('sdk_build')
+        sdk_build_setting = self.get_setting("sdk_build")
         sdk_build = sdk_build_setting.value
 
-        location = self.get_setting('download_dir').value or config.download_path()
+        location = self.get_setting("download_dir").value or config.download_path()
 
         if sdk_build:
             # Switch the download URL if an sdk build is selected
-            path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
+            path = utils.replace_right(path, "nwjs", "nwjs-sdk", 1)
 
-        self.progress_text = 'Downloading {}'.format(path.replace(version_file,
-                                                                  ''))
+        self.progress_text = "Downloading {}".format(path.replace(version_file, ""))
 
         url = QUrl(path)
-        file_name = setting.save_file_path(self.selected_version(),
-                                           location, sdk_build)
+        file_name = setting.save_file_path(self.selected_version(), location, sdk_build)
 
         archive_exists = QFile.exists(file_name)
-        forced = self.get_setting('force_download').value
+        forced = self.get_setting("force_download").value
 
         # Don't download if file already exists
         if archive_exists and not forced:
@@ -740,8 +771,7 @@ class MainWindow(QMainWindow, CommandBase):
         # If the file could not be opened, show the error and abort!
         if not self.downloading_file.open(QIODevice.WriteOnly):
             error = self.downloading_file.error().name
-            self.show_error('Unable to save the file {}: {}.'.format(file_name,
-                                                                     error))
+            self.show_error("Unable to save the file {}: {}.".format(file_name, error))
             self.enable_ui()
             return
 
@@ -759,14 +789,14 @@ class MainWindow(QMainWindow, CommandBase):
     def network_ssl_error(self, error):
         self.download_error = error
         self.downloading_file.remove()
-        self.show_error(f'Download failed: {error}.')
+        self.show_error(f"Download failed: {error}.")
         self.http_request_aborted = True
         self.enable_ui_after_error()
 
     def network_error(self, error):
         self.download_error = error
         self.downloading_file.remove()
-        self.show_error(f'Download failed: {error}.')
+        self.show_error(f"Download failed: {error}.")
         self.http_request_aborted = True
         self.enable_ui_after_error()
 
@@ -775,8 +805,10 @@ class MainWindow(QMainWindow, CommandBase):
         self.downloading_file.write(data)
 
     def create_icon_box(self, name, text):
-        style = ('width:48px;height:48px;background-color:white;'
-                 'border-radius:5px;border:1px solid rgb(50,50,50);')
+        style = (
+            "width:48px;height:48px;background-color:white;"
+            "border-radius:5px;border:1px solid rgb(50,50,50);"
+        )
         icon_label = QtWidgets.QLabel()
         icon_label.setStyleSheet(style)
         icon_label.setMaximumWidth(48)
@@ -787,7 +819,7 @@ class MainWindow(QMainWindow, CommandBase):
         setattr(self, name, icon_label)
 
         icon_text = QtWidgets.QLabel(text)
-        icon_text.setStyleSheet('font-size:10px;')
+        icon_text.setStyleSheet("font-size:10px;")
         icon_text.setAlignment(QtCore.Qt.AlignCenter)
         vbox = QVBoxLayout()
         vbox.setAlignment(QtCore.Qt.AlignCenter)
@@ -802,17 +834,17 @@ class MainWindow(QMainWindow, CommandBase):
 
     def create_project_info(self):
         """Create the GroupBox that shows the user's project name and icons."""
-        group_box = QtWidgets.QGroupBox('An awesome web project called:')
+        group_box = QtWidgets.QGroupBox("An awesome web project called:")
 
         title_hbox = QHBoxLayout()
         title_hbox.setContentsMargins(10, 10, 10, 10)
 
-        win_icon = self.create_icon_box('window_icon', 'Window Icon')
-        exe_icon = self.create_icon_box('exe_icon', 'Exe Icon')
-        mac_icon = self.create_icon_box('mac_icon', 'Mac Icon')
+        win_icon = self.create_icon_box("window_icon", "Window Icon")
+        exe_icon = self.create_icon_box("exe_icon", "Exe Icon")
+        mac_icon = self.create_icon_box("mac_icon", "Mac Icon")
 
-        self.title_label = QtWidgets.QLabel('TBD')
-        self.title_label.setStyleSheet('font-size:20px; font-weight:bold;')
+        self.title_label = QtWidgets.QLabel("TBD")
+        self.title_label.setStyleSheet("font-size:20px; font-weight:bold;")
         title_hbox.addWidget(self.title_label)
         title_hbox.addWidget(QtWidgets.QLabel())
         title_hbox.addWidget(win_icon)
@@ -831,9 +863,9 @@ class MainWindow(QMainWindow, CommandBase):
         return group_box
 
     def set_window_icon(self):
-        icon_setting = self.get_setting('icon')
-        mac_icon_setting = self.get_setting('mac_icon')
-        exe_icon_setting = self.get_setting('exe_icon')
+        icon_setting = self.get_setting("icon")
+        mac_icon_setting = self.get_setting("mac_icon")
+        exe_icon_setting = self.get_setting("exe_icon")
         self.set_icon(icon_setting.value, self.window_icon)
 
         if not mac_icon_setting.value:
@@ -842,11 +874,11 @@ class MainWindow(QMainWindow, CommandBase):
             self.set_icon(icon_setting.value, self.exe_icon)
 
     def set_exe_icon(self):
-        icon_setting = self.get_setting('exe_icon')
+        icon_setting = self.get_setting("exe_icon")
         self.set_icon(icon_setting.value, self.exe_icon)
 
     def set_mac_icon(self):
-        icon_setting = self.get_setting('mac_icon')
+        icon_setting = self.get_setting("mac_icon")
         self.set_icon(icon_setting.value, self.mac_icon)
 
     def set_icon(self, icon_path, icon):
@@ -860,11 +892,11 @@ class MainWindow(QMainWindow, CommandBase):
         if icon_path:
             icon_path = utils.path_join(self.project_dir(), icon_path)
             if os.path.exists(icon_path):
-                if icon_path.endswith('.icns'):
+                if icon_path.endswith(".icns"):
                     pngs = pngs_from_icns(icon_path)
                     if pngs:
                         bdata = QtCore.QByteArray(pngs[-1].data)
-                        image = QtGui.QImage.fromData(bdata, 'PNG')
+                        image = QtGui.QImage.fromData(bdata, "PNG")
                     else:
                         return
                 else:
@@ -875,7 +907,7 @@ class MainWindow(QMainWindow, CommandBase):
                 else:
                     image = image.scaledToHeight(48, trans)
                 icon.setPixmap(QtGui.QPixmap.fromImage(image))
-                icon.setStyleSheet('')
+                icon.setStyleSheet("")
                 return
 
         icon.setPixmap(None)
@@ -886,11 +918,13 @@ class MainWindow(QMainWindow, CommandBase):
         Allows arguments to be passed to click events so the calling object
         is not lost.
         """
+
         def call(*cargs, **ckwargs):
             if hasattr(self, name):
                 func = getattr(self, name)
                 kwargs.update(ckwargs)
-                func(obj, *(args+cargs), **kwargs)
+                func(obj, *(args + cargs), **kwargs)
+
         return call
 
     def find_child_by_name(self, name):
@@ -913,7 +947,7 @@ class MainWindow(QMainWindow, CommandBase):
 
     def project_name(self):
         """Get the current GUI project name field."""
-        return self.find_child_by_name('app_name').text()
+        return self.find_child_by_name("app_name").text()
 
     def browse_dir(self):
         """
@@ -921,8 +955,9 @@ class MainWindow(QMainWindow, CommandBase):
         directory.
         """
         dir_func = QtWidgets.QFileDialog.getExistingDirectory
-        directory = dir_func(self, 'Find Project Directory',
-                             self.project_dir() or self.last_project_dir)
+        directory = dir_func(
+            self, "Find Project Directory", self.project_dir() or self.last_project_dir
+        )
 
         if directory:
             self.load_project(directory)
@@ -950,19 +985,20 @@ class MainWindow(QMainWindow, CommandBase):
         # chosen values
         self.load_package_json()
         self.load_package_json(utils.get_data_file_path(config.GLOBAL_JSON_FILE))
-        self.load_package_json(utils.path_join(self.project_dir(),
-                                               config.WEB2EXE_JSON_FILE))
+        self.load_package_json(
+            utils.path_join(self.project_dir(), config.WEB2EXE_JSON_FILE)
+        )
 
-        default_dir = 'output'
-        export_dir_setting = self.get_setting('export_dir')
+        default_dir = "output"
+        export_dir_setting = self.get_setting("export_dir")
         default_dir = export_dir_setting.value or default_dir
         self.output_line.setText(default_dir)
 
-        script_setting = self.get_setting('custom_script')
+        script_setting = self.get_setting("custom_script")
         self.script_line.setText(script_setting.value)
 
         # Setup output name setting
-        output_name_setting = self.get_setting('output_pattern')
+        output_name_setting = self.get_setting("output_pattern")
         self.output_name_line.setText(output_name_setting.value)
 
         self.output_name_line.textChanged.connect(self.output_name_line.text_changed)
@@ -971,39 +1007,45 @@ class MainWindow(QMainWindow, CommandBase):
         self.set_window_icon()
         self.open_export_button.setEnabled(True)
 
-        blacklist_setting = self.get_setting('blacklist')
-        whitelist_setting = self.get_setting('whitelist')
+        blacklist_setting = self.get_setting("blacklist")
+        whitelist_setting = self.get_setting("whitelist")
 
         output_blacklist = os.path.basename(self.output_dir())
 
-        self.tree_browser.init(directory,
-                               whitelist=re.split('\n?,?', whitelist_setting.value),
-                               blacklist=(re.split('\n?,?', blacklist_setting.value) +
-                                          ['*'+output_blacklist+'*']))
+        self.tree_browser.init(
+            directory,
+            whitelist=re.split("\n?,?", whitelist_setting.value),
+            blacklist=(
+                re.split("\n?,?", blacklist_setting.value)
+                + ["*" + output_blacklist + "*"]
+            ),
+        )
 
         self.update_json = True
 
     def init_main_field(self, directory):
         """Initialize main html or php file."""
-        setting_input = self.find_child_by_name('main')
+        setting_input = self.find_child_by_name("main")
 
         if not setting_input.text():
-            files = (glob.glob(utils.path_join(directory, 'index.html')) +
-                     glob.glob(utils.path_join(directory, 'index.php')) +
-                     glob.glob(utils.path_join(directory, 'index.htm')))
+            files = (
+                glob.glob(utils.path_join(directory, "index.html"))
+                + glob.glob(utils.path_join(directory, "index.php"))
+                + glob.glob(utils.path_join(directory, "index.htm"))
+            )
             if files:
                 # get the first valid file and use that
-                setting_input.setText(files[0].replace(self.project_dir() +
-                                                            os.path.sep,
-                                                       ''))
+                setting_input.setText(
+                    files[0].replace(self.project_dir() + os.path.sep, "")
+                )
 
     def init_input_fields(self, proj_name):
         """Initialize input fields with project name."""
-        app_name_input = self.find_child_by_name('app_name')
-        name_input = self.find_child_by_name('name')
-        name_setting = self.get_setting('name')
-        title_input = self.find_child_by_name('title')
-        id_input = self.find_child_by_name('id')
+        app_name_input = self.find_child_by_name("app_name")
+        name_input = self.find_child_by_name("name")
+        name_setting = self.get_setting("name")
+        title_input = self.find_child_by_name("title")
+        id_input = self.find_child_by_name("id")
 
         if not name_input.text():
             name_input.setText(name_setting.filter_name(proj_name))
@@ -1020,10 +1062,11 @@ class MainWindow(QMainWindow, CommandBase):
     def browse_out_dir(self):
         """Browse for an output directory by showing a dialog."""
         self.update_json = False
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose Output Directory",
-                                                           (self.output_line.text() or
-                                                            self.project_dir() or
-                                                            self.last_project_dir))
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self,
+            "Choose Output Directory",
+            (self.output_line.text() or self.project_dir() or self.last_project_dir),
+        )
         if directory:
             self.update_json = True
             self.output_line.setText(directory)
@@ -1037,14 +1080,15 @@ class MainWindow(QMainWindow, CommandBase):
                                    selected file name in
             setting (Setting): the related setting object
         """
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose File',
-                                                         (setting.last_value or
-                                                          self.project_dir() or
-                                                          QtCore.QDir.currentPath()),
-                                                         setting.file_types)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Choose File",
+            (setting.last_value or self.project_dir() or QtCore.QDir.currentPath()),
+            setting.file_types,
+        )
         if file_path:
-            file_path = os.path.abspath(file_path) # fixes an issue with windows paths
-            file_path = file_path.replace(self.project_dir()+os.path.sep, '')
+            file_path = os.path.abspath(file_path)  # fixes an issue with windows paths
+            file_path = file_path.replace(self.project_dir() + os.path.sep, "")
             text_obj.setText(file_path)
             setting.last_value = file_path
 
@@ -1059,14 +1103,15 @@ class MainWindow(QMainWindow, CommandBase):
             file_types (string): file types specified by a regex
                                  (eg. "*.py|*.html")
         """
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose File',
-                                                         (setting.last_value or
-                                                          self.project_dir() or
-                                                          QtCore.QDir.currentPath()),
-                                                         file_types)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Choose File",
+            (setting.last_value or self.project_dir() or QtCore.QDir.currentPath()),
+            file_types,
+        )
         if file_path:
-            file_path = os.path.abspath(file_path) # fixes an issue with windows paths
-            file_path = file_path.replace(self.project_dir()+os.path.sep, '')
+            file_path = os.path.abspath(file_path)  # fixes an issue with windows paths
+            file_path = file_path.replace(self.project_dir() + os.path.sep, "")
             text_obj.setText(file_path)
             setting.last_value = file_path
 
@@ -1080,17 +1125,17 @@ class MainWindow(QMainWindow, CommandBase):
             setting (Setting): the related setting object
         """
 
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose Folder',
-                                                        (setting.last_value or
-                                                         QtCore.QDir.currentPath()))
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Choose Folder", (setting.last_value or QtCore.QDir.currentPath())
+        )
         if folder:
-            folder = folder.replace(self.project_dir()+os.path.sep, '')
+            folder = folder.replace(self.project_dir() + os.path.sep, "")
             text_obj.setText(folder)
             setting.last_value = folder
 
     def create_application_settings(self):
         group_box = QtWidgets.QWidget()
-        app_setting = self.settings['order']['application_setting_order']
+        app_setting = self.settings["order"]["application_setting_order"]
         vlayout = self.create_layout(app_setting, cols=3)
 
         group_box.setLayout(vlayout)
@@ -1098,12 +1143,14 @@ class MainWindow(QMainWindow, CommandBase):
 
     def create_compression_settings(self):
         group_box = QtWidgets.QWidget()
-        comp_setting = self.settings['order']['compression_setting_order']
+        comp_setting = self.settings["order"]["compression_setting_order"]
         vlayout = self.create_layout(comp_setting, cols=1)
-        warning_label = QtWidgets.QLabel('Note: When using compression (greater '
-                                     'than 0) it will decrease the executable '
-                                     'size,\nbut will increase the startup '
-                                     'time when running it.')
+        warning_label = QtWidgets.QLabel(
+            "Note: When using compression (greater "
+            "than 0) it will decrease the executable "
+            "size,\nbut will increase the startup "
+            "time when running it."
+        )
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(vlayout)
         vbox.addWidget(warning_label)
@@ -1121,26 +1168,26 @@ class MainWindow(QMainWindow, CommandBase):
         setting = self.get_setting(name)
         res = None
 
-        if setting.type == 'string' or setting.type == 'int':
+        if setting.type == "string" or setting.type == "int":
             res = self.create_text_input_setting(name)
-        elif setting.type == 'strings':
+        elif setting.type == "strings":
             res = self.create_text_input_setting(name)
-        elif setting.type == 'file':
+        elif setting.type == "file":
             res = self.create_text_input_with_file_setting(name)
-        elif setting.type == 'folder':
+        elif setting.type == "folder":
             res = self.create_text_input_with_folder_setting(name)
-        elif setting.type == 'check':
+        elif setting.type == "check":
             res = self.create_check_setting(name)
-        elif setting.type == 'list':
+        elif setting.type == "list":
             res = self.create_list_setting(name)
-        elif setting.type == 'range':
+        elif setting.type == "range":
             res = self.create_range_setting(name)
 
         return res
 
     def create_window_settings(self):
         group_box = QtWidgets.QWidget()
-        win_setting_order = self.settings['order']['window_setting_order']
+        win_setting_order = self.settings["order"]["window_setting_order"]
         vlayout = self.create_layout(win_setting_order, cols=3)
 
         group_box.setLayout(vlayout)
@@ -1149,7 +1196,7 @@ class MainWindow(QMainWindow, CommandBase):
     def create_export_settings(self):
         group_box = QtWidgets.QWidget()
 
-        ex_setting_order = self.settings['order']['export_setting_order']
+        ex_setting_order = self.settings["order"]["export_setting_order"]
 
         vlayout = self.create_layout(ex_setting_order, cols=1)
         vlayout.setContentsMargins(0, 10, 0, 0)
@@ -1162,7 +1209,7 @@ class MainWindow(QMainWindow, CommandBase):
 
         hlayout = QtWidgets.QHBoxLayout()
 
-        platform_group = QtWidgets.QGroupBox('Platforms')
+        platform_group = QtWidgets.QGroupBox("Platforms")
         platform_group.setContentsMargins(0, 10, 0, 0)
         playout = QtWidgets.QVBoxLayout()
         playout.addLayout(vlayout)
@@ -1183,7 +1230,6 @@ class MainWindow(QMainWindow, CommandBase):
         return group_box
 
     def create_blacklist_layout(self, blacklist_layout):
-
         self.tree_browser = TreeBrowser()
         self.file_tree = self.tree_browser.file_tree
         self.tree_browser.setContentsMargins(0, 0, 0, 0)
@@ -1199,8 +1245,8 @@ class MainWindow(QMainWindow, CommandBase):
         blacklayout.addWidget(self.blacklist_text)
         whitelayout.addWidget(self.whitelist_text)
 
-        whitelist_setting = self.get_setting('whitelist')
-        blacklist_setting = self.get_setting('blacklist')
+        whitelist_setting = self.get_setting("whitelist")
+        blacklist_setting = self.get_setting("blacklist")
 
         self.blacklist_text.setStatusTip(blacklist_setting.description)
         self.whitelist_text.setStatusTip(whitelist_setting.description)
@@ -1219,27 +1265,27 @@ class MainWindow(QMainWindow, CommandBase):
         blacklist_layout.addWidget(self.tree_browser)
 
         self.blacklist_text.textChanged.connect(
-            self.call_with_object('setting_changed',
-                                  self.blacklist_text,
-                                  blacklist_setting)
+            self.call_with_object(
+                "setting_changed", self.blacklist_text, blacklist_setting
+            )
         )
 
         self.whitelist_text.textChanged.connect(
-            self.call_with_object('setting_changed',
-                                  self.whitelist_text,
-                                  whitelist_setting)
+            self.call_with_object(
+                "setting_changed", self.whitelist_text, whitelist_setting
+            )
         )
 
         self.blacklist_text.textChanged.connect(
-            self.call_with_object('blacklist_changed',
-                                  self.blacklist_text,
-                                  blacklist_setting)
+            self.call_with_object(
+                "blacklist_changed", self.blacklist_text, blacklist_setting
+            )
         )
 
         self.whitelist_text.textChanged.connect(
-            self.call_with_object('whitelist_changed',
-                                  self.whitelist_text,
-                                  whitelist_setting)
+            self.call_with_object(
+                "whitelist_changed", self.whitelist_text, whitelist_setting
+            )
         )
 
         return blacklist_layout
@@ -1247,18 +1293,19 @@ class MainWindow(QMainWindow, CommandBase):
     def blacklist_changed(self, text, blacklist_setting):
         new_val = text.toPlainText()
         output_blacklist = os.path.basename(self.output_dir())
-        self.tree_browser.refresh(blacklist=(re.split('\n?,?', new_val) +
-                                            ['*'+output_blacklist+'*']))
+        self.tree_browser.refresh(
+            blacklist=(re.split("\n?,?", new_val) + ["*" + output_blacklist + "*"])
+        )
 
     def whitelist_changed(self, text, whitelist_setting):
         new_val = text.toPlainText()
-        self.tree_browser.refresh(whitelist=re.split('\n?,?', new_val))
+        self.tree_browser.refresh(whitelist=re.split("\n?,?", new_val))
 
     def create_output_name_pattern_line(self):
         output_name_layout = QtWidgets.QHBoxLayout()
 
-        output_name_setting = self.get_setting('output_pattern')
-        output_name_label = QtWidgets.QLabel(output_name_setting.display_name+':')
+        output_name_setting = self.get_setting("output_pattern")
+        output_name_label = QtWidgets.QLabel(output_name_setting.display_name + ":")
         output_name_label.setMinimumWidth(155)
 
         tag_dict = self.get_tag_dict()
@@ -1272,9 +1319,9 @@ class MainWindow(QMainWindow, CommandBase):
         self.completer.setWidget(self.output_name_line)
 
         self.output_name_line.textChanged.connect(
-            self.call_with_object('setting_changed',
-                                  self.output_name_line,
-                                  output_name_setting)
+            self.call_with_object(
+                "setting_changed", self.output_name_line, output_name_setting
+            )
         )
 
         self.output_name_line.setStatusTip(output_name_setting.description)
@@ -1286,20 +1333,18 @@ class MainWindow(QMainWindow, CommandBase):
     def create_output_directory_line(self):
         output_layout = QtWidgets.QHBoxLayout()
 
-        ex_dir_setting = self.get_setting('export_dir')
-        output_label = QtWidgets.QLabel(ex_dir_setting.display_name+':')
+        ex_dir_setting = self.get_setting("export_dir")
+        output_label = QtWidgets.QLabel(ex_dir_setting.display_name + ":")
         output_label.setMinimumWidth(155)
         self.output_line = QtWidgets.QLineEdit()
 
         self.output_line.textChanged.connect(
-            self.call_with_object('setting_changed',
-                                  self.output_line,
-                                  ex_dir_setting)
+            self.call_with_object("setting_changed", self.output_line, ex_dir_setting)
         )
 
         self.output_line.textChanged.connect(self.project_path_changed)
         self.output_line.setStatusTip(ex_dir_setting.description)
-        output_button = QtWidgets.QPushButton('...')
+        output_button = QtWidgets.QPushButton("...")
         output_button.clicked.connect(self.browse_out_dir)
 
         output_layout.addWidget(output_label)
@@ -1311,8 +1356,8 @@ class MainWindow(QMainWindow, CommandBase):
     def create_script_layout(self):
         script_layout = QtWidgets.QHBoxLayout()
 
-        script_setting = self.get_setting('custom_script')
-        script_label = QtWidgets.QLabel(script_setting.display_name+':')
+        script_setting = self.get_setting("custom_script")
+        script_label = QtWidgets.QLabel(script_setting.display_name + ":")
         script_label.setMinimumWidth(155)
 
         self.script_line = QtWidgets.QLineEdit()
@@ -1320,25 +1365,22 @@ class MainWindow(QMainWindow, CommandBase):
         self.script_line.setObjectName(script_setting.name)
 
         self.script_line.textChanged.connect(
-            self.call_with_object('setting_changed',
-                                  self.script_line,
-                                  script_setting)
+            self.call_with_object("setting_changed", self.script_line, script_setting)
         )
         self.script_line.setStatusTip(script_setting.description)
-        script_button = QtWidgets.QPushButton('...')
+        script_button = QtWidgets.QPushButton("...")
 
-        file_types = ['*.py']
+        file_types = ["*.py"]
 
-        if platform.system() == 'Windows':
-            file_types.append('*.bat')
+        if platform.system() == "Windows":
+            file_types.append("*.bat")
         else:
-            file_types.append('*.bash')
+            file_types.append("*.bash")
 
         script_button.clicked.connect(
-            self.call_with_object('get_file_reg',
-                                  self.script_line,
-                                  script_setting,
-                                  ' '.join(file_types))
+            self.call_with_object(
+                "get_file_reg", self.script_line, script_setting, " ".join(file_types)
+            )
         )
 
         script_layout.addWidget(script_label)
@@ -1349,7 +1391,7 @@ class MainWindow(QMainWindow, CommandBase):
 
     def create_download_settings(self):
         group_box = QtWidgets.QWidget()
-        dl_setting = self.settings['order']['download_setting_order']
+        dl_setting = self.settings["order"]["download_setting_order"]
         vlayout = self.create_layout(dl_setting, cols=1)
 
         group_box.setLayout(vlayout)
@@ -1374,18 +1416,17 @@ class MainWindow(QMainWindow, CommandBase):
 
         for setting_name in settings:
             setting = self.get_setting(setting_name)
-            if col >= cols*2:
+            if col >= cols * 2:
                 row += 1
                 col = 0
-            display_name = setting.display_name+':'
+            display_name = setting.display_name + ":"
             if setting.required:
-                display_name += '*'
+                display_name += "*"
             setting_label = QtWidgets.QLabel(display_name)
             setting_label.setToolTip(setting.description)
             setting_label.setStatusTip(setting.description)
             glayout.addWidget(setting_label, row, col)
-            glayout.addLayout(self.create_setting(setting_name),
-                              row, col+1)
+            glayout.addLayout(self.create_setting(setting_name), row, col + 1)
             col += 2
 
         return glayout
@@ -1400,8 +1441,9 @@ class MainWindow(QMainWindow, CommandBase):
         text.setValidator(Validator(setting.filter, setting.filter_action))
         text.setObjectName(setting.name)
 
-        text.textChanged.connect(self.call_with_object('setting_changed',
-                                                       text, setting))
+        text.textChanged.connect(
+            self.call_with_object("setting_changed", text, setting)
+        )
         if setting.value:
             text.setText(setting.value)
         text.setStatusTip(setting.description)
@@ -1423,20 +1465,20 @@ class MainWindow(QMainWindow, CommandBase):
         text = QtWidgets.QLineEdit()
         text.setObjectName(setting.name)
 
-        button = QtWidgets.QPushButton('...')
+        button = QtWidgets.QPushButton("...")
         button.setMaximumWidth(30)
         button.setMaximumHeight(26)
 
-        button.clicked.connect(self.call_with_object('get_file',
-                                                     text, setting))
+        button.clicked.connect(self.call_with_object("get_file", text, setting))
 
         if setting.value:
             text.setText(setting.value)
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
-        text.textChanged.connect(self.call_with_object('setting_changed',
-                                                       text, setting))
+        text.textChanged.connect(
+            self.call_with_object("setting_changed", text, setting)
+        )
 
         hlayout.addWidget(text)
         hlayout.addWidget(button)
@@ -1455,20 +1497,20 @@ class MainWindow(QMainWindow, CommandBase):
         text = QtWidgets.QLineEdit()
         text.setObjectName(setting.name)
 
-        button = QtWidgets.QPushButton('...')
+        button = QtWidgets.QPushButton("...")
         button.setMaximumWidth(30)
         button.setMaximumHeight(26)
 
-        button.clicked.connect(self.call_with_object('get_folder',
-                                                     text, setting))
+        button.clicked.connect(self.call_with_object("get_folder", text, setting))
 
         if setting.value:
             text.setText(setting.value)
         text.setStatusTip(setting.description)
         text.setToolTip(setting.description)
 
-        text.textChanged.connect(self.call_with_object('setting_changed',
-                                                       text, setting))
+        text.textChanged.connect(
+            self.call_with_object("setting_changed", text, setting)
+        )
 
         hlayout.addWidget(text)
         hlayout.addWidget(button)
@@ -1477,34 +1519,36 @@ class MainWindow(QMainWindow, CommandBase):
 
     def reset_settings(self):
         """Reset all of the settings to their defaults."""
-        for sgroup in self.settings['setting_groups']:
+        for sgroup in self.settings["setting_groups"]:
             for setting in sgroup.values():
                 widget = self.find_child_by_name(setting.name)
                 if widget is None or setting.value is None:
                     continue
 
-                if (setting.type == 'string' or
-                        setting.type == 'file' or
-                        setting.type == 'folder' or
-                        setting.type == 'int'):
-                    old_val = ''
+                if (
+                    setting.type == "string"
+                    or setting.type == "file"
+                    or setting.type == "folder"
+                    or setting.type == "int"
+                ):
+                    old_val = ""
 
                     if setting.default_value is not None:
                         old_val = setting.default_value
 
-                    setting.value = old_val.replace('\\', '\\\\')
-                    if hasattr(widget, 'setText'):
+                    setting.value = old_val.replace("\\", "\\\\")
+                    if hasattr(widget, "setText"):
                         widget.setText(old_val)
-                    elif hasattr(widget, 'setPlainText'):
+                    elif hasattr(widget, "setPlainText"):
                         widget.setPlainText(old_val)
-                elif setting.type == 'strings':
+                elif setting.type == "strings":
                     old_val = []
                     if setting.default_value is not None:
                         old_val = setting.default_value
-                    setting.value = [v.replace('\\', '\\\\') for v in old_val]
-                    widget.setText(','.join(setting.value))
+                    setting.value = [v.replace("\\", "\\\\") for v in old_val]
+                    widget.setText(",".join(setting.value))
 
-                elif setting.type == 'check':
+                elif setting.type == "check":
                     old_val = False
 
                     if setting.default_value is not None:
@@ -1513,7 +1557,7 @@ class MainWindow(QMainWindow, CommandBase):
                     setting.value = old_val
                     widget.setChecked(old_val)
 
-                elif setting.type == 'range':
+                elif setting.type == "range":
                     old_val = 0
                     if setting.default_value is not None:
                         old_val = setting.default_value
@@ -1523,28 +1567,28 @@ class MainWindow(QMainWindow, CommandBase):
     def set_kiosk_emulation_options(self, is_checked):
         """Emulate kiosk mode on platforms that don't support it."""
         if is_checked:
-            width_field = self.find_child_by_name('width')
+            width_field = self.find_child_by_name("width")
             width_field.setText(str(self.desktop_width))
 
-            height_field = self.find_child_by_name('height')
+            height_field = self.find_child_by_name("height")
             height_field.setText(str(self.desktop_height))
 
-            frame_field = self.find_child_by_name('frame')
+            frame_field = self.find_child_by_name("frame")
             frame_field.setChecked(not is_checked)
 
-            show_field = self.find_child_by_name('show')
+            show_field = self.find_child_by_name("show")
             show_field.setChecked(is_checked)
 
-            kiosk_field = self.find_child_by_name('kiosk')
+            kiosk_field = self.find_child_by_name("kiosk")
             kiosk_field.setChecked(not is_checked)
 
-            fullscreen_field = self.find_child_by_name('fullscreen')
+            fullscreen_field = self.find_child_by_name("fullscreen")
             fullscreen_field.setChecked(not is_checked)
 
-            always_on_top_field = self.find_child_by_name('always_on_top')
+            always_on_top_field = self.find_child_by_name("always_on_top")
             always_on_top_field.setChecked(is_checked)
 
-            resizable_field = self.find_child_by_name('resizable')
+            resizable_field = self.find_child_by_name("resizable")
             resizable_field.setChecked(not is_checked)
 
     def setting_changed(self, obj, setting, *args):
@@ -1554,10 +1598,12 @@ class MainWindow(QMainWindow, CommandBase):
         json files in order to persist the changes.
         """
 
-        if (setting.type == 'string' or
-                setting.type == 'file' or
-                setting.type == 'folder' or
-                setting.type == 'int'):
+        if (
+            setting.type == "string"
+            or setting.type == "file"
+            or setting.type == "folder"
+            or setting.type == "int"
+        ):
             if args:
                 setting.value = args[0]
             else:
@@ -1565,21 +1611,21 @@ class MainWindow(QMainWindow, CommandBase):
 
             if not setting.value:
                 setting.value = setting.default_value
-        elif setting.type == 'strings':
-            setting.value = args[0].split(',')
+        elif setting.type == "strings":
+            setting.value = args[0].split(",")
             setting.value = [x.strip() for x in setting.value if x]
             if not setting.value:
                 setting.value = setting.default_value
-        elif setting.type == 'check':
+        elif setting.type == "check":
             setting.value = obj.isChecked()
             check_action = setting.check_action
             if hasattr(self, check_action):
                 getattr(self, check_action)(obj.isChecked())
-        elif setting.type == 'list':
+        elif setting.type == "list":
             setting.value = obj.currentText()
             if not setting.value:
                 setting.value = setting.default_value
-        elif setting.type == 'range':
+        elif setting.type == "range":
             setting.value = obj.value()
 
         if setting.action is not None:
@@ -1612,8 +1658,7 @@ class MainWindow(QMainWindow, CommandBase):
 
         check.setObjectName(setting.name)
 
-        check.clicked.connect(self.call_with_object('setting_changed',
-                                                    check, setting))
+        check.clicked.connect(self.call_with_object("setting_changed", check, setting))
         check.setChecked(setting.value or False)
         check.setStatusTip(setting.description)
         check.setToolTip(setting.description)
@@ -1636,10 +1681,12 @@ class MainWindow(QMainWindow, CommandBase):
 
         combo.setObjectName(setting.name)
 
-        combo.currentIndexChanged.connect(self.call_with_object('setting_changed',
-                                                                combo, setting))
-        combo.editTextChanged.connect(self.call_with_object('setting_changed',
-                                                            combo, setting))
+        combo.currentIndexChanged.connect(
+            self.call_with_object("setting_changed", combo, setting)
+        )
+        combo.editTextChanged.connect(
+            self.call_with_object("setting_changed", combo, setting)
+        )
 
         combo.setStatusTip(setting.description)
         combo.setToolTip(setting.description)
@@ -1674,8 +1721,9 @@ class MainWindow(QMainWindow, CommandBase):
 
         slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         slider.setRange(setting.min, setting.max)
-        slider.valueChanged.connect(self.call_with_object('setting_changed',
-                                                          slider, setting))
+        slider.valueChanged.connect(
+            self.call_with_object("setting_changed", slider, setting)
+        )
 
         slider.setObjectName(setting.name)
         slider.setValue(setting.default_value or 0)
@@ -1685,8 +1733,9 @@ class MainWindow(QMainWindow, CommandBase):
         range_label = QtWidgets.QLabel(str(setting.default_value))
         range_label.setMaximumWidth(30)
 
-        slider.valueChanged.connect(self.call_with_object('_update_range_label',
-                                                          range_label))
+        slider.valueChanged.connect(
+            self.call_with_object("_update_range_label", range_label)
+        )
 
         w = QtWidgets.QWidget()
         whlayout = QtWidgets.QHBoxLayout()
@@ -1709,26 +1758,28 @@ class MainWindow(QMainWindow, CommandBase):
         for setting in setting_list:
             setting_field = self.find_child_by_name(setting.name)
             if setting_field and setting.value is not None:
-                if (setting.type == 'file' or
-                        setting.type == 'string' or
-                        setting.type == 'folder' or
-                        setting.type == 'int'):
+                if (
+                    setting.type == "file"
+                    or setting.type == "string"
+                    or setting.type == "folder"
+                    or setting.type == "int"
+                ):
                     val_str = self.convert_val_to_str(setting.value)
-                    if hasattr(setting_field, 'setText'):
+                    if hasattr(setting_field, "setText"):
                         setting_field.setText(setting.filter_name(val_str))
-                    elif hasattr(setting_field, 'setPlainText'):
+                    elif hasattr(setting_field, "setPlainText"):
                         setting_field.setPlainText(setting.filter_name(val_str))
-                if setting.type == 'strings':
+                if setting.type == "strings":
                     vals = [self.convert_val_to_str(v) for v in setting.value]
-                    setting_field.setText(','.join(vals))
-                if setting.type == 'check':
+                    setting_field.setText(",".join(vals))
+                if setting.type == "check":
                     setting_field.setChecked(setting.value)
-                if setting.type == 'list':
+                if setting.type == "list":
                     val_str = self.convert_val_to_str(setting.value)
                     index = setting_field.findText(val_str)
                     if index != -1:
                         setting_field.setCurrentIndex(index)
-                if setting.type == 'range':
+                if setting.type == "range":
                     setting_field.setValue(int(setting.value))
         self.ex_button.setEnabled(self.required_settings_filled())
 
@@ -1752,5 +1803,6 @@ def main():
 
     sys.exit(app.exec_())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

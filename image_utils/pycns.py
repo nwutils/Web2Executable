@@ -18,16 +18,17 @@ def encode_image_to_icns(image_path):
 def save_icns(image_path, icns_path):
     im_data = encode_image_to_icns(image_path)
     if im_data is not None:
-        icns_path = icns_path if icns_path.endswith('.icns') else icns_path+'.icns'
-        open(icns_path, 'wb+').write(im_data)
+        icns_path = icns_path if icns_path.endswith(".icns") else icns_path + ".icns"
+        open(icns_path, "wb+").write(im_data)
 
 
 def pngs_from_icns(icns_path):
     return icns_to_png(icns_path)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print('Usage: pycns input_image_path output_icns_path')
+        print("Usage: pycns input_image_path output_icns_path")
         sys.exit()
 
     image_path, icns_path = sys.argv[1:3]

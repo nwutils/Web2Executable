@@ -24,9 +24,7 @@ class FileItem(QtWidgets.QTreeWidgetItem):
 
 
 class FileTree(object):
-    def __init__(self, directory=None,
-                 whitelist=None, blacklist=None):
-
+    def __init__(self, directory=None, whitelist=None, blacklist=None):
         self.whitelist = None
         self.blacklist = None
 
@@ -40,9 +38,7 @@ class FileTree(object):
 
         self.init(directory, whitelist, blacklist)
 
-    def init(self, directory=None,
-             whitelist=None, blacklist=None):
-
+    def init(self, directory=None, whitelist=None, blacklist=None):
         self.logger = config.getLogger(__name__)
 
         if directory:
@@ -56,8 +52,7 @@ class FileTree(object):
         self.files = []
         self.dirs = []
 
-    def refresh(self, whitelist=None,
-                blacklist=None):
+    def refresh(self, whitelist=None, blacklist=None):
         self.set_filters(whitelist, blacklist)
 
         self.clear()
@@ -133,12 +128,12 @@ class FileTree(object):
         if self.directory is None:
             return
 
-        self.logger.debug('Blacklist pattern:')
+        self.logger.debug("Blacklist pattern:")
         self.logger.debug(pformat(self.blacklist))
-        self.logger.debug('')
-        self.logger.debug('Whitelist pattern:')
+        self.logger.debug("")
+        self.logger.debug("Whitelist pattern:")
         self.logger.debug(pformat(self.whitelist))
-        self.logger.debug('')
+        self.logger.debug("")
 
         self.init_cache()
 
@@ -147,19 +142,19 @@ class FileTree(object):
         for root, dirs, files in self.walk(self.directory):
             self.add_to_cache(root, dirs, files)
 
-            proj_path = root.replace(self.directory, '')
+            proj_path = root.replace(self.directory, "")
 
             for directory in dirs:
                 path = os.path.join(proj_path, directory)
 
                 if self.determine_skip(path):
                     if not self.is_in_skipped(skipped_files, path):
-                        self.logger.debug('Skipping dir: %s', path)
+                        self.logger.debug("Skipping dir: %s", path)
                     skipped_files.add(path)
                     continue
                 else:
                     if self.is_in_skipped(skipped_files, path):
-                        self.logger.debug('Keeping dir: %s', path)
+                        self.logger.debug("Keeping dir: %s", path)
 
                 self.dirs.append(path)
 
@@ -168,24 +163,23 @@ class FileTree(object):
 
                 if self.determine_skip(path):
                     if not self.is_in_skipped(skipped_files, path):
-                        self.logger.debug('Skipping file: %s', path)
+                        self.logger.debug("Skipping file: %s", path)
                     skipped_files.add(path)
                     continue
                 else:
                     if self.is_in_skipped(skipped_files, path):
-                        self.logger.debug('Keeping file: %s', path)
+                        self.logger.debug("Keeping file: %s", path)
 
                 self.files.append(path)
 
 
 class TreeBrowser(QtWidgets.QWidget):
-    def __init__(self, directory=None,
-                 whitelist=None, blacklist=None, parent=None):
+    def __init__(self, directory=None, whitelist=None, blacklist=None, parent=None):
         QtWidgets.QWidget.__init__(self, parent=parent)
         self.root = QtWidgets.QTreeWidget()
         self.root.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.root.header().setStretchLastSection(False)
-        self.root.setHeaderLabel('Included files')
+        self.root.setHeaderLabel("Included files")
 
         self.parent_map = {}
 
@@ -201,15 +195,12 @@ class TreeBrowser(QtWidgets.QWidget):
         self.root.clear()
         self.file_tree.clear()
 
-    def init(self, directory=None,
-             whitelist=None, blacklist=None):
-
+    def init(self, directory=None, whitelist=None, blacklist=None):
         self.file_tree.init(directory, whitelist, blacklist)
 
         self.refresh(whitelist, blacklist)
 
-    def refresh(self, whitelist=None,
-                blacklist=None):
+    def refresh(self, whitelist=None, blacklist=None):
         self.file_tree.set_filters(whitelist, blacklist)
         self.clear()
         self.generate_files()
@@ -267,14 +258,14 @@ class TreeBrowser(QtWidgets.QWidget):
         if directory is None:
             return
 
-        self.parent_map = {'': self.root}
+        self.parent_map = {"": self.root}
 
         self.file_tree.init_cache()
 
         for root, dirs, files in self.file_tree.walk(directory):
             self.file_tree.add_to_cache(root, dirs, files)
 
-            proj_path = root.replace(directory, '')
+            proj_path = root.replace(directory, "")
 
             for dir in dirs:
                 parent = self.parent_map.get(proj_path)
@@ -307,11 +298,11 @@ class TreeBrowser(QtWidgets.QWidget):
 class ExistingProjectDialog(QtWidgets.QDialog):
     def __init__(self, recent_projects, directory_callback, parent=None):
         super(ExistingProjectDialog, self).__init__(parent)
-        self.setWindowTitle('Open Project Folder')
-        self.setWindowIcon(QtGui.QIcon(config.get_file('files/images/icon.png')))
+        self.setWindowTitle("Open Project Folder")
+        self.setWindowIcon(QtGui.QIcon(config.get_file("files/images/icon.png")))
         self.setMinimumWidth(500)
 
-        group_box = QtWidgets.QGroupBox('Existing Projects')
+        group_box = QtWidgets.QGroupBox("Existing Projects")
         gbox_layout = QtWidgets.QVBoxLayout()
         self.project_list = QtWidgets.QListWidget()
 
@@ -323,15 +314,15 @@ class ExistingProjectDialog(QtWidgets.QDialog):
         self.projects = recent_projects
 
         for project in recent_projects:
-            text = '{} - {}'.format(os.path.basename(project), project)
+            text = "{} - {}".format(os.path.basename(project), project)
             self.project_list.addItem(text)
 
         self.project_list.itemClicked.connect(self.project_clicked)
 
-        self.cancel = QtWidgets.QPushButton('Cancel')
-        self.open = QtWidgets.QPushButton('Open Selected')
-        self.open_readonly = QtWidgets.QPushButton('Open Read-only')
-        self.browse = QtWidgets.QPushButton('Browse...')
+        self.cancel = QtWidgets.QPushButton("Cancel")
+        self.open = QtWidgets.QPushButton("Open Selected")
+        self.open_readonly = QtWidgets.QPushButton("Open Read-only")
+        self.browse = QtWidgets.QPushButton("Browse...")
 
         self.open.setEnabled(False)
         self.open.clicked.connect(self.open_clicked)
@@ -360,11 +351,11 @@ class ExistingProjectDialog(QtWidgets.QDialog):
         self.cancel.clicked.connect(self.cancelled)
 
     def browse_clicked(self):
-
         default = self.parent().project_dir() or self.parent().last_project_dir
 
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Find Project Directory',
-                                                           default)
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Find Project Directory", default
+        )
 
         if directory:
             self.callback(directory)
@@ -402,7 +393,7 @@ class Validator(QtGui.QRegularExpressionValidator):
         return result
 
     def fixup(self, text):
-        return ''.join(re.findall(self.exp, self.action(text)))
+        return "".join(re.findall(self.exp, self.action(text)))
 
 
 class BackgroundThread(QtCore.QThread):
@@ -416,39 +407,50 @@ class BackgroundThread(QtCore.QThread):
             func = getattr(self.widget, self.method_name)
             func()
 
+
 class Setting(object):
     """Class that describes a setting from the setting.cfg file"""
-    def __init__(self, name='', display_name=None, value=None,
-                 required=False, type=None, file_types=None, *args, **kwargs):
+
+    def __init__(
+        self,
+        name="",
+        display_name=None,
+        value=None,
+        required=False,
+        type=None,
+        file_types=None,
+        *args,
+        **kwargs
+    ):
         self.name = name
-        self.display_name = (display_name
-                             if display_name
-                             else name.replace('_', ' ').capitalize())
+        self.display_name = (
+            display_name if display_name else name.replace("_", " ").capitalize()
+        )
         self.value = value
         self.last_value = None
         self.required = required
         self.type = type
-        self.url = kwargs.pop('url', '')
-        self.copy = kwargs.pop('copy', True)
+        self.url = kwargs.pop("url", "")
+        self.copy = kwargs.pop("copy", True)
         self.file_types = file_types
-        self.scope = kwargs.pop('scope', 'local')
+        self.scope = kwargs.pop("scope", "local")
 
-        self.default_value = kwargs.pop('default_value', None)
-        self.button = kwargs.pop('button', None)
-        self.button_callback = kwargs.pop('button_callback', None)
-        self.description = kwargs.pop('description', '')
-        self.values = kwargs.pop('values', [])
-        self.filter = kwargs.pop('filter', '.*')
-        self.filter_action = kwargs.pop('filter_action', 'None')
-        self.check_action = kwargs.pop('check_action', 'None')
-        self.action = kwargs.pop('action', None)
+        self.default_value = kwargs.pop("default_value", None)
+        self.button = kwargs.pop("button", None)
+        self.button_callback = kwargs.pop("button_callback", None)
+        self.description = kwargs.pop("description", "")
+        self.values = kwargs.pop("values", [])
+        self.filter = kwargs.pop("filter", ".*")
+        self.filter_action = kwargs.pop("filter_action", "None")
+        self.check_action = kwargs.pop("check_action", "None")
+        self.action = kwargs.pop("action", None)
 
         self.set_extra_attributes_from_keyword_args(**kwargs)
 
         if self.value is None:
             self.value = self.default_value
 
-        self.save_path = kwargs.pop('save_path', '')
+        self.save_path = kwargs.pop("save_path", "")
 
         self.get_file_information_from_url()
 
@@ -457,20 +459,20 @@ class Setting(object):
         if text and hasattr(self.filter_action, text):
             action = getattr(self.filter_action, text)
             return action(text)
-        return text or ''
+        return text or ""
 
     def get_file_information_from_url(self):
         """Extract the file information from the setting url"""
-        if hasattr(self, 'url'):
-            self.file_name = self.url.split('/')[-1]
+        if hasattr(self, "url"):
+            self.file_name = self.url.split("/")[-1]
             self.full_file_path = utils.path_join(self.save_path, self.file_name)
             self.file_ext = os.path.splitext(self.file_name)[1]
-            if self.file_ext == '.zip':
+            if self.file_ext == ".zip":
                 self.extract_class = zipfile.ZipFile
                 self.extract_args = ()
-            elif self.file_ext == '.gz':
+            elif self.file_ext == ".gz":
                 self.extract_class = tarfile.TarFile.open
-                self.extract_args = ('r:gz',)
+                self.extract_args = ("r:gz",)
 
     def save_file_path(self, version, location=None, sdk_build=False):
         """Get the save file path based on the version"""
@@ -479,19 +481,17 @@ class Setting(object):
         else:
             self.save_path = location or config.download_path()
 
-
         self.get_file_information_from_url()
 
         if self.full_file_path:
-
             path = self.full_file_path.format(version)
 
             if sdk_build:
-                path = utils.replace_right(path, 'nwjs', 'nwjs-sdk', 1)
+                path = utils.replace_right(path, "nwjs", "nwjs-sdk", 1)
 
             return path
 
-        return ''
+        return ""
 
     def set_extra_attributes_from_keyword_args(self, **kwargs):
         for undefined_key, undefined_value in kwargs.items():
@@ -501,16 +501,14 @@ class Setting(object):
         if os.path.exists(ex_path):
             utils.rmtree(ex_path, ignore_errors=True)
 
-        path = location or self.save_file_path(version,
-                                               sdk_build=sdk_build)
+        path = location or self.save_file_path(version, sdk_build=sdk_build)
 
-        file = self.extract_class(path,
-                                  *self.extract_args)
+        file = self.extract_class(path, *self.extract_args)
         # currently, python's extracting mechanism for zipfile doesn't
         # copy file permissions, resulting in a binary that
         # that doesn't work. Copied from a patch here:
         # http://bugs.python.org/file34873/issue15795_cleaned.patch
-        if path.endswith('.zip'):
+        if path.endswith(".zip"):
             members = file.namelist()
             for zipinfo in members:
                 minfo = file.getinfo(zipinfo)
@@ -520,10 +518,14 @@ class Setting(object):
         else:
             file.extractall(ex_path)
 
-        if path.endswith('.tar.gz'):
-            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.tar.gz', ''))
+        if path.endswith(".tar.gz"):
+            dir_name = utils.path_join(
+                ex_path, os.path.basename(path).replace(".tar.gz", "")
+            )
         else:
-            dir_name = utils.path_join(ex_path, os.path.basename(path).replace('.zip', ''))
+            dir_name = utils.path_join(
+                ex_path, os.path.basename(path).replace(".zip", "")
+            )
 
         if os.path.exists(dir_name):
             for p in os.listdir(dir_name):
@@ -532,59 +534,56 @@ class Setting(object):
             utils.rmtree(dir_name, ignore_errors=True)
 
     def __repr__(self):
-        url = ''
-        if hasattr(self, 'url'):
+        url = ""
+        if hasattr(self, "url"):
             url = self.url
         return (
-            'Setting: (name={}, '
-            'display_name={}, '
-            'value={}, required={}, '
-            'type={}, url={})'
-        ).format(self.name,
-                 self.display_name,
-                 self.value,
-                 self.required,
-                 self.type,
-                 url)
+            "Setting: (name={}, "
+            "display_name={}, "
+            "value={}, required={}, "
+            "type={}, url={})"
+        ).format(
+            self.name, self.display_name, self.value, self.required, self.type, url
+        )
+
 
 class CompleterLineEdit(QtWidgets.QLineEdit):
-
     def __init__(self, tag_dict, *args):
         QtWidgets.QLineEdit.__init__(self, *args)
 
-        self.pref = ''
+        self.pref = ""
         self.tag_dict = tag_dict
 
     def text_changed(self, text):
         all_text = str(text)
-        text = all_text[:self.cursorPosition()]
-        prefix = re.split(r'(?<=\))(.*)(?=%\()', text)[-1].strip()
+        text = all_text[: self.cursorPosition()]
+        prefix = re.split(r"(?<=\))(.*)(?=%\()", text)[-1].strip()
         self.pref = prefix
         if prefix.strip() != prefix:
-            self.pref = ''
+            self.pref = ""
 
     def complete_text(self, text):
         cursor_pos = self.cursorPosition()
         before_text = str(self.text())[:cursor_pos]
         after_text = str(self.text())[cursor_pos:]
-        prefix_len = len(re.split(r'(?<=\))(.*)(?=%\()', before_text)[-1].strip())
+        prefix_len = len(re.split(r"(?<=\))(.*)(?=%\()", before_text)[-1].strip())
         tag_text = self.tag_dict.get(text)
 
         if tag_text is None:
             tag_text = text
 
-        new_text = '{}{}{}'.format(before_text[:cursor_pos - prefix_len],
-                                   tag_text,
-                                   after_text)
+        new_text = "{}{}{}".format(
+            before_text[: cursor_pos - prefix_len], tag_text, after_text
+        )
         self.setText(new_text)
         self.setCursorPosition(len(new_text))
 
-class TagsCompleter(QtWidgets.QCompleter):
 
+class TagsCompleter(QtWidgets.QCompleter):
     def __init__(self, parent, all_tags):
         self.keys = sorted(all_tags.keys())
         self.vals = sorted([val for val in all_tags.values()])
-        self.tags = list(sorted(self.vals+self.keys))
+        self.tags = list(sorted(self.vals + self.keys))
         QtWidgets.QCompleter.__init__(self, self.tags, parent)
         self.editor = parent
 
@@ -595,5 +594,5 @@ class TagsCompleter(QtWidgets.QCompleter):
         self.setModel(model)
 
         self.setCompletionPrefix(completion_prefix)
-        if completion_prefix.strip() != '':
+        if completion_prefix.strip() != "":
             self.complete()
