@@ -1,5 +1,5 @@
 appdirs==1.4.4
-black==23.12.1
+black==24.1.0
 configobj==5.0.8
 pillow==10.2.0
 pyinstaller==6.3.0
