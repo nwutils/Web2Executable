@@ -3,7 +3,7 @@ black==24.2.0
 configobj==5.0.8
 pillow==10.2.0
 pyinstaller==6.4.0
-pylint==3.0.3
+pylint==3.0.4
 pyside6==6.6.2
 pytest==8.0.1
 requests==2.31.0
