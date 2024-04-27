@@ -4,18 +4,22 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e:
     strategy:
       matrix:
-        os: [macos-12, ubuntu-22.04, windows-2022]
+        os: [macos-14, ubuntu-22.04, windows-2022]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: actions/setup-python@v4.6.1
         with:
-          python-version: "3.11.0"
+          python-version: '3.12.0'
           cache: pip
       - if: matrix.os == 'ubuntu-22.04'
         uses: awalsh128/cache-apt-pkgs-action@v1.3.0
