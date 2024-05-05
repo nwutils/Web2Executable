@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
       day: "saturday"
     groups:
-      npm:
+      pip:
         patterns:
           - "*"
   - package-ecosystem: "github-actions"
