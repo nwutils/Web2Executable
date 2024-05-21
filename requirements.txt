@@ -6,6 +6,6 @@ pyinstaller==6.6.0
 pylint==3.2.0
 pyside6==6.7.0
 pytest==8.2.0
-requests==2.31.0
+requests==2.32.0
 semantic_version==2.10.0
 validators==0.28.1
