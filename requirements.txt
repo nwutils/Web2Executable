@@ -2,10 +2,10 @@ appdirs==1.4.4
 black==24.4.2
 configobj==5.0.8
 pillow==10.3.0
-pyinstaller==6.6.0
-pylint==3.2.0
-pyside6==6.7.0
-pytest==8.2.0
-requests==2.32.0
+pyinstaller==6.7.0
+pylint==3.2.2
+pyside6==6.7.1
+pytest==8.2.1
+requests==2.32.2
 semantic_version==2.10.0
-validators==0.28.1
+validators==0.28.3
