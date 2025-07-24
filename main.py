@@ -1014,9 +1014,9 @@ class MainWindow(QMainWindow, CommandBase):
 
         self.tree_browser.init(
             directory,
-            whitelist=re.split("\n?,?", whitelist_setting.value),
+            whitelist=re.split(r"\n?,?", whitelist_setting.value),
             blacklist=(
-                re.split("\n?,?", blacklist_setting.value)
+                re.split(r"\n?,?", blacklist_setting.value)
                 + ["*" + output_blacklist + "*"]
             ),
         )
@@ -1294,12 +1294,12 @@ class MainWindow(QMainWindow, CommandBase):
         new_val = text.toPlainText()
         output_blacklist = os.path.basename(self.output_dir())
         self.tree_browser.refresh(
-            blacklist=(re.split("\n?,?", new_val) + ["*" + output_blacklist + "*"])
+            blacklist=(re.split(r"\n?,?", new_val) + ["*" + output_blacklist + "*"])
         )
 
     def whitelist_changed(self, text, whitelist_setting):
         new_val = text.toPlainText()
-        self.tree_browser.refresh(whitelist=re.split("\n?,?", new_val))
+        self.tree_browser.refresh(whitelist=re.split(r"\n?,?", new_val))
 
     def create_output_name_pattern_line(self):
         output_name_layout = QtWidgets.QHBoxLayout()

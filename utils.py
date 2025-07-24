@@ -292,7 +292,13 @@ def urlopen(url):
     "SSL: CERTIFICATE_VERIFY_FAILED” errors when no verification is
     actually needed.
     """
-    return request.urlopen(url, context=config.SSL_CONTEXT)
+    req = request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36"
+        },
+    )
+    return request.urlopen(req, context=config.SSL_CONTEXT)
 
 
 # To avoid a circular import, we import config at the bottom of the file
