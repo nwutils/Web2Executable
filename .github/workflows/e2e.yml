@@ -1,4 +1,4 @@
-name: e2e
+name: CI
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e:
+  test:
     strategy:
       matrix:
         os: [macos-15, ubuntu-24.04, windows-2025]

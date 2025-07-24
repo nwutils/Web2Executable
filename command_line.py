@@ -424,7 +424,7 @@ class CommandBase(object):
             if setting.value is not None and setting.value != "":
                 dic[setting_name] = setting.value
                 if setting_name == "keywords":
-                    dic[setting_name] = re.findall("\w+", setting.value)
+                    dic[setting_name] = re.findall(r"\w+", setting.value)
             else:
                 dic.pop(setting_name, "")
 
@@ -896,8 +896,8 @@ class CommandBase(object):
 
         output_blacklist = os.path.basename(self.output_dir())
 
-        blacklist_vals = re.split(",?\n?", blacklist_setting.value)
-        whitelist_vals = re.split(",?\n?", whitelist_setting.value)
+        blacklist_vals = re.split(r",?\n?", blacklist_setting.value)
+        whitelist_vals = re.split(r",?\n?", whitelist_setting.value)
 
         self.file_tree.init(
             self.project_dir(),
@@ -972,7 +972,7 @@ class CommandBase(object):
             A 3-tuple of (major, minor, release)
         """
         try:
-            strs = re.findall("(\d+)\.(\d+)\.(\d+)", self.selected_version())[0]
+            strs = re.findall(r"(\d+)\.(\d+)\.(\d+)", self.selected_version())[0]
         except IndexError:
             strs = ["0", "0", "0"]
         return [int(s) for s in strs]
