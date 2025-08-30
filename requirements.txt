@@ -4,8 +4,8 @@ configobj==5.0.9
 pillow==11.3.0
 pyinstaller==6.15.0
 pylint==3.3.8
-pyside6==6.9.1
+pyside6==6.9.2
 pytest==8.4.1
-requests==2.32.4
+requests==2.32.5
 semantic_version==2.10.0
 validators==0.35.0
