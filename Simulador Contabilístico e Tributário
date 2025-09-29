@@ -1,0 +1,165 @@
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta de Serviços - ALL IN ONE SOLUTIONS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        .bg-primary { background-color: #1a237e; }
+        .text-primary { color: #1a237e; }
+        .border-accent { border-color: #ffb300; }
+        .bg-accent { background-color: #ffb300; }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a237e;
+            border-bottom: 4px solid #ffb300;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+        .address-block {
+            font-size: 0.875rem;
+            color: #555;
+            text-align: right;
+        }
+        .content-block {
+            margin-top: 2rem;
+        }
+        .subject {
+            font-weight: 700;
+            color: #1a237e;
+            margin: 1.5rem 0 0.5rem;
+            text-decoration: underline;
+        }
+        .service-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 1.5rem;
+        }
+        .service-item {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        .service-icon {
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            background-color: #ffb300;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #1a237e;
+            margin-right: 1rem;
+        }
+        .signature {
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="container">
+    <header>
+        <div class="header-logo">
+            <h1>ALL IN ONE SOLUTIONS</h1>
+            <p class="text-xs md:text-sm text-gray-500 font-semibold">COMÉRCIO E SERVIÇOS, LDA.</p>
+        </div>
+        <div class="address-block">
+            <p>Rua da Liberdade, nº 123</p>
+            <p>Luanda, Angola</p>
+            <p>contact@allinonesolutions.ao</p>
+            <p>(+244) 9XX-XXX-XXX</p>
+        </div>
+        <p class="mt-8 text-right text-gray-600">Luanda, Angola, {{ data }}</p>
+    </header>
+
+    <div class="content-block">
+        <p>Exmos. Senhores da **EMIS, S.A.**,</p>
+        <p>Ao Cuidado do Departamento de Compras e Logística</p>
+
+        <h3 class="subject">Assunto: Proposta para Otimização de Processos de Aquisição e Serviços</h3>
+
+        <p class="mt-4">O nosso propósito é claro: **simplificar a sua operação para que o senhor se possa focar na sua missão.** A **ALL IN ONE SOLUTIONS** é especializada em libertar empresas como a vossa da complexidade de gerir múltiplos fornecedores de bens e serviços.</p>
+
+        <p>Com base na nossa análise das necessidades de uma organização da vossa dimensão e foco, apresentamos uma solução integrada que abrange quatro áreas críticas da vossa operação:</p>
+
+        <ul class="service-list">
+            <li class="service-item">
+                <div class="service-icon">📦</div>
+                <div>
+                    <h4 class="font-bold text-lg text-primary">Gestão Consolidada de Materiais e Consumíveis</h4>
+                    <p class="text-sm text-gray-700 mt-1">Acabe com o pesadelo de dezenas de faturas e dezenas de fornecedores. Nós gerimos a aquisição e o fornecimento de todos os materiais de escritório, consumíveis de informática (toners, tinteiros, etc.) e materiais de limpeza, entregando tudo numa única encomenda e com uma fatura única e centralizada.</p>
+                </div>
+            </li>
+            <li class="service-item">
+                <div class="service-icon">🛠️</div>
+                <div>
+                    <h4 class="font-bold text-lg text-primary">Gestão de Manutenção de Instalações e Frota</h4>
+                    <p class="text-sm text-gray-700 mt-1">A manutenção da vossa infraestrutura e da frota de viaturas pode ser uma operação complexa. Nós fornecemos um ponto de contacto único para todos os serviços de manutenção, incluindo eletricidade, climatização, reparações prediais e manutenção preventiva/corretiva de veículos. Nós auditamos e gerimos os melhores prestadores do mercado para garantir a qualidade.</p>
+                </div>
+            </li>
+            <li class="service-item">
+                <div class="service-icon">💻</div>
+                <div>
+                    <h4 class="font-bold text-lg text-primary">Apoio Técnico em Equipamentos de Escritório</h4>
+                    <p class="text-sm text-gray-700 mt-1">Evite interrupções nas vossas operações. Gerimos a manutenção e reparação de equipamentos não-críticos, como impressoras, scanners e computadores em áreas administrativas. Nós asseguramos que os técnicos são validados e que o vosso equipamento está sempre a funcionar.</p>
+                </div>
+            </li>
+             <li class="service-item">
+                <div class="service-icon">✅</div>
+                <div>
+                    <h4 class="font-bold text-lg text-primary">Pagamento e Gestão de Contas de Utilidade Pública</h4>
+                    <p class="text-sm text-gray-700 mt-1">Simplifique o processo de pagamento das vossas contas fixas. Gerimos e pagamos as vossas faturas de água, energia e telecomunicações, consolidando todos os custos numa única linha da vossa fatura mensal, libertando a vossa equipa de gestão de um processo repetitivo e complexo.</p>
+                </div>
+            </li>
+        </ul>
+
+        <p>Os benefícios para a **EMIS** são claros: **poupança de tempo, redução de custos administrativos e garantia de qualidade** em todos os serviços. Com a **ALL IN ONE SOLUTIONS**, a vossa equipa de compras pode focar-se no que realmente importa, e não na gestão de fornecedores.</p>
+
+        <p class="mt-6">Estamos confiantes de que uma parceria com a **ALL IN ONE SOLUTIONS** será de grande valor para a vossa organização. Gostaríamos de marcar uma reunião, no momento que vos for mais conveniente, para apresentar em detalhe o nosso modelo de negócio e como podemos começar a gerar valor imediato para a **EMIS**.</p>
+    </div>
+
+    <div class="signature">
+        <p>Com os melhores cumprimentos,</p>
+        <p class="mt-4 font-bold">{{ seu_nome }}</p>
+        <p>Sócio-Gerente</p>
+        <p>ALL IN ONE SOLUTIONS – COMÉRCIO E SERVIÇOS, LDA.</p>
+    </div>
+
+    <script>
+        const dateElement = document.querySelector('p.text-right');
+        const today = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        dateElement.textContent = `Luanda, Angola, ${today.toLocaleDateString('pt-PT', options)}`;
+    </script>
+</div>
+
+</body>
+</html>
