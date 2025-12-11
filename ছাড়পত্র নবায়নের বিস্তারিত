@@ -1,0 +1,2336 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ছাড়পত্র নবায়নের বিস্তারিত</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Updated Notification Popup Styles - Fixed with header */
+        .notification-popup {
+            position: fixed;
+            top: 80px; /* Below the header */
+            right: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 999;
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-100%); /* Start hidden above */
+            opacity: 0;
+            transition: all 0.5s ease;
+            border-left: 4px solid var(--warning);
+        }
+
+        .notification-popup.show {
+            transform: translateY(0); /* Slide down to position */
+            opacity: 1;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            color: var(--warning);
+        }
+
+        .notification-content h4 {
+            margin-bottom: 5px;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+
+        .notification-content p {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .close-notification {
+            color: var(--gray);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .close-notification:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-timer {
+            width: 100%;
+            height: 4px;
+            background-color: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background-color: var(--warning);
+            width: 100%;
+            transition: width 4.5s linear;
+        }
+
+        /* Rest of the existing styles remain unchanged */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --renewal: #8b5cf6; /* New color for renewal status */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            line-height: 1.6;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* New: Expiring and Expired animation classes */
+        @keyframes pulse-warning {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse-danger {
+            0% { transform: scale(1); color: var(--danger); }
+            50% { transform: scale(1.2); color: #dc2626; }
+            100% { transform: scale(1); color: var(--danger); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .expiring-animated {
+            animation: pulse-warning 2s infinite ease-in-out, flash 3s infinite;
+        }
+
+        .expired-animated {
+            animation: pulse-danger 1.5s infinite ease-in-out, shake 2s infinite;
+        }
+
+        @keyframes shimmer-expiring {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        @keyframes shimmer-expired {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0.3; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 15px 0;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.5s ease-out;
+            overflow: hidden;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Animated background for header */
+        .header-bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.1) 0%, 
+                rgba(255,255,255,0.2) 50%, 
+                rgba(255,255,255,0.1) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-bell {
+            position: relative;
+            font-size: 1.8rem; /* Increased font size */
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            color: white;
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.1);
+            color: #fbbf24; /* Light yellow on hover */
+        }
+
+        /* Improved notification count style */
+        .notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ff0000; /* Bright red */
+            color: white;
+            border-radius: 50%;
+            width: 24px; /* Increased size */
+            height: 24px; /* Increased size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem; /* Increased font size */
+            font-weight: bold;
+            border: 2px solid white; /* White border for contrast */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            animation: pulse-danger 1.5s infinite;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* New animation for notification count */
+        @keyframes pulse-notification {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(255, 0, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: cardAppear 0.6s ease-out forwards;
+        }
+
+        @keyframes cardAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #0da271;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table Container with Fixed Header */
+        .table-container {
+            position: relative;
+            overflow: auto;
+            max-height: 600px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            animation: tableAppear 0.7s ease-out;
+        }
+
+        @keyframes tableAppear {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--dark);
+            position: relative;
+        }
+
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status:hover {
+            transform: scale(1.05);
+        }
+
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-expiring {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-expiring::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.3) 50%, 
+                transparent 70%);
+            animation: shimmer-expiring 2s infinite linear;
+        }
+
+        .status-expired {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-expired::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.4) 50%, 
+                transparent 70%);
+            animation: shimmer-expired 1.5s infinite linear;
+        }
+
+        .status-renewal {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            animation: modalScaleIn 0.3s ease-out forwards;
+        }
+
+        @keyframes modalScaleIn {
+            to { transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: transform 0.3s ease;
+        }
+
+        .close:hover {
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Checkbox styles */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            transform: scale(1.2);
+        }
+
+        .renewal-date-group {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .renewal-date-group.show {
+            display: block;
+        }
+
+        /* Backup/Restore Modal Styles */
+        .backup-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .backup-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .backup-option:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+
+        .backup-icon {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .backup-title {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .backup-desc {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .file-label:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .backup-info {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .backup-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .backup-info li {
+            margin-bottom: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: statAppear 0.6s ease-out forwards;
+        }
+
+        @keyframes statAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.active {
+            border-left: 5px solid var(--secondary);
+        }
+
+        .stat-card.expiring {
+            border-left: 5px solid var(--warning);
+        }
+
+        .stat-card.expired {
+            border-left: 5px solid var(--danger);
+        }
+
+        .stat-card.renewal {
+            border-left: 5px solid var(--renewal);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .active .stat-icon {
+            color: var(--secondary);
+        }
+
+        .expiring .stat-icon {
+            color: var(--warning);
+        }
+
+        .expired .stat-icon {
+            color: var(--danger);
+        }
+
+        .renewal .stat-icon {
+            color: var(--renewal);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            color: var(--primary);
+        }
+
+        .delete-btn {
+            color: var(--danger);
+        }
+
+        .action-btn:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.1);
+        }
+
+        .days-remaining {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .days-remaining.active {
+            color: var(--secondary);
+        }
+
+        .days-remaining.expiring {
+            color: var(--warning);
+        }
+
+        .days-remaining.expired {
+            color: var(--danger);
+        }
+
+        .days-remaining.renewal {
+            color: var(--renewal);
+        }
+
+        /* Improved Filter Buttons */
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            background-color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dark);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-btn.all.active {
+            background-color: var(--primary);
+        }
+
+        .filter-btn.active.active {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .filter-btn.expiring.active {
+            background-color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .filter-btn.expired.active {
+            background-color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .filter-btn.renewal.active {
+            background-color: var(--renewal);
+            border-color: var(--renewal);
+        }
+
+        .filter-btn.expiring i {
+            animation: pulse-warning 2s infinite ease-in-out;
+        }
+
+        .filter-btn.expired i {
+            animation: pulse-danger 1.5s infinite ease-in-out;
+        }
+
+        /* Smart Table Header Styles */
+        .table-header-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .table-header-icon i {
+            font-size: 1rem;
+            color: var(--primary);
+        }
+
+        .sort-indicator {
+            margin-left: auto;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        th:hover .sort-indicator {
+            opacity: 1;
+        }
+
+        /* Settings Gear */
+        .settings-gear {
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.5s ease;
+            color: white;
+        }
+
+        .settings-gear:hover {
+            transform: rotate(90deg);
+            color: #fbbf24;
+        }
+
+        /* Notification Period Options */
+        .notification-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .notification-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-option:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+
+        .notification-option.selected {
+            border-color: var(--primary);
+            background-color: #e0f2fe;
+        }
+
+        .notification-days {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .notification-desc {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        /* FIXED: Updated Print Styles - Header will now appear */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.1in !important;
+            }
+            
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 100% !important;
+                width: 100% !important;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            }
+            
+            /* Fix for header visibility */
+            body > *:not(.print-section) {
+                display: none !important;
+            }
+            
+            .print-section, .print-section * {
+                visibility: visible !important;
+                display: block !important;
+            }
+            
+            .print-section {
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 10px !important;
+                padding-bottom: 5px !important;
+                border-bottom: 2px solid #000 !important;
+                page-break-after: avoid !important;
+                width: 100% !important;
+            }
+            
+            .print-header h1 {
+                font-size: 18px !important;
+                margin: 0 0 5px 0 !important;
+                line-height: 1.2 !important;
+                font-weight: bold !important;
+                color: #000 !important;
+            }
+            
+            .print-header p {
+                font-size: 12px !important;
+                margin: 0 !important;
+                line-height: 1.2 !important;
+                color: #000 !important;
+            }
+            
+            .print-title {
+                text-align: center;
+                margin: 10px 0 15px 0 !important;
+                font-size: 16px !important;
+                font-weight: bold !important;
+                color: #000 !important;
+                text-decoration: underline;
+                page-break-after: avoid !important;
+                width: 100% !important;
+            }
+            
+            .print-table-container {
+                width: 100% !important;
+                overflow: visible !important;
+                page-break-inside: avoid !important;
+            }
+            
+            .table-container {
+                max-height: none !important;
+                height: auto !important;
+                overflow: visible !important;
+                border: 1px solid #000 !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            
+            table {
+                width: 100% !important;
+                font-size: 9px !important;
+                border-collapse: collapse !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 0 !important;
+                border-spacing: 0 !important;
+            }
+            
+            /* CRITICAL FIX: Ensure table header is visible and prints on every page */
+            thead {
+                display: table-header-group !important;
+                position: static !important;
+                background-color: #f0f0f0 !important;
+                color: #000 !important;
+                font-weight: bold !important;
+            }
+            
+            tbody {
+                display: table-row-group !important;
+            }
+            
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            th, td {
+                border: 1px solid #000 !important;
+                padding: 5px 3px !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                font-size: 9px !important;
+                line-height: 1.1 !important;
+                white-space: normal !important;
+                overflow: visible !important;
+            }
+            
+            th {
+                background-color: #f0f0f0 !important;
+                color: #000 !important;
+                font-weight: bold !important;
+                font-size: 9px !important;
+                padding: 6px 3px !important;
+                text-transform: none !important;
+            }
+            
+            /* Make sure header text is visible */
+            th .table-header-icon {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                font-size: 9px !important;
+                font-weight: bold !important;
+                color: #000 !important;
+                text-align: center !important;
+            }
+            
+            th .table-header-icon i,
+            th .sort-indicator {
+                display: none !important;
+            }
+            
+            /* Column width optimization */
+            th:nth-child(1), td:nth-child(1) { width: 6% !important; min-width: 40px !important; }
+            th:nth-child(2), td:nth-child(2) { width: 20% !important; min-width: 120px !important; }
+            th:nth-child(3), td:nth-child(3) { width: 14% !important; min-width: 90px !important; }
+            th:nth-child(4), td:nth-child(4) { width: 14% !important; min-width: 90px !important; }
+            th:nth-child(5), td:nth-child(5) { width: 30% !important; min-width: 160px !important; }
+            th:nth-child(6), td:nth-child(6) { width: 10% !important; min-width: 70px !important; }
+            th:nth-child(7), td:nth-child(7) { display: none !important; width: 0 !important; }
+            
+            .actions-column {
+                display: none !important;
+            }
+            
+            .status {
+                padding: 3px 6px !important;
+                border-radius: 10px !important;
+                font-size: 8px !important;
+                font-weight: bold !important;
+                border: 1px solid #000 !important;
+                line-height: 1 !important;
+                display: inline-block !important;
+                text-align: center !important;
+            }
+            
+            .days-remaining {
+                font-size: 8px !important;
+                font-weight: bold !important;
+                line-height: 1 !important;
+                margin: 0 !important;
+                text-align: center !important;
+            }
+            
+            /* Remove animations for print */
+            .expiring-animated,
+            .expired-animated {
+                animation: none !important;
+            }
+            
+            .status-expiring::before,
+            .status-expired::before {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .report-actions, .filter-options {
+                flex-direction: column;
+            }
+            
+            .filter-options {
+                gap: 10px;
+            }
+            
+            .table-header-icon {
+                font-size: 0.8rem;
+            }
+            
+            .table-header-icon i {
+                font-size: 0.9rem;
+            }
+
+            .notification-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .backup-options {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Mobile adjustment for notification popup */
+            .notification-popup {
+                width: 95%;
+                right: 2.5%;
+                max-width: none;
+                top: 70px; /* Adjusted for mobile header height */
+            }
+            
+            /* Mobile adjustment for notification bell */
+            .notification-bell {
+                font-size: 1.5rem;
+            }
+            
+            .notification-count {
+                width: 20px;
+                height: 20px;
+                font-size: 0.8rem;
+                top: -6px;
+                right: -6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="no-print">
+        <div class="header-bg-animation"></div>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-file-contract"></i>
+                <h1>ছাড়পত্র নবায়নের বিস্তারিত</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-warning" id="printTableBtn">
+                    <i class="fas fa-print"></i> প্রিন্ট করুন
+                </button>
+                <button class="btn btn-primary" id="backupBtn">
+                    <i class="fas fa-download"></i> ডাটা ব্যাকআপ
+                </button>
+                <div class="settings-gear" id="settingsBtn">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="notification-bell" id="notificationBell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-count" id="notificationCount">3</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Popup - Fixed with header -->
+    <div class="notification-popup no-print" id="notificationPopup">
+        <div class="notification-icon">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="notification-content">
+            <h4>মেয়াদ শেষ হতে চলেছে!</h4>
+            <p id="notificationMessage">আপনার ৩টি ছাড়পত্রের মেয়াদ ৭ দিনের মধ্যে শেষ হতে চলেছে।</p>
+            <div class="notification-timer">
+                <div class="timer-bar" id="timerBar"></div>
+            </div>
+        </div>
+        <div class="close-notification" id="closeNotification">
+            <i class="fas fa-times"></i>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats no-print">
+            <div class="stat-card active" id="activeStat">
+                <i class="fas fa-check-circle stat-icon"></i>
+                <div class="stat-number">12</div>
+                <div class="stat-title">সক্রিয় ছাড়পত্র</div>
+            </div>
+            <div class="stat-card expiring" id="expiringStat">
+                <!-- Animated expiring icon -->
+                <i class="fas fa-exclamation-triangle stat-icon expiring-animated"></i>
+                <div class="stat-number">5</div>
+                <div class="stat-title">মেয়াদ উত্তীর্ণ হতে চলেছে</div>
+            </div>
+            <div class="stat-card expired" id="expiredStat">
+                <!-- Animated expired icon -->
+                <i class="fas fa-times-circle stat-icon expired-animated"></i>
+                <div class="stat-number">2</div>
+                <div class="stat-title">মেয়াদ শেষ</div>
+            </div>
+            <div class="stat-card renewal" id="renewalStat">
+                <i class="fas fa-sync-alt stat-icon"></i>
+                <div class="stat-number">0</div>
+                <div class="stat-title">নবায়ন চলমান</div>
+            </div>
+        </div>
+
+        <div class="card print-section">
+            <div class="print-header" id="printHeader">
+                <h1 id="factoryName">ফার ইস্ট স্পিনিং ইন্ডাস্ট্রিজ পিএলসি</h1>
+                <p id="factoryAddress">উত্তর সুরমা, তেলিয়াপাড়া, মাধবপুর, হবিগঞ্জ</p>
+            </div>
+            
+            <div class="print-title">ছাড়পত্র নবায়নের বিস্তারিত তথ্য</div>
+            
+            <div class="card-header no-print">
+                <h2 class="card-title">ছাড়পত্র তালিকা</h2>
+                <button class="btn btn-primary" id="addClearanceBtn">
+                    <i class="fas fa-plus"></i> নতুন ছাড়পত্র যোগ করুন
+                </button>
+            </div>
+
+            <div class="report-actions no-print">
+                <button class="btn btn-success" id="exportExcelBtn">
+                    <i class="fas fa-file-excel"></i> এক্সেলে এক্সপোর্ট করুন
+                </button>
+                <button class="btn btn-danger" id="restoreBtn">
+                    <i class="fas fa-upload"></i> ডাটা রিস্টোর করুন
+                </button>
+            </div>
+
+            <div class="filter-options no-print">
+                <button class="filter-btn all active" data-filter="all">
+                    <i class="fas fa-list"></i> সবগুলো
+                </button>
+                <button class="filter-btn active" data-filter="active">
+                    <i class="fas fa-check-circle"></i> সক্রিয়
+                </button>
+                <!-- Animated expiring filter button -->
+                <button class="filter-btn expiring" data-filter="expiring">
+                    <i class="fas fa-exclamation-triangle expiring-animated"></i> মেয়াদ উত্তীর্ণ হতে চলেছে
+                </button>
+                <!-- Animated expired filter button -->
+                <button class="filter-btn expired" data-filter="expired">
+                    <i class="fas fa-times-circle expired-animated"></i> মেয়াদ শেষ
+                </button>
+                <button class="filter-btn renewal" data-filter="renewal">
+                    <i class="fas fa-sync-alt"></i> নবায়ন চলমান
+                </button>
+            </div>
+
+            <div class="print-table-container">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-hashtag"></i>
+                                        ক্রমিক নং
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-file-signature"></i>
+                                        ছাড়পত্রের নাম
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-calendar-times"></i>
+                                        মেয়াদ শেষের তারিখ
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        মেয়াদ শেষ হতে বাকি
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        নবায়নের ঠিকানা
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-info-circle"></i>
+                                        অবস্থা
+                                        <span class="sort-indicator"><i class="fas fa-sort"></i></span>
+                                    </div>
+                                </th>
+                                <th class="no-print actions-column">
+                                    <div class="table-header-icon">
+                                        <i class="fas fa-cogs"></i>
+                                        কার্যক্রম
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="clearanceTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal no-print" id="clearanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">নতুন ছাড়পত্র যোগ করুন</h3>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <form id="clearanceForm">
+                <div class="form-group">
+                    <label for="clearanceName">ছাড়পত্রের নাম</label>
+                    <input type="text" id="clearanceName" required>
+                </div>
+                <div class="form-group">
+                    <label for="expiryDate">মেয়াদ শেষের তারিখ</label>
+                    <input type="date" id="expiryDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="renewalOffice">নবায়নের জন্য দপ্তরের ঠিকানা</label>
+                    <textarea id="renewalOffice" rows="3" required></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="renewalInProgress">
+                    <label for="renewalInProgress">নবায়ন চলমান</label>
+                </div>
+                <div class="form-group renewal-date-group" id="renewalDateGroup">
+                    <label for="renewalDate">নবায়নের তারিখ</label>
+                    <input type="date" id="renewalDate">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-save"></i> সংরক্ষণ করুন
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal no-print" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">কারখানা সেটিংস</h3>
+                <span class="close" id="closeSettingsModal">&times;</span>
+            </div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="factoryNameInput">কারখানার নাম</label>
+                    <input type="text" id="factoryNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="factoryAddressInput">ঠিকানা</label>
+                    <textarea id="factoryAddressInput" rows="2" required></textarea>
+                </div>
+                
+                <!-- New Notification Period Setting -->
+                <div class="form-group">
+                    <label>মেয়াদ শেষ হওয়ার কত দিন আগে নোটিফিকেশন দেখাতে চান</label>
+                    <div class="notification-options">
+                        <div class="notification-option" data-days="7">
+                            <div>
+                                <div class="notification-days">৭ দিন আগে</div>
+                                <div class="notification-desc">১ সপ্তাহ পূর্বে</div>
+                            </div>
+                        </div>
+                        <div class="notification-option" data-days="15">
+                            <div>
+                                <div class="notification-days">১৫ দিন আগে</div>
+                                <div class="notification-desc">২ সপ্তাহ পূর্বে</div>
+                            </div>
+                        </div>
+                        <div class="notification-option" data-days="30">
+                            <div>
+                                <div class="notification-days">৩০ দিন আগে</div>
+                                <div class="notification-desc">১ মাস পূর্বে</div>
+                            </div>
+                        </div>
+                        <div class="notification-option" data-days="60">
+                            <div>
+                                <div class="notification-days">৬০ দিন আগে</div>
+                                <div class="notification-desc">২ মাস পূর্বে</div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="notificationPeriodInput" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-save"></i> সেটিংস সংরক্ষণ করুন
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backup/Restore Modal -->
+    <div class="modal no-print" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">ডাটা ব্যাকআপ ও রিস্টোর</h3>
+                <span class="close" id="closeBackupModal">&times;</span>
+            </div>
+            <div class="backup-options">
+                <div class="backup-option" id="backupDataOption">
+                    <i class="fas fa-download backup-icon"></i>
+                    <div class="backup-title">ডাটা ব্যাকআপ করুন</div>
+                    <div class="backup-desc">সমস্ত ডাটা একটি JSON ফাইলে সংরক্ষণ করুন</div>
+                </div>
+                <div class="backup-option" id="restoreDataOption">
+                    <i class="fas fa-upload backup-icon"></i>
+                    <div class="backup-title">ডাটা রিস্টোর করুন</div>
+                    <div class="backup-desc">পূর্বে সংরক্ষিত ডাটা ফাইল থেকে রিস্টোর করুন</div>
+                    <input type="file" id="restoreFileInput" class="file-input" accept=".json">
+                    <label for="restoreFileInput" class="file-label">ফাইল নির্বাচন করুন</label>
+                </div>
+            </div>
+            
+            <div class="backup-info">
+                <h4>ব্যাকআপ সম্পর্কে তথ্য:</h4>
+                <ul>
+                    <li>ব্যাকআপ ফাইল আপনার সমস্ত ছাড়পত্র এবং কারখানা সেটিংস সংরক্ষণ করবে</li>
+                    <li>ডাটা রিস্টোর করার সময় সমস্ত বিদ্যমান ডাটা প্রতিস্থাপিত হবে</li>
+                    <li>ব্যাকআপ ফাইল শুধুমাত্র এই অ্যাপ্লিকেশনে ব্যবহারের জন্য</li>
+                    <li>নিয়মিত ব্যাকআপ রাখা উচিত যাতে ডাটা হারানো থেকে রক্ষা পায়</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load data from localStorage or initialize with sample data
+        let clearances = JSON.parse(localStorage.getItem('clearances')) || [
+            {
+                id: 1,
+                name: "নমুনা ট্রেড লাইসেন্স",
+                expiryDate: "2025-12-31",
+                renewalOffice: "বাণিজ্য মন্ত্রণালয়, ঢাকা",
+                status: "active",
+                renewalInProgress: false,
+                renewalDate: ""
+            },
+            {
+                id: 2,
+                name: "নমুনা ফায়ার সার্টিফিকেট",
+                expiryDate: "2025-11-15",
+                renewalOffice: "ফায়ার সার্ভিস অ্যান্ড সিভিল ডিফেন্স, ঢাকা",
+                status: "expiring",
+                renewalInProgress: false,
+                renewalDate: ""
+            },
+            {
+                id: 3,
+                name: "নমুনা এনওসি পরিবেশ",
+                expiryDate: "2025-10-20",
+                renewalOffice: "পরিবেশ অধিদপ্তর, ঢাকা",
+                status: "expired",
+                renewalInProgress: false,
+                renewalDate: ""
+            },
+            {
+                id: 4,
+                name: "নমুনা স্বাস্থ্য ছাড়পত্র",
+                expiryDate: "2025-02-28",
+                renewalOffice: "স্বাস্থ্য অধিদপ্তর, ঢাকা",
+                status: "active",
+                renewalInProgress: true,
+                renewalDate: "2024-02-15"
+            }
+        ];
+
+        // Load factory settings from localStorage or initialize with default values
+        let factorySettings = JSON.parse(localStorage.getItem('factorySettings')) || {
+            name: "নমুনা কারখানার নাম",
+            address: "নমুনা কারখানার ঠিকানা",
+            notificationPeriod: 30 // Default 30 days
+        };
+
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('clearances', JSON.stringify(clearances));
+        }
+
+        // Save factory settings to localStorage
+        function saveFactorySettings() {
+            localStorage.setItem('factorySettings', JSON.stringify(factorySettings));
+        }
+
+        // Update factory info in the UI
+        function updateFactoryInfo() {
+            document.getElementById('factoryName').textContent = factorySettings.name;
+            document.getElementById('factoryAddress').textContent = factorySettings.address;
+        }
+
+        // DOM Elements
+        const tableBody = document.getElementById('clearanceTableBody');
+        const modal = document.getElementById('clearanceModal');
+        const closeModal = document.getElementById('closeModal');
+        const addClearanceBtn = document.getElementById('addClearanceBtn');
+        const form = document.getElementById('clearanceForm');
+        const notificationPopup = document.getElementById('notificationPopup');
+        const closeNotification = document.getElementById('closeNotification');
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationCount = document.getElementById('notificationCount');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const timerBar = document.getElementById('timerBar');
+        const activeStat = document.getElementById('activeStat');
+        const expiringStat = document.getElementById('expiringStat');
+        const expiredStat = document.getElementById('expiredStat');
+        const renewalStat = document.getElementById('renewalStat');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const printTableBtn = document.getElementById('printTableBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsModal = document.getElementById('closeSettingsModal');
+        const settingsForm = document.getElementById('settingsForm');
+        const factoryNameInput = document.getElementById('factoryNameInput');
+        const factoryAddressInput = document.getElementById('factoryAddressInput');
+        const notificationPeriodInput = document.getElementById('notificationPeriodInput');
+        const notificationOptions = document.querySelectorAll('.notification-option');
+        
+        // New backup/restore elements
+        const backupBtn = document.getElementById('backupBtn');
+        const restoreBtn = document.getElementById('restoreBtn');
+        const backupModal = document.getElementById('backupModal');
+        const closeBackupModal = document.getElementById('closeBackupModal');
+        const backupDataOption = document.getElementById('backupDataOption');
+        const restoreDataOption = document.getElementById('restoreDataOption');
+        const restoreFileInput = document.getElementById('restoreFileInput');
+
+        // Renewal checkbox and date elements
+        const renewalInProgressCheckbox = document.getElementById('renewalInProgress');
+        const renewalDateGroup = document.getElementById('renewalDateGroup');
+        const renewalDateInput = document.getElementById('renewalDate');
+
+        let currentFilter = 'all';
+        let editingId = null;
+        let notificationTimer;
+
+        // Initialize factory settings in the form
+        factoryNameInput.value = factorySettings.name;
+        factoryAddressInput.value = factorySettings.address;
+        
+        // Initialize notification period selection
+        notificationOptions.forEach(option => {
+            if (parseInt(option.getAttribute('data-days')) === factorySettings.notificationPeriod) {
+                option.classList.add('selected');
+                notificationPeriodInput.value = factorySettings.notificationPeriod;
+            }
+            
+            option.addEventListener('click', () => {
+                notificationOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                notificationPeriodInput.value = option.getAttribute('data-days');
+            });
+        });
+
+        // Update factory info on page load
+        updateFactoryInfo();
+
+        // Calculate days remaining
+        function calculateDaysRemaining(expiryDate) {
+            const today = new Date();
+            const expiry = new Date(expiryDate);
+            const diffTime = expiry - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        // Get status based on days remaining and notification period
+        function getStatus(daysRemaining, renewalInProgress) {
+            if (renewalInProgress) {
+                return 'renewal';
+            } else if (daysRemaining < 0) {
+                return 'expired';
+            } else if (daysRemaining <= factorySettings.notificationPeriod) {
+                return 'expiring';
+            } else {
+                return 'active';
+            }
+        }
+
+        // Get status message
+        function getStatusMessage(days, renewalInProgress, renewalDate) {
+            if (renewalInProgress) {
+                return `নবায়ন চলমান - তারিখ: ${formatDate(renewalDate)}`;
+            } else if (days < 0) {
+                return `মেয়াদ শেষ হয়েছে ${Math.abs(days)} দিন আগে`;
+            } else if (days === 0) {
+                return "আজ মেয়াদ শেষ";
+            } else if (days <= 7) {
+                return `মাত্র ${days} দিন বাকি`;
+            } else if (days <= 30) {
+                return `${days} দিন বাকি`;
+            } else {
+                return `${days} দিন বাকি`;
+            }
+        }
+
+        // Initialize the table
+        function renderTable() {
+            tableBody.innerHTML = '';
+            let activeCount = 0;
+            let expiringCount = 0;
+            let expiredCount = 0;
+            let renewalCount = 0;
+            
+            clearances.forEach(clearance => {
+                // Calculate status and days remaining
+                const daysRemaining = calculateDaysRemaining(clearance.expiryDate);
+                const status = getStatus(daysRemaining, clearance.renewalInProgress);
+                
+                // Skip if doesn't match current filter
+                if (currentFilter !== 'all' && status !== currentFilter) {
+                    return;
+                }
+                
+                // Update counts
+                if (status === 'active') activeCount++;
+                else if (status === 'expiring') expiringCount++;
+                else if (status === 'expired') expiredCount++;
+                else if (status === 'renewal') renewalCount++;
+                
+                const statusText = status === 'active' ? 'সক্রিয়' : 
+                                 status === 'expiring' ? 'মেয়াদ উত্তীর্ণ হতে চলেছে' : 
+                                 status === 'renewal' ? 'নবায়ন চলমান' : 'মেয়াদ শেষ';
+                
+                const statusMessage = getStatusMessage(daysRemaining, clearance.renewalInProgress, clearance.renewalDate);
+                
+                // Add animated classes for expiring and expired status
+                let statusClass = `status status-${status}`;
+                if (status === 'expiring' || status === 'expired') {
+                    statusClass += ` ${status}-animated`;
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${clearance.id}</td>
+                    <td>${clearance.name}</td>
+                    <td>${formatDate(clearance.expiryDate)}</td>
+                    <td>
+                        <div class="days-remaining ${status} ${(status === 'expiring' || status === 'expired') ? status + '-animated' : ''}">${statusMessage}</div>
+                    </td>
+                    <td>${clearance.renewalOffice}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td class="no-print actions-column">
+                        <div class="actions">
+                            <button class="action-btn edit-btn" data-id="${clearance.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${clearance.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update stat cards
+            document.querySelector('.stat-card.active .stat-number').textContent = activeCount;
+            document.querySelector('.stat-card.expiring .stat-number').textContent = expiringCount;
+            document.querySelector('.stat-card.expired .stat-number').textContent = expiredCount;
+            document.querySelector('.stat-card.renewal .stat-number').textContent = renewalCount;
+            
+            // Update stat icons animation based on count
+            const expiringIcon = document.querySelector('.stat-card.expiring .stat-icon');
+            const expiredIcon = document.querySelector('.stat-card.expired .stat-icon');
+            
+            if (expiringCount > 0) {
+                expiringIcon.classList.add('expiring-animated');
+            } else {
+                expiringIcon.classList.remove('expiring-animated');
+            }
+            
+            if (expiredCount > 0) {
+                expiredIcon.classList.add('expired-animated');
+            } else {
+                expiredIcon.classList.remove('expired-animated');
+            }
+            
+            // Update notification count and add animation
+            notificationCount.textContent = expiringCount;
+            if (expiringCount > 0) {
+                notificationCount.style.animation = 'pulse-notification 1.5s infinite';
+                notificationCount.style.backgroundColor = '#ff0000'; // Bright red
+            } else {
+                notificationCount.style.animation = 'none';
+                notificationCount.style.backgroundColor = 'var(--danger)'; // Original color
+            }
+            
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editClearance(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteClearance(id);
+                });
+            });
+            
+            // Save to localStorage after rendering
+            saveToLocalStorage();
+        }
+
+        // Format date to display
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('bn-BD', options);
+        }
+
+        // Edit clearance
+        function editClearance(id) {
+            const clearance = clearances.find(c => c.id === id);
+            if (!clearance) return;
+            
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'ছাড়পত্র সম্পাদনা করুন';
+            document.getElementById('clearanceName').value = clearance.name;
+            document.getElementById('expiryDate').value = clearance.expiryDate;
+            document.getElementById('renewalOffice').value = clearance.renewalOffice;
+            
+            // Set renewal checkbox and date
+            renewalInProgressCheckbox.checked = clearance.renewalInProgress || false;
+            if (clearance.renewalInProgress) {
+                renewalDateGroup.classList.add('show');
+                renewalDateInput.value = clearance.renewalDate || '';
+            } else {
+                renewalDateGroup.classList.remove('show');
+                renewalDateInput.value = '';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        // Delete clearance
+        function deleteClearance(id) {
+            if (confirm('আপনি কি নিশ্চিত যে আপনি এই ছাড়পত্রটি মুছে ফেলতে চান?')) {
+                clearances = clearances.filter(c => c.id !== id);
+                renderTable();
+                alert('ছাড়পত্র সফলভাবে মুছে ফেলা হয়েছে!');
+            }
+        }
+
+        // Close notification
+        function closeNotificationPopup() {
+            notificationPopup.classList.remove('show');
+            if (notificationTimer) {
+                clearTimeout(notificationTimer);
+            }
+        }
+
+        // Show notification details when bell is clicked
+        function showNotificationDetails() {
+            const expiringClearances = clearances.filter(c => {
+                const days = calculateDaysRemaining(c.expiryDate);
+                return days > 0 && days <= factorySettings.notificationPeriod && !c.renewalInProgress;
+            });
+            
+            if (expiringClearances.length === 0) {
+                notificationMessage.textContent = "কোন মেয়াদ উত্তীর্ণ হতে চলেছে এমন ছাড়পত্র নেই।";
+            } else {
+                let message = `আপনার ${expiringClearances.length}টি ছাড়পত্রের মেয়াদ ${factorySettings.notificationPeriod} দিনের মধ্যে শেষ হতে চলেছে:\n\n`;
+                expiringClearances.forEach((c, index) => {
+                    const days = calculateDaysRemaining(c.expiryDate);
+                    message += `${index + 1}. ${c.name} - ${days} দিন বাকি\n`;
+                });
+                
+                notificationMessage.innerHTML = message.replace(/\n/g, '<br>');
+            }
+            
+            // Reset and animate timer bar - 4.5 seconds now
+            timerBar.style.width = '100%';
+            timerBar.style.transition = 'none';
+            setTimeout(() => {
+                timerBar.style.transition = 'width 4.5s linear';
+                timerBar.style.width = '0%';
+            }, 10);
+            
+            // Show notification - This will now slide down from the header
+            notificationPopup.classList.add('show');
+            
+            // Clear any existing timer
+            if (notificationTimer) {
+                clearTimeout(notificationTimer);
+            }
+            
+            // Set timer to auto close after 4.5 seconds
+            notificationTimer = setTimeout(() => {
+                closeNotificationPopup();
+            }, 4500);
+        }
+
+        // Backup data function
+        function backupData() {
+            const dataToBackup = {
+                clearances: clearances,
+                factorySettings: factorySettings,
+                backupDate: new Date().toISOString(),
+                version: "1.0"
+            };
+            
+            const dataStr = JSON.stringify(dataToBackup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Create filename with current date
+            const date = new Date();
+            const dateStr = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+            link.download = `ছাড়পত্র_ডাটা_ব্যাকআপ_${dateStr}.json`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('ডাটা সফলভাবে ব্যাকআপ করা হয়েছে! ফাইলটি আপনার ডিভাইসে ডাউনলোড হয়েছে।');
+        }
+
+        // Restore data function
+        function restoreData(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    // Validate backup data structure
+                    if (!backupData.clearances || !backupData.factorySettings) {
+                        throw new Error('অবৈধ ব্যাকআপ ফাইল ফরম্যাট');
+                    }
+                    
+                    // Confirm restoration with user
+                    if (confirm('আপনি কি নিশ্চিত যে আপনি পূর্বের ডাটা দিয়ে বর্তমান ডাটা প্রতিস্থাপন করতে চান? এটি পূর্বের সমস্ত ডাটা মুছে ফেলবে।')) {
+                        clearances = backupData.clearances;
+                        factorySettings = backupData.factorySettings;
+                        
+                        // Save to localStorage
+                        saveToLocalStorage();
+                        saveFactorySettings();
+                        
+                        // Update UI
+                        updateFactoryInfo();
+                        renderTable();
+                        
+                        // Update settings form
+                        factoryNameInput.value = factorySettings.name;
+                        factoryAddressInput.value = factorySettings.address;
+                        
+                        // Update notification period
+                        notificationOptions.forEach(option => {
+                            option.classList.remove('selected');
+                            if (parseInt(option.getAttribute('data-days')) === factorySettings.notificationPeriod) {
+                                option.classList.add('selected');
+                                notificationPeriodInput.value = factorySettings.notificationPeriod;
+                            }
+                        });
+                        
+                        alert('ডাটা সফলভাবে রিস্টোর করা হয়েছে!');
+                        backupModal.style.display = 'none';
+                    }
+                } catch (error) {
+                    alert('ব্যাকআপ ফাইল লোড করতে সমস্যা হয়েছে: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // Fixed print functionality - ensures headers appear
+        printTableBtn.addEventListener('click', () => {
+            // Temporarily remove inline styles that might hide headers
+            const originalTableHTML = document.querySelector('.table-container').innerHTML;
+            
+            // Create a clean version for printing
+            const printContent = `
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>ছাড়পত্র তালিকা</title>
+                    <style>
+                        @page {
+                            size: landscape;
+                            margin: 0.1in;
+                        }
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0;
+                            padding: 10px;
+                        }
+                        .print-header {
+                            text-align: center;
+                            margin-bottom: 15px;
+                            border-bottom: 2px solid #000;
+                            padding-bottom: 10px;
+                        }
+                        .print-header h1 {
+                            font-size: 20px;
+                            margin: 0 0 5px 0;
+                            font-weight: bold;
+                        }
+                        .print-header p {
+                            font-size: 14px;
+                            margin: 0;
+                        }
+                        .print-title {
+                            text-align: center;
+                            margin: 15px 0 20px 0;
+                            font-size: 18px;
+                            font-weight: bold;
+                            text-decoration: underline;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 10px;
+                        }
+                        th, td {
+                            border: 1px solid #000;
+                            padding: 6px 4px;
+                            text-align: center;
+                            vertical-align: middle;
+                        }
+                        th {
+                            background-color: #f0f0f0;
+                            font-weight: bold;
+                            font-size: 10px;
+                        }
+                        .status {
+                            padding: 3px 6px;
+                            border-radius: 10px;
+                            font-size: 9px;
+                            font-weight: bold;
+                            border: 1px solid #000;
+                        }
+                        .status-active { background-color: #d1fae5; color: #065f46; }
+                        .status-expiring { background-color: #fef3c7; color: #92400e; }
+                        .status-expired { background-color: #fee2e2; color: #991b1b; }
+                        .status-renewal { background-color: #e0e7ff; color: #3730a3; }
+                        .days-remaining {
+                            font-size: 9px;
+                            font-weight: bold;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h1>${document.getElementById('factoryName').textContent}</h1>
+                        <p>${document.getElementById('factoryAddress').textContent}</p>
+                    </div>
+                    <div class="print-title">ছাড়পত্র নবায়নের বিস্তারিত তথ্য</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ক্রমিক নং</th>
+                                <th>ছাড়পত্রের নাম</th>
+                                <th>মেয়াদ শেষের তারিখ</th>
+                                <th>মেয়াদ শেষ হতে বাকি</th>
+                                <th>নবায়নের ঠিকানা</th>
+                                <th>অবস্থা</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from(document.querySelectorAll('#clearanceTableBody tr')).map(row => {
+                                const cells = row.cells;
+                                if (cells.length >= 6) {
+                                    return `
+                                        <tr>
+                                            <td>${cells[0].textContent}</td>
+                                            <td>${cells[1].textContent}</td>
+                                            <td>${cells[2].textContent}</td>
+                                            <td>${cells[3].querySelector('.days-remaining')?.textContent || cells[3].textContent}</td>
+                                            <td>${cells[4].textContent}</td>
+                                            <td>${cells[5].querySelector('.status')?.textContent || cells[5].textContent}</td>
+                                        </tr>
+                                    `;
+                                }
+                                return '';
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Wait for content to load then print
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        });
+
+        // Event Listeners
+        addClearanceBtn.addEventListener('click', () => {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'নতুন ছাড়পত্র যোগ করুন';
+            form.reset();
+            renewalDateGroup.classList.remove('show');
+            modal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Renewal checkbox event listener
+        renewalInProgressCheckbox.addEventListener('change', () => {
+            if (renewalInProgressCheckbox.checked) {
+                renewalDateGroup.classList.add('show');
+            } else {
+                renewalDateGroup.classList.remove('show');
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('clearanceName').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const renewalOffice = document.getElementById('renewalOffice').value;
+            const renewalInProgress = renewalInProgressCheckbox.checked;
+            const renewalDate = renewalInProgress ? document.getElementById('renewalDate').value : '';
+            
+            if (editingId) {
+                // Update existing clearance
+                const index = clearances.findIndex(c => c.id === editingId);
+                if (index !== -1) {
+                    clearances[index] = {
+                        ...clearances[index],
+                        name,
+                        expiryDate,
+                        renewalOffice,
+                        renewalInProgress,
+                        renewalDate
+                    };
+                }
+                alert('ছাড়পত্র সফলভাবে আপডেট করা হয়েছে!');
+            } else {
+                // Add new clearance
+                const newId = clearances.length > 0 ? Math.max(...clearances.map(c => c.id)) + 1 : 1;
+                clearances.push({
+                    id: newId,
+                    name,
+                    expiryDate,
+                    renewalOffice,
+                    status: 'active',
+                    renewalInProgress,
+                    renewalDate
+                });
+                alert('ছাড়পত্র সফলভাবে সংরক্ষণ করা হয়েছে!');
+            }
+            
+            modal.style.display = 'none';
+            renderTable();
+        });
+
+        closeNotification.addEventListener('click', () => {
+            closeNotificationPopup();
+        });
+
+        notificationBell.addEventListener('click', () => {
+            showNotificationDetails();
+        });
+
+        // Settings modal
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+
+        closeSettingsModal.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            factorySettings.name = factoryNameInput.value;
+            factorySettings.address = factoryAddressInput.value;
+            factorySettings.notificationPeriod = parseInt(notificationPeriodInput.value);
+            
+            saveFactorySettings();
+            updateFactoryInfo();
+            renderTable(); // Re-render to update status based on new notification period
+            
+            settingsModal.style.display = 'none';
+            alert('কারখানা সেটিংস সফলভাবে সংরক্ষণ করা হয়েছে!');
+        });
+
+        // Backup/Restore modal
+        backupBtn.addEventListener('click', () => {
+            backupModal.style.display = 'flex';
+        });
+
+        restoreBtn.addEventListener('click', () => {
+            backupModal.style.display = 'flex';
+        });
+
+        closeBackupModal.addEventListener('click', () => {
+            backupModal.style.display = 'none';
+        });
+
+        backupDataOption.addEventListener('click', () => {
+            backupData();
+        });
+
+        restoreDataOption.addEventListener('click', () => {
+            restoreFileInput.click();
+        });
+
+        restoreFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                restoreData(e.target.files[0]);
+            }
+        });
+
+        // Stat card filtering
+        activeStat.addEventListener('click', () => {
+            currentFilter = 'active';
+            updateFilterButtons();
+            renderTable();
+        });
+
+        expiringStat.addEventListener('click', () => {
+            currentFilter = 'expiring';
+            updateFilterButtons();
+            renderTable();
+        });
+
+        expiredStat.addEventListener('click', () => {
+            currentFilter = 'expired';
+            updateFilterButtons();
+            renderTable();
+        });
+
+        renewalStat.addEventListener('click', () => {
+            currentFilter = 'renewal';
+            updateFilterButtons();
+            renderTable();
+        });
+
+        // Filter buttons
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                currentFilter = e.currentTarget.getAttribute('data-filter');
+                updateFilterButtons();
+                renderTable();
+            });
+        });
+
+        function updateFilterButtons() {
+            filterButtons.forEach(btn => {
+                if (btn.getAttribute('data-filter') === currentFilter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Excel export functionality
+        exportExcelBtn.addEventListener('click', () => {
+            // Create CSV content with UTF-8 BOM for Excel compatibility
+            const BOM = '\uFEFF';
+            let csvContent = BOM + "ক্রমিক নং,ছাড়পত্রের নাম,মেয়াদ শেষের তারিখ,মেয়াদ শেষ হতে বাকি,নবায়নের ঠিকানা,অবস্থা\n";
+            
+            clearances.forEach(clearance => {
+                const daysRemaining = calculateDaysRemaining(clearance.expiryDate);
+                const statusMessage = getStatusMessage(daysRemaining, clearance.renewalInProgress, clearance.renewalDate);
+                const status = getStatus(daysRemaining, clearance.renewalInProgress);
+                
+                let statusText = 'সক্রিয়';
+                if (status === 'expiring') statusText = 'মেয়াদ উত্তীর্ণ হতে চলেছে';
+                else if (status === 'expired') statusText = 'মেয়াদ শেষ';
+                else if (status === 'renewal') statusText = 'নবায়ন চলমান';
+                
+                csvContent += `"${clearance.id}","${clearance.name}","${formatDate(clearance.expiryDate)}","${statusMessage}","${clearance.renewalOffice}","${statusText}"\n`;
+            });
+            
+            // Create and download CSV file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'ছাড়পত্র_তালিকা.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('ডেটা সফলভাবে CSV ফাইল হিসেবে ডাউনলোড করা হয়েছে! এক্সেলে খুললে বাংলা টেক্সট সঠিকভাবে দেখা যাবে।');
+        });
+
+        // Initialize
+        renderTable();
+        
+        // Show initial notification
+        setTimeout(() => {
+            showNotificationDetails();
+        }, 1000);
+    </script>
+</body>
+</html>
