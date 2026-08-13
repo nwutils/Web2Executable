@@ -9,7 +9,7 @@ try:
     def resize(image, size):
         output = BytesIO()
         back = im.new("RGBA", size, (0, 0, 0, 0))
-        image.thumbnail(size, im.ANTIALIAS)
+        image.thumbnail(size, im.LANCZOS)
         offset = [0, 0]
         if image.size[0] >= image.size[1]:
             offset[1] = int(back.size[1] / 2 - image.size[1] / 2)

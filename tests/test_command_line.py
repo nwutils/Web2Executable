@@ -1,8 +1,9 @@
 import os
-import config
-import utils
+
 import pytest
 
+import config
+import utils
 from command_line import CommandBase
 
 # api = pytest.mark.skipif(
@@ -77,6 +78,7 @@ def test_invalid_get_setting_objects(command_base):
         setting = command_base.get_setting(setting_name)
         assert setting == None
 
+
 # TODO: investigate why this test is failing
 # def test_get_default_nwjs_branch(command_base):
 #     import re
@@ -86,6 +88,7 @@ def test_invalid_get_setting_objects(command_base):
 #     match = re.match(r"nw\d+", branch)
 
 #     assert match != None
+
 
 def test_download_nwjs(command_base):
     command_base.get_setting("nw_version").value = "0.19.0"

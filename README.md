@@ -1,16 +1,15 @@
+# Web2Executable
+
+> [!Note]
 > This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
-Web2Executable
-==============
+![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)
 
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
+![Releases (Downloads)](https://github.com/jyapayne/Web2Executable/releases)
 
-[Releases (Downloads)](https://github.com/jyapayne/Web2Executable/releases) (new!)
+![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)
 
-[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]()
-
-What is it?
------------
+## What is it?
 
 Web2Executable is a friendly command line and GUI application that can transform your Nodejs (or any other JS/HTML) app into an executable (and libraries) that can run in a contained, desktop-like style. It can export to Mac OS X, Windows and Linux all from one platform, so no need to go out and buy expensive hardware.
 
@@ -20,14 +19,11 @@ If you have an idea for a feature, please create a new issue with a format like 
 
 On the other hand, if you have any annoyances with the application and want to contribute to making it better for everyone, please file an issue with "Annoyance:" as the first part of the title. Sometimes it's hard to know what is annoying for people and input is much appreciated :)
 
-What About Electron?
---------------------
+## What About Electron?
 
 If you want to export using Electron instead of NW.js, try [Electrify](https://github.com/jyapayne/Electrify), my other app based on Web2Executable.
 
-
-Who's Using It?
----------------
+## Who's Using It?
 
 Lots of people! There are currently thousands of downloads and several articles written about using Web2Executable.
 
@@ -45,9 +41,7 @@ Some articles include:
 
 If you have a project you'd like to see listed here that was successfully built using Web2Executable or you have written an article that mentions it, feel free to send me an email with a link and I'd be super stoked to paste it here :)
 
-
-Features
---------
+## Features
 
 - Cross platform to Mac, Windows, Linux
 - Working media out of the box (sound and video)
@@ -61,15 +55,12 @@ Features
 - A command line utility with functionality equivalent to the GUI. Useful for automated builds.
 - Compression of executables with upx
 
-Planned New Features
---------------------
+## Planned New Features
 
 - The ability to add external files to the project
 - Minifying JS and HTML
 
-
-Getting Started
----------------
+## Getting Started
 
 ### Using Prebuilt Binaries
 
@@ -77,10 +68,9 @@ When using the prebuilt binaries for Windows, Mac, or Ubuntu, there are NO depen
 
 **NOTE!**: Some people report needing the Microsoft Visual C++ 2008/2010 SP1 and regular Redistributable package. I don't have a machine to test this, but just know that you might need the package if the application won't open or spits out the following error:
 
-```
+```shell
 Error: The application has failed to start because the side by side configuration is incorrect please see the application event log or use the command line sxstrace.exe tool for more detail.
 ```
-
 
 ### Building from Source
 
@@ -94,7 +84,7 @@ Run the command_line.py with the --help option to see a list of export options. 
 
 Example usage (if using the prebuilt binary, replace `python3.4 command_line.py` with the exe name):
 
-```
+```shell
 python3.4 command_line.py /var/www/html/CargoBlaster/ --main html/index.html --export-to linux-x64 windows mac --width 900 --height 700 --nw-version 0.10.5
 ```
 
@@ -102,19 +92,19 @@ python3.4 command_line.py /var/www/html/CargoBlaster/ --main html/index.html --e
 
 Install dependencies:
 
-```
+```shell
 pip install -r requirements.txt
 ```
 
 Initiate submodules:
 
-```
+```shell
 git submodule update --init --recursive
 ```
 
 Run with:
 
-```
+```shell
 python3.4 main.py
 ```
 
@@ -125,42 +115,18 @@ General Instructions for exporting:
   3. Choose at least one export platform and then the Export button should be enabled (as long as the field names marked with a star are filled out and all files in the fields exist).
   4. Click the export button and once it's done, click the "Open Export Folder" button to go to the folder where your exported project will be.
 
-
 ### Issues?
 
 If you have an issue, please check the FAQ before filing an issue to see if it helps.
 
 [FAQ](https://github.com/jyapayne/Web2Executable/wiki/FAQ)
 
-
-### Additional Info
+## Additional Info
 
 [Changelog](https://github.com/jyapayne/Web2Executable/releases)
 
 [Screenshots](https://github.com/jyapayne/Web2Executable/wiki/Screenshots)
 
+## License
 
-License
--------
-
-The MIT License (MIT)
-
-Copyright (c) 2015 SimplyPixelated
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+MIT.

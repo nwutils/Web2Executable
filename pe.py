@@ -19,10 +19,10 @@ def resize(image, size, format=None):
         else:
             factor = size[1] / image.width
         image = image.resize(
-            (int(image.width * factor), int(image.height * factor)), Image.ANTIALIAS
+            (int(image.width * factor), int(image.height * factor)), Image.LANCZOS
         )
     else:
-        image.thumbnail(size, Image.ANTIALIAS)
+        image.thumbnail(size, Image.LANCZOS)
 
     offset = [0, 0]
     if image.size[0] > image.size[1]:
@@ -1328,11 +1328,6 @@ class PEFile(Printable):
 
     def is_PEFile(self):
         """Checks if the file is a proper PE file"""
-        signature = None
-        try:
-            with open(self.file_path, "rb") as f:
-                signature = f.read(2)
-        except IOError as e:
-            raise e
-        finally:
-            return signature == self.signature
+        with open(self.file_path, "rb") as f:
+            signature = f.read(2)
+        return signature == self.signature

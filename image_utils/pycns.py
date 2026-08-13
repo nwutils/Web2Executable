@@ -1,6 +1,7 @@
+import sys
+
 from image_utils.icns_info import ICNSHeader, icns_to_png
 from image_utils.image_utils import Image
-import sys
 
 """This module takes any image that is readable by PIL and exports it to an icns file.
 The image will be scaled keeping the aspect ratio if it is a non square image.
