@@ -3,11 +3,11 @@ Web2Executable
 > [!Note]
 > This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]
+![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)
 
 [Releases (Downloads)](https://github.com/jyapayne/Web2Executable/releases) (new!)
 
-[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]
+![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)
 
 What is it?
 -----------
