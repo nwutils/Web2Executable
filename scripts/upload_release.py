@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import requests
+import getpass
 import json
 import os
-from pprint import pprint
 from glob import glob
 
+import requests
 from semantic_version import Version
-import getpass
-import sys
 
 
 def main():
@@ -81,7 +79,7 @@ def main():
             with open(zip_file, "rb") as zipf:
                 file_data = zipf.read()
 
-                print("\nUploading file {}...".format(zip_file))
+                print(f"\nUploading file {zip_file}...")
 
                 data = {"name": zip_file}
                 headers = {"Content-Type": "application/zip"}

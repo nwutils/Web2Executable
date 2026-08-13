@@ -1,8 +1,9 @@
 import os
-import config
-import utils
+
 import pytest
 
+import config
+import utils
 from command_line import CommandBase
 
 # api = pytest.mark.skipif(

@@ -1,11 +1,12 @@
 """A module to parse the contents of an ICNS file."""
 
-import struct
-import image_utils.image_utils as image_utils
-import image_utils.png as png
-from PIL import Image
 import os
+import struct
 from io import BytesIO
+
+from PIL import Image
+
+from image_utils import image_utils, png
 
 # ---------------------CONSTANTS-----------------------------------------------#
 
@@ -639,7 +640,7 @@ def type_to_str(type):
     return bytes(s)
 
 
-class Printable(object):
+class Printable:
     def _attrs(self):
         a = []
         for attr in dir(self):
@@ -655,22 +656,22 @@ class Printable(object):
         vals = []
         for key, val in self._dict_items():
             try:
-                vals.append("{}={}".format(key, val))
+                vals.append(f"{key}={val}")
             except UnicodeDecodeError:
-                vals.append("{}=<not printable>".format(key))
+                vals.append(f"{key}=<not printable>")
         return ", ".join(vals)
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return "{} [{}]".format(self.__class__.__name__, self._dict_string())
+        return f"{self.__class__.__name__} [{self._dict_string()}]"
 
 
 # ---------------------------CLASSES-------------------------------------------#
 
 
-class Field(object):
+class Field:
     """This is a field object that will describe a field on the
     class it is a part of.
     """
@@ -994,7 +995,7 @@ class ICNSInfo(Printable):
             icon_info.iconPixelDepth = 1
             icon_info.iconBitDepth = 1
         else:
-            print("Unable to parse icon type {}".format(type_to_str(type)))
+            print(f"Unable to parse icon type {type_to_str(type)}")
             icon_info.iconType = ICNS_NULL_TYPE
 
         icon_info.iconRawDataSize = int(
@@ -1354,7 +1355,9 @@ def icns_header_check(icns_data):
     if resource_type != ICNS_FAMILY_TYPE:
         raise Exception("File is not an ICNS file.")
     if resource_size != len(icns_data):
-        raise Exception("Expected size {}, but got {}".format(len(icns_data)))
+        raise Exception(
+            f"Expected size {resource_size}, but got {len(icns_data)}"
+        )
 
 
 def icns_parse_family_data(icns_data):

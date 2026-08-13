@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 
 # png.py - PNG encoder/decoder in pure Python
 #
@@ -75,7 +74,7 @@ each letter abbreviates a single channel: *L* is for Luminance or Luma
 or Lightness which is the channel used in greyscale images; *R*, *G*,
 *B* stand for Red, Green, Blue, the components of a colour image; *A*
 stands for Alpha, the opacity channel (used for transparency effects,
-but higher values are more opaque, so it makes sense to call it 
+but higher values are more opaque, so it makes sense to call it
 opacity).
 
 A note on formats
@@ -157,7 +156,6 @@ import sys
 # http://www.python.org/doc/2.4.4/lib/module-warnings.html
 import warnings
 import zlib
-
 from array import array
 from functools import reduce
 
@@ -172,7 +170,7 @@ except ImportError:
     pass
 
 
-__all__ = ["Image", "Reader", "Writer", "write_chunks", "from_array"]
+__all__ = ["Image", "Reader", "Writer", "from_array", "write_chunks"]
 
 
 # The PNG signature.
@@ -785,7 +783,7 @@ class Writer:
         try:
             # If this fails...
             extend(row)
-        except:
+        except Exception:
             # ... try a version that converts the values to int first.
             # Not only does this work for the (slightly broken) NumPy
             # types, there are probably lots of other, unknown, "nearly"
@@ -1287,7 +1285,7 @@ def from_array(a, mode=None, info={}):
                 bitdepth = 8 * dtype.itemsize
         info["bitdepth"] = bitdepth
 
-    for thing in "width height bitdepth greyscale alpha".split():
+    for thing in ["width", "height", "bitdepth", "greyscale", "alpha"]:
         assert thing in info
     return Image(a, info)
 
@@ -1985,10 +1983,10 @@ class Reader:
         else:
             pixels = self.iterboxed(self.iterstraight(raw))
         meta = dict()
-        for attr in "greyscale alpha planes bitdepth interlace".split():
+        for attr in ["greyscale", "alpha", "planes", "bitdepth", "interlace"]:
             meta[attr] = getattr(self, attr)
         meta["size"] = (self.width, self.height)
-        for attr in "gamma transparent background".split():
+        for attr in ["gamma", "transparent", "background"]:
             a = getattr(self, attr, None)
             if a is not None:
                 meta[attr] = a
@@ -2339,7 +2337,7 @@ try:
     pngfilters
 except NameError:
 
-    class pngfilters(object):
+    class pngfilters:
         def undo_filter_sub(filter_unit, scanline, previous, result):
             """Undo sub filter."""
 
@@ -2708,7 +2706,8 @@ def _main(argv):
         parser.error("more than one input file")
     outfile = sys.stdout
     if sys.platform == "win32":
-        import msvcrt, os
+        import msvcrt
+        import os
 
         msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
