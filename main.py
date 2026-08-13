@@ -781,7 +781,7 @@ class MainWindow(QMainWindow, CommandBase):
 
         reply = self.net_manager.get(request)
         reply.readyRead.connect(self.ready_read_file)
-        reply.error[QNetworkReply.NetworkError].connect(self.network_error)
+        reply.errorOccurred.connect(self.network_error)
         reply.sslErrors.connect(self.network_ssl_error)
         reply.downloadProgress.connect(self.update_progress_bar)
         self.current_download_request = reply
@@ -1801,7 +1801,7 @@ def main():
     frame = MainWindow(900, 500, app)
     frame.show_and_raise()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
