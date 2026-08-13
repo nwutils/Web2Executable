@@ -3,17 +3,15 @@ updates:
   - package-ecosystem: "pip"
     directory: "."
     schedule:
-      interval: "weekly"
-      day: "saturday"
+      interval: "monthly"
     groups:
       pip:
         patterns:
           - "*"
   - package-ecosystem: "github-actions"
-    directory: ".github/"
+    directory: ".github"
     schedule:
-      interval: "weekly"
-      day: "saturday"
+      interval: "monthly"
     groups:
       gha:
         patterns:
