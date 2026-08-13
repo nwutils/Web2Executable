@@ -55,6 +55,7 @@ jobs:
         with:
           packages: libegl1
           version: 1.0
+          execute_install_scripts: true
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
       - name: Check for formatting errors
