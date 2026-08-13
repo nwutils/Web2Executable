@@ -1,13 +1,13 @@
+Web2Executable
+
+> [!Note]
 > This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
-Web2Executable
-==============
-
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]()
+[![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)]
 
 [Releases (Downloads)](https://github.com/jyapayne/Web2Executable/releases) (new!)
 
-[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]()
+[![Github All Releases](https://img.shields.io/github/downloads/jyapayne/Web2Executable/total.svg)]
 
 What is it?
 -----------
@@ -24,7 +24,6 @@ What About Electron?
 --------------------
 
 If you want to export using Electron instead of NW.js, try [Electrify](https://github.com/jyapayne/Electrify), my other app based on Web2Executable.
-
 
 Who's Using It?
 ---------------
@@ -44,7 +43,6 @@ Some articles include:
 [Shotten.com Node-webkit for Poets](http://www.shotton.com/wp/2014/10/27/node-webkit-for-poets-mac-version/)
 
 If you have a project you'd like to see listed here that was successfully built using Web2Executable or you have written an article that mentions it, feel free to send me an email with a link and I'd be super stoked to paste it here :)
-
 
 Features
 --------
@@ -67,7 +65,6 @@ Planned New Features
 - The ability to add external files to the project
 - Minifying JS and HTML
 
-
 Getting Started
 ---------------
 
@@ -77,10 +74,9 @@ When using the prebuilt binaries for Windows, Mac, or Ubuntu, there are NO depen
 
 **NOTE!**: Some people report needing the Microsoft Visual C++ 2008/2010 SP1 and regular Redistributable package. I don't have a machine to test this, but just know that you might need the package if the application won't open or spits out the following error:
 
-```
+```shell
 Error: The application has failed to start because the side by side configuration is incorrect please see the application event log or use the command line sxstrace.exe tool for more detail.
 ```
-
 
 ### Building from Source
 
@@ -94,7 +90,7 @@ Run the command_line.py with the --help option to see a list of export options. 
 
 Example usage (if using the prebuilt binary, replace `python3.4 command_line.py` with the exe name):
 
-```
+```shell
 python3.4 command_line.py /var/www/html/CargoBlaster/ --main html/index.html --export-to linux-x64 windows mac --width 900 --height 700 --nw-version 0.10.5
 ```
 
@@ -102,19 +98,19 @@ python3.4 command_line.py /var/www/html/CargoBlaster/ --main html/index.html --e
 
 Install dependencies:
 
-```
+```shell
 pip install -r requirements.txt
 ```
 
 Initiate submodules:
 
-```
+```shell
 git submodule update --init --recursive
 ```
 
 Run with:
 
-```
+```shell
 python3.4 main.py
 ```
 
@@ -125,20 +121,17 @@ General Instructions for exporting:
   3. Choose at least one export platform and then the Export button should be enabled (as long as the field names marked with a star are filled out and all files in the fields exist).
   4. Click the export button and once it's done, click the "Open Export Folder" button to go to the folder where your exported project will be.
 
-
 ### Issues?
 
 If you have an issue, please check the FAQ before filing an issue to see if it helps.
 
 [FAQ](https://github.com/jyapayne/Web2Executable/wiki/FAQ)
 
-
 ### Additional Info
 
 [Changelog](https://github.com/jyapayne/Web2Executable/releases)
 
 [Screenshots](https://github.com/jyapayne/Web2Executable/wiki/Screenshots)
-
 
 License
 -------
