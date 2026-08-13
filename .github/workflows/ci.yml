@@ -18,19 +18,19 @@ jobs:
     strategy:
       matrix:
         os:
-          # - macos-26
-          # - macos-26-intel
-          # - ubuntu-24.04
+          - macos-26
+          - macos-26-intel
+          - ubuntu-24.04
           - ubuntu-24.04-arm
-          # - windows-2025
-          # - windows-11-arm
+          - windows-2025
+          - windows-11-arm
         python-version:
           # Lets test latest for now, too many jobs
-          # - '3.10'
-          # - '3.11'
-          # - '3.12'
-          # - '3.13'
-          # - '3.14'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
           - '3.15'
         include:
           - os: macos-26
@@ -45,10 +45,6 @@ jobs:
             display: Windows 11 Intel
           - os: windows-11-arm
             display: Windows 11 (ARM)
-        exclude:
-          # setup-python has no win-arm64 builds before 3.11
-          - os: windows-11-arm
-            python-version: '3.10'
       fail-fast: false
 
     name: ${{ matrix.display }} / Python ${{ matrix.python-version }}
@@ -66,6 +62,9 @@ jobs:
         with:
           packages: libegl1
           version: 1.0
-      - run: python -m pip install -r requirements.txt
-      # - run: python -m pylint ./**/*.py
-      - run: python -m pytest
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Format code
+        run: python -m ruff format ./**/*.py
+      - name: Run test suite
+        run: python -m pytest

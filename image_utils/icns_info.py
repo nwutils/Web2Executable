@@ -446,9 +446,9 @@ def encode_rle24(data):
                     ):
                         dataTemp[dataTempCount] = runLength - 3
                         dataTempCount += 1
-                        dataTemp[
-                            dataTempCount : dataTempCount + runLength - 2
-                        ] = dataRun[: runLength - 2]
+                        dataTemp[dataTempCount : dataTempCount + runLength - 2] = (
+                            dataRun[: runLength - 2]
+                        )
                         dataTempCount += runLength - 2
                         runCount += 1
 
@@ -1296,8 +1296,7 @@ class ICNSElement(Structure):
                 while data_count < icns_info.iconSize.height:
                     data_pos = data_count * mask_data_row_size
                     icns_info.data[data_pos : data_pos + mask_data_row_size] = data[
-                        data_pos
-                        + mask_data_size : data_pos
+                        data_pos + mask_data_size : data_pos
                         + mask_data_row_size
                         + mask_data_size
                     ]

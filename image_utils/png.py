@@ -1980,7 +1980,7 @@ class Reader:
             # each row.
             pixels = map(
                 lambda *row: array(arraycode, row),
-                *[iter(self.deinterlace(raw))] * self.width * self.planes
+                *[iter(self.deinterlace(raw))] * self.width * self.planes,
             )
         else:
             pixels = self.iterboxed(self.iterstraight(raw))
