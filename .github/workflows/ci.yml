@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - if: matrix.os == 'ubuntu-24.04'
+      - if: matrix.os == 'ubuntu-24.04' or matrix.os == 'ubuntu-24.04-arm'
         uses: awalsh128/cache-apt-pkgs-action@v1.5.1
         with:
           packages: libegl1
