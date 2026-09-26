@@ -1,7 +1,7 @@
 # Web2Executable
 
 > [!Note]
-> This repository is in maintainance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
+> This repository is in maintenance mode. Bug fixes will be provided on a best effort basis. If you use this project, please consider contributing back.
 
 ![Github Releases (by Release)](https://img.shields.io/github/downloads/jyapayne/Web2Executable/latest/total.svg)
 
