@@ -33,7 +33,7 @@ Some articles include:
 
 [Packt Publishing NW.js Essentials Tutorial](https://www.packtpub.com/packtlib/book/Web-Development/9781785280863/7/ch07lvl1sec53/Web2Executable) and [Ebook](https://books.google.ca/books?id=wz6qCQAAQBAJ&pg=PA135&lpg=PA135&dq=web2executable&source=bl&ots=sPP-3BOMXX&sig=UolyF31WcTgA-lrel2UTIfzs65U&hl=en&sa=X&redir_esc=y#v=onepage&q=web2executable&f=false)
 
-[A Russian NW.js Tutoral](http://canonium.com/articles/nwjs-web-to-executable)
+[A Russian NW.js Tutorial](http://canonium.com/articles/nwjs-web-to-executable)
 
 [Marv's Blog](http://www.marv.ph/tag/web2exe/)
 
